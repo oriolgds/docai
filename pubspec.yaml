@@ -1,7 +1,7 @@
 name: docai
 description: "An app to heal the world"
 
-version: 1.0.0+1
+version: 0.0.0+1
 
 environment:
   sdk: ^3.9.0
@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+  supabase_flutter: ^2.10.0
 
 
 dev_dependencies:
