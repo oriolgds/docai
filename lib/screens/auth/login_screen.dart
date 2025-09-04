@@ -235,15 +235,31 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleGoogleSignIn() async {
-    // Simulate Google Sign In
-    await Future.delayed(const Duration(seconds: 1));
-    
-    if (mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
-        (route) => false,
-      );
+    try {
+      final success = await SupabaseService.signInWithGoogle();
+      if (success && mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          (route) => false,
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Google Sign-In was cancelled'),
+            backgroundColor: Color(0xFFE53E3E),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google Sign-In failed: ${e.toString()}'),
+            backgroundColor: const Color(0xFFE53E3E),
+          ),
+        );
+      }
     }
   }
 

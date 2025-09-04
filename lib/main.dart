@@ -50,7 +50,7 @@ class _DocAIAppState extends State<DocAIApp> {
   void _setupDeepLinks() {
     final appLinks = AppLinks();
     appLinks.uriLinkStream.listen((uri) {
-      if (uri.path == '/email-verified') {
+      if (uri.host == 'email-verified') {
         final user = SupabaseService.currentUser;
         if (user?.emailConfirmedAt != null) {
           _navigatorKey.currentState?.pushAndRemoveUntil(
