@@ -6,35 +6,37 @@ version: 0.0.0+1
 environment:
   sdk: ^3.9.0
 
-
 dependencies:
   flutter:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
   supabase_flutter: ^2.10.0
-
+  firebase_core: ^4.1.0
+  firebase_crashlytics: ^5.0.1
+  firebase_analytics: ^12.0.1
+  flutter_dotenv: ^5.1.0
+  google_sign_in: ^6.2.1
+  app_links: ^3.4.5
 
 dev_dependencies:
   flutter_launcher_icons: "^0.14.4"
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
-
-
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/logo/
-
+    - ./.env
 
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/logo/logo.jpg"
-  min_sdk_android: 16 # android min sdk min:16, default 21
+  min_sdk_android: 16
   web:
     generate: true
     image_path: "assets/logo/logo transparent.png"
@@ -43,7 +45,7 @@ flutter_launcher_icons:
   windows:
     generate: true
     image_path: "assets/logo/logo.jpg"
-    icon_size: 48 # min:48, max:256, default: 48
+    icon_size: 48
   macos:
     generate: true
     image_path: "assets/logo/logo.jpg"
