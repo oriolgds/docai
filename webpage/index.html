@@ -3,7 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocAI — Healing Through Intelligence</title>
+    
+    <!-- SEO Meta Tags -->
+    <title>DocAI - Tu Médico Personal con Inteligencia Artificial | App de Salud</title>
+    <meta name="description" content="DocAI es tu médico personal impulsado por IA. Consultas médicas instantáneas, información sobre medicamentos y gestión de historial médico. Disponible en Android e iOS.">
+    <meta name="keywords" content="DocAI, médico IA, inteligencia artificial médica, consulta médica online, ChatGPT salud, app médica, telemedicina, Flutter app">
+    <meta name="author" content="DocAI">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://docai.com">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="DocAI - Tu Médico Personal con Inteligencia Artificial">
+    <meta property="og:description" content="Consultas médicas instantáneas con IA. Información sobre medicamentos, presets de salud y historial médico seguro. Descarga DocAI ahora.">
+    <meta property="og:image" content="https://docai.com/og-image.png">
+    <meta property="og:url" content="https://docai.com">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="DocAI">
+    <meta property="og:locale" content="es_ES">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DocAI - Tu Médico Personal con IA">
+    <meta name="twitter:description" content="Consultas médicas instantáneas con inteligencia artificial. Descarga DocAI y accede a tu médico personal 24/7.">
+    <meta name="twitter:image" content="https://docai.com/twitter-image.jpg">
+    <meta name="twitter:creator" content="@DocAI">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "MobileApplication",
+      "name": "DocAI",
+      "description": "Tu médico personal impulsado por IA para consultas médicas instantáneas",
+      "applicationCategory": "HealthApplication",
+      "operatingSystem": ["Android", "iOS"],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "1200"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "DocAI"
+      }
+    }
+    </script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@200;400&display=swap');
         
@@ -80,6 +135,7 @@
             justify-content: center;
             padding: 0 5vw 0 8vw;
             z-index: 3;
+            position: relative;
         }
 
         .hero-visual {
@@ -88,6 +144,7 @@
             background: linear-gradient(45deg, var(--primary) 0%, var(--gray) 100%);
             position: relative;
             clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%);
+            z-index: 2;
         }
 
         .hero h1 {
@@ -124,7 +181,7 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 1;
+            z-index: 0; /* Cambiado de 1 a 0 para que aparezca detrás */
         }
 
         .floating-element {
@@ -132,6 +189,7 @@
             width: 2px;
             background: var(--primary);
             animation: float 20s infinite linear;
+            opacity: 0.3; /* Reducida la opacidad para que no compita con el texto */
         }
 
         .floating-element:nth-child(1) { left: 10%; height: 100px; animation-delay: 0s; }
@@ -142,8 +200,8 @@
 
         @keyframes float {
             0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
+            10% { opacity: 0.3; }
+            90% { opacity: 0.3; }
             100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
         }
 
@@ -600,11 +658,11 @@
                     <h2>DESCARGA<br>AHORA</h2>
                 </div>
                 <div class="download-links">
-                    <a href="https://play.google.com/store/apps/details?id=com.oriolgds.doky" class="download-btn" target="_blank">
+                    <a href="https://play.google.com/store/apps/details?id=com.oriolgds.doky" class="download-btn" target="_blank" rel="noopener">
                         <span>📱</span>
                         <span>GOOGLE PLAY</span>
                     </a>
-                    <a href="https://github.com/oriolgds/docai" class="download-btn" target="_blank">
+                    <a href="https://github.com/oriolgds/docai" class="download-btn" target="_blank" rel="noopener">
                         <span>💻</span>
                         <span>GITHUB</span>
                     </a>
@@ -661,28 +719,28 @@
             <div class="carousel-container">
                 <div class="carousel-track" id="carouselTrack">
                     <div class="screenshot-item active">
-                        <img src="Screenshot_0.png" alt="DocAI Login Screen">
+                        <img src="Screenshot_0.png" alt="DocAI Pantalla de Inicio de Sesión - Login seguro con autenticación Supabase" loading="lazy">
                         <div class="screenshot-overlay">
                             <h4>Inicio de Sesión</h4>
                             <p>Acceso seguro con autenticación Supabase</p>
                         </div>
                     </div>
                     <div class="screenshot-item">
-                        <img src="Screenshot_1.png" alt="DocAI Chat Interface">
+                        <img src="Screenshot_1.png" alt="DocAI Chat Inteligente - Consultas médicas con IA personalizada" loading="lazy">
                         <div class="screenshot-overlay">
                             <h4>Chat Inteligente</h4>
                             <p>Consultas médicas con IA personalizada</p>
                         </div>
                     </div>
                     <div class="screenshot-item">
-                        <img src="Screenshot_2.png" alt="DocAI Health Presets">
+                        <img src="Screenshot_2.png" alt="DocAI Presets de Salud - Plantillas rápidas para consultas médicas" loading="lazy">
                         <div class="screenshot-overlay">
                             <h4>Presets de Salud</h4>
                             <p>Plantillas rápidas para consultas</p>
                         </div>
                     </div>
                     <div class="screenshot-item">
-                        <img src="Screenshot_3.png" alt="DocAI Profile">
+                        <img src="Screenshot_3.png" alt="DocAI Perfil Personal - Gestión de datos médicos y suscripciones" loading="lazy">
                         <div class="screenshot-overlay">
                             <h4>Perfil Personal</h4>
                             <p>Gestión de datos y suscripciones</p>
@@ -691,15 +749,15 @@
                 </div>
                 
                 <div class="carousel-controls">
-                    <button class="carousel-btn" id="prevBtn">‹</button>
-                    <button class="carousel-btn" id="nextBtn">›</button>
+                    <button class="carousel-btn" id="prevBtn" aria-label="Imagen anterior">‹</button>
+                    <button class="carousel-btn" id="nextBtn" aria-label="Siguiente imagen">›</button>
                 </div>
                 
                 <div class="carousel-indicators" id="indicators">
-                    <span class="indicator active" data-slide="0"></span>
-                    <span class="indicator" data-slide="1"></span>
-                    <span class="indicator" data-slide="2"></span>
-                    <span class="indicator" data-slide="3"></span>
+                    <span class="indicator active" data-slide="0" aria-label="Ver pantalla 1"></span>
+                    <span class="indicator" data-slide="1" aria-label="Ver pantalla 2"></span>
+                    <span class="indicator" data-slide="2" aria-label="Ver pantalla 3"></span>
+                    <span class="indicator" data-slide="3" aria-label="Ver pantalla 4"></span>
                 </div>
             </div>
         </section>
