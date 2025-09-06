@@ -1,521 +1,668 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocAI - Your Personal AI Doctor</title>
+    <title>DocAI — Healing Through Intelligence</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@200;400&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        :root {
+            --primary: #000000;
+            --secondary: #ffffff;
+            --accent: #ff0000;
+            --gray: #808080;
+            --light-gray: #f0f0f0;
+        }
+
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            line-height: 1.6;
-            color: #000;
-            background: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--secondary);
+            color: var(--primary);
             overflow-x: hidden;
+            cursor: none;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* Geometric Background Patterns */
-        .geometric-bg {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            opacity: 0.03;
-            background-image:
-                linear-gradient(45deg, transparent 35%, #000 35%, #000 65%, transparent 65%),
-                linear-gradient(-45deg, transparent 35%, #000 35%, #000 65%, transparent 65%);
-            background-size: 60px 60px;
-            background-position: 0 0, 30px 30px;
-            pointer-events: none;
-        }
-
-        .pattern-overlay {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            opacity: 0.02;
-            background-image:
-                radial-gradient(circle at 25% 25%, #000 2px, transparent 2px),
-                radial-gradient(circle at 75% 75%, #000 2px, transparent 2px);
-            background-size: 80px 80px;
-            background-position: 0 0, 40px 40px;
-            pointer-events: none;
-        }
-
-        /* Header */
-        header {
+        /* Custom Cursor */
+        .cursor {
             position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-            padding: 1rem 0;
-            transition: all 0.3s ease;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: all 0.1s ease;
+            mix-blend-mode: difference;
         }
 
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .cursor-trail {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
         }
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #000;
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: #000;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: #666;
-        }
-
-        /* Hero Section */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding-top: 80px;
-            background: linear-gradient(135deg, #f5f5f5 0%, #fff 50%, #f5f5f5 100%);
-            position: relative;
-        }
-
-        .hero-content {
-            animation: fadeInUp 1s ease-out;
-            z-index: 2;
-            position: relative;
-        }
-
-        .hero h1 {
-            font-size: clamp(3rem, 6vw, 5rem);
-            font-weight: 700;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, #000 0%, #333 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero .tagline {
-            font-size: 1.5rem;
-            color: #000;
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-
-        .hero .description {
-            font-size: 1.2rem;
-            color: #666;
-            margin-bottom: 3rem;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .download-buttons {
-            display: flex;
-            gap: 1.5rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .download-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: #000;
-            color: #fff;
-            padding: 1rem 2rem;
-            text-decoration: none;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            min-width: 200px;
-        }
-
-        .download-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .github-btn {
-            background: #fff;
-            color: #000;
-            border: 2px solid #000;
-        }
-
-        .github-btn:hover {
-            background: #000;
-            color: #fff;
-        }
-
-        /* Features Section */
-        .features {
-            padding: 6rem 0;
-            background: #fff;
-            position: relative;
-        }
-
-        .section-title {
-            font-size: 3rem;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 4rem;
-            color: #000;
-        }
-
-        .features-grid {
+        /* Experimental Grid Layout */
+        .main-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2.5rem;
-            margin-top: 3rem;
+            grid-template-columns: 1fr 2fr 1fr;
+            grid-template-rows: 100vh auto auto auto;
+            gap: 0;
+            position: relative;
         }
 
-        .feature-card {
-            background: rgba(249, 249, 249, 0.8);
-            padding: 3rem 2rem;
-            border-radius: 16px;
-            text-align: center;
-            transition: all 0.4s ease;
-            border: 1px solid #eee;
-            backdrop-filter: blur(10px);
+        /* Hero Section - Asymmetric */
+        .hero {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            min-height: 100vh;
             position: relative;
             overflow: hidden;
         }
 
-        .feature-card::before {
-            content: '';
+        .hero-text {
+            grid-column: 1 / 3;
+            grid-row: 1 / 3;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 5vw 0 8vw;
+            z-index: 3;
+        }
+
+        .hero-visual {
+            grid-column: 3;
+            grid-row: 1 / 3;
+            background: linear-gradient(45deg, var(--primary) 0%, var(--gray) 100%);
+            position: relative;
+            clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%);
+        }
+
+        .hero h1 {
+            font-size: clamp(4rem, 12vw, 12rem);
+            font-weight: 700;
+            line-height: 0.8;
+            margin-bottom: 2rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 .doc {
+            color: var(--primary);
+        }
+
+        .hero h1 .ai {
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 200;
+        }
+
+        .hero-tagline {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 3rem;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .floating-elements {
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background-image:
-                repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0, 0, 0, 0.02) 10px, rgba(0, 0, 0, 0.02) 20px);
+            width: 100%;
+            height: 100%;
             pointer-events: none;
+            z-index: 1;
         }
 
-        .feature-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-            background: rgba(255, 255, 255, 0.95);
+        .floating-element {
+            position: absolute;
+            width: 2px;
+            background: var(--primary);
+            animation: float 20s infinite linear;
+        }
+
+        .floating-element:nth-child(1) { left: 10%; height: 100px; animation-delay: 0s; }
+        .floating-element:nth-child(2) { left: 25%; height: 150px; animation-delay: -5s; }
+        .floating-element:nth-child(3) { left: 40%; height: 80px; animation-delay: -10s; }
+        .floating-element:nth-child(4) { left: 60%; height: 120px; animation-delay: -15s; }
+        .floating-element:nth-child(5) { left: 80%; height: 90px; animation-delay: -8s; }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Download Section - Experimental */
+        .download-section {
+            grid-column: 1 / -1;
+            background: var(--primary);
+            color: var(--secondary);
+            padding: 8rem 0;
+            position: relative;
+            clip-path: polygon(0 15%, 100% 0%, 100% 85%, 0% 100%);
+            margin: -5rem 0;
+        }
+
+        .download-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 5vw;
+        }
+
+        .download-text h2 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            margin-bottom: 2rem;
+            line-height: 0.9;
+        }
+
+        .download-links {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .download-btn {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            background: var(--secondary);
+            color: var(--primary);
+            padding: 2rem 3rem;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .download-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--accent);
+            transition: left 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .download-btn:hover::before {
+            left: 0;
+        }
+
+        .download-btn:hover {
+            color: var(--secondary);
+            transform: translateX(10px);
+        }
+
+        .download-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Features - Magazine Layout */
+        .features-magazine {
+            grid-column: 1 / -1;
+            padding: 10rem 5vw;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .feature-large {
+            grid-column: span 8;
+            background: var(--light-gray);
+            padding: 4rem;
+            position: relative;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .feature-small {
+            grid-column: span 4;
+            background: var(--primary);
+            color: var(--secondary);
+            padding: 3rem;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .feature-medium {
+            grid-column: span 6;
+            background: var(--secondary);
+            border: 2px solid var(--primary);
+            padding: 3rem;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .feature h3 {
+            font-size: clamp(1.5rem, 3vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+
+        .feature p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            opacity: 0.8;
         }
 
         .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
+            font-size: 4rem;
+            margin-bottom: 2rem;
             display: block;
         }
 
-        .feature-card h3 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            color: #000;
+        /* Staggered Animation for Features */
+        .feature {
+            opacity: 0;
+            transform: translateY(50px);
+            animation: slideUp 0.8s forwards;
         }
 
-        .feature-card p {
-            color: #666;
-            line-height: 1.7;
-            font-size: 1.1rem;
-        }
+        .feature:nth-child(1) { animation-delay: 0.1s; }
+        .feature:nth-child(2) { animation-delay: 0.2s; }
+        .feature:nth-child(3) { animation-delay: 0.3s; }
+        .feature:nth-child(4) { animation-delay: 0.4s; }
+        .feature:nth-child(5) { animation-delay: 0.5s; }
+        .feature:nth-child(6) { animation-delay: 0.6s; }
 
-        /* Call to Action */
-        .cta-section {
-            padding: 6rem 0;
-            background: #000;
-            color: #fff;
-            text-align: center;
-            position: relative;
-        }
-
-        .cta-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image:
-                linear-gradient(30deg, transparent 40%, rgba(255, 255, 255, 0.1) 40%, rgba(255, 255, 255, 0.1) 60%, transparent 60%);
-            background-size: 100px 100px;
-            opacity: 0.3;
-            pointer-events: none;
-        }
-
-        .cta-section h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-            z-index: 2;
-            position: relative;
-        }
-
-        .cta-section p {
-            font-size: 1.2rem;
-            margin-bottom: 3rem;
-            opacity: 0.9;
-            z-index: 2;
-            position: relative;
-        }
-
-        /* Footer */
-        footer {
-            background: #f5f5f5;
-            color: #000;
-            padding: 3rem 0;
-            text-align: center;
-            position: relative;
-        }
-
-        footer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image:
-                radial-gradient(circle at 20% 50%, rgba(0, 0, 0, 0.02) 2px, transparent 2px),
-                radial-gradient(circle at 80% 50%, rgba(0, 0, 0, 0.02) 2px, transparent 2px);
-            background-size: 50px 50px;
-            background-position: 0 0, 25px 25px;
-            pointer-events: none;
-        }
-
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
+        @keyframes slideUp {
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
 
-        .animate-on-scroll {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.6s ease;
+        /* Terminal-style CTA */
+        .terminal-cta {
+            grid-column: 1 / -1;
+            background: var(--primary);
+            color: #00ff00;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 6rem 5vw;
+            position: relative;
         }
 
-        .animate-on-scroll.visible {
-            opacity: 1;
+        .terminal {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .terminal-header {
+            background: #2a2a2a;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red { background: #ff5f57; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #28ca42; }
+
+        .terminal-body {
+            padding: 2rem;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .terminal-line {
+            margin-bottom: 1rem;
+        }
+
+        .terminal-prompt {
+            color: #00ff00;
+        }
+
+        .terminal-command {
+            color: #ffffff;
+        }
+
+        .terminal-output {
+            color: #00ff00;
+            margin-left: 2rem;
+        }
+
+        /* Experimental Footer */
+        .footer {
+            grid-column: 1 / -1;
+            background: var(--light-gray);
+            padding: 4rem 5vw;
+            text-align: center;
+            position: relative;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background: var(--primary);
+            transform: translateX(-50%);
+        }
+
+        /* Hover Effects */
+        .hover-reveal {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hover-reveal::before {
+            content: attr(data-hover);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--accent);
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .hover-reveal:hover::before {
             transform: translateY(0);
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-
-            .features-grid {
+            .main-grid {
                 grid-template-columns: 1fr;
             }
-
-            .download-buttons {
+            
+            .hero {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr auto;
+                padding: 2rem;
+            }
+            
+            .hero-text {
+                grid-column: 1;
+                grid-row: 1;
+                padding: 2rem 0;
+            }
+            
+            .hero-visual {
+                grid-column: 1;
+                grid-row: 2;
+                height: 200px;
+                clip-path: none;
+            }
+            
+            .download-content {
                 flex-direction: column;
-                align-items: center;
+                gap: 3rem;
+                text-align: center;
             }
-
-            .download-btn {
-                width: 100%;
-                max-width: 300px;
+            
+            .features-magazine {
+                grid-template-columns: 1fr;
+                padding: 5rem 2rem;
             }
-        }
-
-        /* Smooth scroll */
-        html {
-            scroll-behavior: smooth;
+            
+            .feature-large,
+            .feature-small,
+            .feature-medium {
+                grid-column: 1;
+                min-height: 250px;
+            }
         }
     </style>
 </head>
-
 <body>
-    <header>
-        <nav class="container">
-            <div class="logo">DocAI</div>
-            <ul class="nav-links">
-                <li><a href="#features">Features</a></li>
-                <li><a href="#download">Download</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <main>
+    <div class="cursor"></div>
+    
+    <div class="main-grid">
+        <!-- Hero Section -->
         <section class="hero">
-            <div class="geometric-bg"></div>
-            <div class="pattern-overlay"></div>
-            <div class="container">
-                <div class="hero-content">
-                    <h1>DocAI</h1>
-                    <p class="tagline">An app to heal the world</p>
-                    <p class="description">Your personal AI-powered doctor. Get instant health consultations, medication
-                        information, and manage your medical history with intelligent chat.</p>
-                    <div class="download-buttons">
-                        <a href="https://play.google.com/store/apps/details?id=com.oriolgds.doky" class="download-btn"
-                            target="_blank">
-                            📱 Download on Play Store
-                        </a>
-                        <a href="https://github.com/oriolgds/docai" class="download-btn github-btn" target="_blank">
-                            💻 View on GitHub
-                        </a>
+            <div class="floating-elements">
+                <div class="floating-element"></div>
+                <div class="floating-element"></div>
+                <div class="floating-element"></div>
+                <div class="floating-element"></div>
+                <div class="floating-element"></div>
+            </div>
+            
+            <div class="hero-text">
+                <h1>
+                    <span class="doc">DOC</span><span class="ai">AI</span>
+                </h1>
+                <p class="hero-tagline">An app to heal the world</p>
+                <p style="font-size: 1.2rem; line-height: 1.6; opacity: 0.8;">Tu médico personal impulsado por IA. Consultas instantáneas, información sobre medicamentos y gestión de historial médico.</p>
+            </div>
+            
+            <div class="hero-visual"></div>
+        </section>
+
+        <!-- Download Section -->
+        <section class="download-section">
+            <div class="download-content">
+                <div class="download-text">
+                    <h2>DESCARGA<br>AHORA</h2>
+                </div>
+                <div class="download-links">
+                    <a href="https://play.google.com/store/apps/details?id=com.oriolgds.doky" class="download-btn" target="_blank">
+                        <span>📱</span>
+                        <span>GOOGLE PLAY</span>
+                    </a>
+                    <a href="https://github.com/oriolgds/docai" class="download-btn" target="_blank">
+                        <span>💻</span>
+                        <span>GITHUB</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Magazine Layout -->
+        <section class="features-magazine">
+            <div class="feature feature-large">
+                <span class="feature-icon">🤖</span>
+                <h3>Inteligencia Artificial Médica</h3>
+                <p>Conversaciones inteligentes para consultas de salud y orientación médica personalizada usando tecnología ChatGPT.</p>
+            </div>
+            
+            <div class="feature feature-small">
+                <span class="feature-icon">💊</span>
+                <h3>Presets de Salud</h3>
+                <p>Plantillas rápidas para medicamentos, remedios naturales y consultas especializadas.</p>
+            </div>
+            
+            <div class="feature feature-medium">
+                <span class="feature-icon">📱</span>
+                <h3>Multiplataforma</h3>
+                <p>Disponible en iOS y Android con sincronización completa.</p>
+            </div>
+            
+            <div class="feature feature-medium">
+                <span class="feature-icon">📝</span>
+                <h3>Historial Médico</h3>
+                <p>Almacena y accede a conversaciones pasadas con búsqueda avanzada.</p>
+            </div>
+            
+            <div class="feature feature-small hover-reveal" data-hover="SEGURO">
+                <span class="feature-icon">🔒</span>
+                <h3>Privacidad Total</h3>
+                <p>Tus datos médicos protegidos con encriptación de grado militar.</p>
+            </div>
+            
+            <div class="feature feature-large">
+                <span class="feature-icon">⚡</span>
+                <h3>Respuestas Instantáneas</h3>
+                <p>Obtén orientación médica inmediata sin listas de espera. DocAI está disponible 24/7 para ayudarte con tus consultas de salud.</p>
+            </div>
+        </section>
+
+        <!-- Terminal CTA -->
+        <section class="terminal-cta">
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-dot dot-red"></div>
+                    <div class="terminal-dot dot-yellow"></div>
+                    <div class="terminal-dot dot-green"></div>
+                    <span style="margin-left: 1rem; color: #666;">docai-terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">$</span> 
+                        <span class="terminal-command">install docai</span>
+                    </div>
+                    <div class="terminal-output">
+                        ✓ Descargando medicina del futuro...<br>
+                        ✓ Instalando inteligencia artificial médica...<br>
+                        ✓ Configurando consultas instantáneas...<br>
+                        ✓ DocAI listo para salvar vidas
+                    </div>
+                    <div class="terminal-line" style="margin-top: 2rem;">
+                        <span class="terminal-prompt">$</span> 
+                        <span class="terminal-command">docai --help</span>
+                    </div>
+                    <div class="terminal-output">
+                        Tu médico personal está listo.<br>
+                        Escribe tus síntomas y recibe orientación médica inmediata.
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="features" class="features">
-            <div class="geometric-bg"></div>
-            <div class="container">
-                <h2 class="section-title animate-on-scroll">Features</h2>
-                <div class="features-grid">
-                    <div class="feature-card animate-on-scroll">
-                        <span class="feature-icon">🤖</span>
-                        <h3>Smart AI Chat</h3>
-                        <p>Intelligent conversations for health consultations and medical guidance with personalized
-                            responses.</p>
-                    </div>
-                    <div class="feature-card animate-on-scroll">
-                        <span class="feature-icon">💊</span>
-                        <h3>Health Presets</h3>
-                        <p>Quick access templates for medications, natural remedies, nutrition, and mental health
-                            consultations.</p>
-                    </div>
-                    <div class="feature-card animate-on-scroll">
-                        <span class="feature-icon">📱</span>
-                        <h3>Cross-Platform</h3>
-                        <p>Available on both iOS and Android devices for seamless healthcare access anywhere.</p>
-                    </div>
-                    <div class="feature-card animate-on-scroll">
-                        <span class="feature-icon">📝</span>
-                        <h3>Chat History</h3>
-                        <p>Store and access past conversations with search and filtering for continuous health tracking.
-                        </p>
-                    </div>
-                    <div class="feature-card animate-on-scroll">
-                        <span class="feature-icon">👤</span>
-                        <h3>Profile Management</h3>
-                        <p>Manage your health data, subscription plans, and personal preferences securely.</p>
-                    </div>
-                    <div class="feature-card animate-on-scroll">
-                        <span class="feature-icon">🔒</span>
-                        <h3>Privacy & Security</h3>
-                        <p>Your health data is protected with encryption and secure storage, fully compliant with
-                            privacy regulations.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="download" class="cta-section">
-            <div class="container">
-                <div class="animate-on-scroll">
-                    <h2>Ready to start your health journey?</h2>
-                    <p>Download DocAI now and get instant access to your personal AI doctor.</p>
-                    <div class="download-buttons">
-                        <a href="https://play.google.com/store/apps/details?id=com.oriolgds.doky" class="download-btn"
-                            target="_blank" style="background: #fff; color: #000;">
-                            📱 Get it on Google Play
-                        </a>
-                        <a href="https://github.com/oriolgds/docai" class="download-btn" target="_blank"
-                            style="background: transparent; border: 2px solid #fff;">
-                            💻 Source Code
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2025 DocAI. Your personal AI doctor - An app to heal the world.</p>
-        </div>
-    </footer>
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 DocAI — Revolucionando la medicina con IA</p>
+        </footer>
+    </div>
 
     <script>
-        // Smooth scroll animation observer
+        // Custom Cursor
+        const cursor = document.querySelector('.cursor');
+        const trails = [];
+        
+        // Create cursor trails
+        for(let i = 0; i < 5; i++) {
+            const trail = document.createElement('div');
+            trail.className = 'cursor-trail';
+            document.body.appendChild(trail);
+            trails.push({element: trail, x: 0, y: 0});
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX - 10 + 'px';
+            cursor.style.top = e.clientY - 10 + 'px';
+            
+            // Update trails with delay
+            setTimeout(() => {
+                trails.forEach((trail, index) => {
+                    setTimeout(() => {
+                        trail.element.style.left = e.clientX - 2 + 'px';
+                        trail.element.style.top = e.clientY - 2 + 'px';
+                        trail.element.style.opacity = 0.8 - (index * 0.15);
+                    }, index * 50);
+                });
+            }, 50);
+        });
+
+        // Hide cursor on mobile
+        if('ontouchstart' in window) {
+            cursor.style.display = 'none';
+            trails.forEach(trail => trail.element.style.display = 'none');
+        }
+
+        // Intersection Observer for animations
         const observerOptions = {
             threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
+            rootMargin: '0px 0px -100px 0px'
         };
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
+                    entry.target.style.animationPlayState = 'running';
                 }
             });
         }, observerOptions);
 
-        // Observe all elements with animate-on-scroll class
-        document.addEventListener('DOMContentLoaded', () => {
-            const animateElements = document.querySelectorAll('.animate-on-scroll');
-            animateElements.forEach(el => observer.observe(el));
+        document.querySelectorAll('.feature').forEach(feature => {
+            feature.style.animationPlayState = 'paused';
+            observer.observe(feature);
         });
 
-        // Header background on scroll
-        window.addEventListener('scroll', () => {
-            const header = document.querySelector('header');
-            if (window.scrollY > 100) {
-                header.style.background = 'rgba(255, 255, 255, 0.98)';
-                header.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
-            } else {
-                header.style.background = 'rgba(255, 255, 255, 0.95)';
-                header.style.boxShadow = 'none';
-            }
-        });
-
-        // Smooth scroll for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+        // Hover sound effect simulation
+        document.querySelectorAll('.download-btn, .hover-reveal').forEach(element => {
+            element.addEventListener('mouseenter', () => {
+                if (cursor) {
+                    cursor.style.width = '40px';
+                    cursor.style.height = '40px';
+                    cursor.style.marginLeft = '-20px';
+                    cursor.style.marginTop = '-20px';
                 }
+            });
+            
+            element.addEventListener('mouseleave', () => {
+                if (cursor) {
+                    cursor.style.width = '20px';
+                    cursor.style.height = '20px';
+                    cursor.style.marginLeft = '-10px';
+                    cursor.style.marginTop = '-10px';
+                }
+            });
+        });
+
+        // Parallax effect for floating elements
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallax = document.querySelectorAll('.floating-element');
+            const speed = 0.5;
+
+            parallax.forEach(element => {
+                const yPos = -(scrolled * speed);
+                element.style.transform = `translateY(${yPos}px)`;
             });
         });
     </script>
 </body>
-
 </html>
