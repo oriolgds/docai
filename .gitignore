@@ -49,3 +49,10 @@ lib/firebase_options.dart
 firebase.json
 android/app/google-services.json
 /android/.kotlin
+
+
+
+
+
+web-release*.zip
+web-debug*.zip
