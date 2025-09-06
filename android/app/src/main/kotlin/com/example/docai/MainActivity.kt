@@ -1,4 +1,4 @@
-package com.oriolgds.docai
+package com.oriolgds.doky
 
 import io.flutter.embedding.android.FlutterActivity
 
