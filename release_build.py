@@ -3,25 +3,9 @@
 release_build.py
 -----------------
 Utility script that:
-1. Extracts the version from pubspec.yaml.
-2. Builds Flutter release artifacts (AAB, APK, Windows, Web).
-3. Zips Windows and Web builds.
-4. Creates/Updates a GitHub release with the version number as title & tag and uploads all artifacts.
-
-Requirements:
-    - Python 3.8+
-    - requests (pip install requests)
-
-Environment variables (or CLI flags):
-    GITHUB_TOKEN        Personal access token with `repo` scope.
-    GITHUB_REPOSITORY   Your repo in the form `owner/repo`.
-
-Typical usage:
-    python release_build.py --repo owner/repo --token $GITHUB_TOKEN
-
-If --repo / --token are omitted, the script falls back to the corresponding
-environment variables. The script must be executed from the project root (where
-pubspec.yaml is located).
+1. Creates a GitHub prerelease first
+2. Builds and uploads Flutter artifacts concurrently
+3. Marks the release as latest when complete
 """
 from __future__ import annotations
 
@@ -33,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 from pathlib import Path
 from typing import List
 
@@ -84,7 +69,6 @@ def zip_dir(src: Path, dest_zip: Path):
 
 def check_flutter_installation():
     """Verify Flutter is installed and accessible."""
-    # First try with shell=True to use the full system PATH
     try:
         result = subprocess.run(["flutter", "--version"], 
                               capture_output=True, text=True, shell=True, timeout=30)
@@ -105,13 +89,9 @@ def check_flutter_installation():
     
     # Try to find flutter.bat or flutter.exe in common locations
     flutter_paths = [
-        "flutter",
-        "flutter.bat", 
-        "flutter.exe",
-        r"C:\flutter\bin\flutter.bat",
-        r"C:\flutter\bin\flutter.exe",
-        r"C:\tools\flutter\bin\flutter.bat",
-        r"C:\tools\flutter\bin\flutter.exe",
+        "flutter", "flutter.bat", "flutter.exe",
+        r"C:\flutter\bin\flutter.bat", r"C:\flutter\bin\flutter.exe",
+        r"C:\tools\flutter\bin\flutter.bat", r"C:\tools\flutter\bin\flutter.exe",
     ]
     
     for flutter_path in flutter_paths:
@@ -126,9 +106,6 @@ def check_flutter_installation():
             continue
     
     print("ERROR: Flutter is not accessible from this Python environment.")
-    print("Current PATH:", os.environ.get('PATH', 'Not found'))
-    print("Please ensure Flutter is properly installed and accessible.")
-    print("Try running this script from a command prompt where 'flutter --version' works.")
     return False
 
 # ---------------------------------------------------------------------------
@@ -142,7 +119,6 @@ def load_config_file(path: Path) -> dict:
     if path.suffix.lower() == ".json":
         with path.open(encoding="utf-8") as f:
             return json.load(f)
-    # Fallback to simple key=value per line (ignore comments and blanks)
     data: dict[str, str] = {}
     with path.open(encoding="utf-8") as f:
         for line in f:
@@ -160,8 +136,8 @@ def load_config_file(path: Path) -> dict:
 
 github_api = "https://api.github.com"
 
-
-def create_or_get_release(token: str, repo: str, tag: str, name: str):
+def create_or_get_prerelease(token: str, repo: str, tag: str, name: str):
+    """Create or get a GitHub release, initially marked as prerelease."""
     headers = {
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github+json",
@@ -182,16 +158,37 @@ def create_or_get_release(token: str, repo: str, tag: str, name: str):
         "name": name,
         "body": f"Release {name}",
         "draft": False,
-        "prerelease": False,
+        "prerelease": True,  # Initially create as prerelease
     }
 
-    print(f"Creating release {tag} in {repo}…")
+    print(f"Creating prerelease {tag} in {repo}…")
     r = requests.post(f"{github_api}/repos/{repo}/releases", json=payload, headers=headers)
     r.raise_for_status()
     return r.json()
 
+def update_release_to_latest(token: str, repo: str, release_id: int):
+    """Update the release to mark it as latest (remove prerelease status)."""
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github+json",
+    }
 
-def upload_asset(token: str, upload_url_template: str, file_path: Path):
+    payload = {
+        "prerelease": False  # Mark as latest release
+    }
+
+    print(f"Updating release id={release_id} to mark as latest release...")
+    r = requests.patch(f"{github_api}/repos/{repo}/releases/{release_id}", json=payload, headers=headers)
+    
+    if r.status_code == 200:
+        print(f"✅ Release successfully updated to latest!")
+        return r.json()
+    else:
+        print(f"❌ Failed to update release: {r.status_code} {r.text}")
+        r.raise_for_status()
+
+def upload_asset_thread(token: str, upload_url_template: str, file_path: Path, asset_name: str):
+    """Upload a single asset in a background thread."""
     headers = {
         "Authorization": f"token {token}",
         "Content-Type": "application/octet-stream",
@@ -199,57 +196,100 @@ def upload_asset(token: str, upload_url_template: str, file_path: Path):
 
     upload_url = upload_url_template.split("{", 1)[0]  # remove templating var
     params = {"name": file_path.name}
-    print(f"Uploading {file_path}…")
-    with file_path.open("rb") as fp:
-        resp = requests.post(upload_url, params=params, data=fp, headers=headers)
-    if resp.status_code not in (200, 201):
-        print("Failed to upload asset:", resp.text)
-        resp.raise_for_status()
-
-
-# ---------------------------------------------------------------------------
-# Build process
-# ---------------------------------------------------------------------------
-
-def run_flutter_builds():
-    print("Running Flutter builds…")
-    if not check_flutter_installation():
-        sys.exit(1)
     
-    run(["flutter", "pub", "get"])
-    run(["flutter", "build", "appbundle", "--release"])
-    run(["flutter", "build", "apk", "--release"])    
-    #run(["flutter", "build", "windows", "--release"])
-    run(["flutter", "build", "web", "--release"])
+    print(f"[UPLOAD] Starting upload of {asset_name}...")
+    try:
+        with file_path.open("rb") as fp:
+            resp = requests.post(upload_url, params=params, data=fp, headers=headers)
+        if resp.status_code not in (200, 201):
+            print(f"[UPLOAD] Failed to upload {asset_name}:", resp.text)
+            resp.raise_for_status()
+        else:
+            print(f"[UPLOAD] ✅ Successfully uploaded {asset_name}")
+    except Exception as e:
+        print(f"[UPLOAD] ❌ Error uploading {asset_name}: {e}")
+        raise
 
+# ---------------------------------------------------------------------------
+# Concurrent Build and Upload Pipeline
+# ---------------------------------------------------------------------------
 
-def gather_artifacts(version: str) -> List[Path]:
-    apk = PROJECT_ROOT / "build" / "app" / "outputs" / "flutter-apk" / "app-release.apk"
-    aab = PROJECT_ROOT / "build" / "app" / "outputs" / "bundle" / "release" / "app-release.aab"
-
+def run_concurrent_build_upload(token: str, repo: str, upload_url_template: str, version: str, existing_names: set):
+    """Execute the concurrent build and upload pipeline."""
+    
+    # Prepare paths
+    aab_path = PROJECT_ROOT / "build" / "app" / "outputs" / "bundle" / "release" / "app-release.aab"
+    apk_path = PROJECT_ROOT / "build" / "app" / "outputs" / "flutter-apk" / "app-release.apk"
     web_dir = PROJECT_ROOT / "build" / "web"
-
     web_zip = PROJECT_ROOT / f"web-release-{version}.zip"
-
     
-    if not web_dir.exists():
-        raise FileNotFoundError(f"Web build directory not found: {web_dir}")
-
-    zip_dir(web_dir, web_zip)
-
-    for p in (apk, aab, web_zip):
-        if not p.exists():
-            raise FileNotFoundError(f"Missing artifact: {p}")
-
-    return [apk, aab, web_zip]
-
+    # Run flutter pub get first
+    run(["flutter", "pub", "get"])
+    
+    # Step 1: Build AAB
+    print("\n=== BUILDING AAB ===")
+    run(["flutter", "build", "appbundle", "--release"])
+    
+    # Step 2: Start uploading AAB while building APK
+    upload_aab_thread = None
+    if aab_path.name not in existing_names and aab_path.exists():
+        upload_aab_thread = threading.Thread(
+            target=upload_asset_thread,
+            args=(token, upload_url_template, aab_path, "AAB"),
+            name="UploadAAB"
+        )
+        upload_aab_thread.start()
+    else:
+        print(f"[SKIP] AAB already exists in release or file not found")
+    
+    # Step 3: Build APK while AAB uploads
+    print("\n=== BUILDING APK (while uploading AAB) ===")
+    run(["flutter", "build", "apk", "--release"])
+    
+    # Wait for AAB upload to complete before starting APK upload
+    if upload_aab_thread:
+        print("[SYNC] Waiting for AAB upload to complete...")
+        upload_aab_thread.join()
+    
+    # Step 4: Start uploading APK while building Web
+    upload_apk_thread = None
+    if apk_path.name not in existing_names and apk_path.exists():
+        upload_apk_thread = threading.Thread(
+            target=upload_asset_thread,
+            args=(token, upload_url_template, apk_path, "APK"),
+            name="UploadAPK"
+        )
+        upload_apk_thread.start()
+    else:
+        print(f"[SKIP] APK already exists in release or file not found")
+    
+    # Step 5: Build Web while APK uploads
+    print("\n=== BUILDING WEB (while uploading APK) ===")
+    run(["flutter", "build", "web", "--release"])
+    
+    # Wait for APK upload to complete
+    if upload_apk_thread:
+        print("[SYNC] Waiting for APK upload to complete...")
+        upload_apk_thread.join()
+    
+    # Step 6: Zip and upload Web
+    print("\n=== PREPARING AND UPLOADING WEB ===")
+    if web_dir.exists():
+        zip_dir(web_dir, web_zip)
+        
+        if web_zip.name not in existing_names:
+            upload_asset_thread(token, upload_url_template, web_zip, "Web")
+        else:
+            print(f"[SKIP] Web zip already exists in release")
+    else:
+        print("[ERROR] Web build directory not found")
 
 # ---------------------------------------------------------------------------
 # Main entry
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="Build Flutter release & GitHub upload")
+    parser = argparse.ArgumentParser(description="Build Flutter release & GitHub upload with concurrent processing")
     parser.add_argument("--repo", default=os.getenv("GITHUB_REPOSITORY"), help="GitHub repository in owner/repo format")
     parser.add_argument("--token", default=os.getenv("GITHUB_TOKEN"), help="GitHub Personal Access Token with repo scope")
     parser.add_argument("--config", default=None, help="Path to config file (json or key=value).")
@@ -262,39 +302,40 @@ def main():
     repo = args.repo or os.getenv("GITHUB_REPOSITORY") or config.get("repo") or config.get("repository") or config.get("GITHUB_REPOSITORY")
     token = args.token or os.getenv("GITHUB_TOKEN") or config.get("token") or config.get("github_token") or config.get("GITHUB_TOKEN")
 
-    # Propagate back to args so the remainder of the script can keep using them
-    args.repo = repo
-    args.token = token
-
     if not repo or not token:
         print("ERROR: GitHub repo and token must be supplied via CLI flags, environment variables, or config file.")
+        sys.exit(1)
+
+    if not check_flutter_installation():
         sys.exit(1)
 
     version = extract_version()
     tag = f"v{version}"
     print(f"Version detected: {version}")
 
-    # 1. Run builds
-    run_flutter_builds()
+    try:
+        # STEP 1: Create GitHub prerelease FIRST (before any builds)
+        print("\n=== CREATING GITHUB PRERELEASE ===")
+        release = create_or_get_prerelease(token, repo, tag=tag, name=version)
+        release_id = release['id']
+        
+        existing_names = {asset["name"] for asset in release.get("assets", [])}
+        upload_url_template = release["upload_url"]
+        
+        # STEP 2: Run concurrent build and upload pipeline
+        print(f"\n=== STARTING CONCURRENT BUILD & UPLOAD PIPELINE ===")
+        run_concurrent_build_upload(token, repo, upload_url_template, version, existing_names)
 
-    # 2. Zip and gather artifacts
-    artifacts = gather_artifacts(version)
+        # STEP 3: Mark release as latest when everything is complete
+        print(f"\n=== FINALIZING RELEASE ===")
+        update_release_to_latest(token, repo, release_id)
 
-    # 3. Create or fetch GitHub release
-    release = create_or_get_release(args.token, args.repo, tag=tag, name=version)
+        print("\n🎉 Release completed successfully and marked as latest!")
 
-    # 4. Upload assets (skip duplicates)
-    existing_names = {asset["name"] for asset in release.get("assets", [])}
-    upload_url_template = release["upload_url"]
-
-    for artifact in artifacts:
-        if artifact.name in existing_names:
-            print(f"Asset {artifact.name} already exists in release – skipping")
-            continue
-        upload_asset(args.token, upload_url_template, artifact)
-
-    print("Release completed successfully!")
-
+    except Exception as e:
+        print(f"\n❌ Error during release process: {e}")
+        print("The release may have been created as prerelease but not finalized.")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
