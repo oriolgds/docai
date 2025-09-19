@@ -136,7 +136,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       await SupabaseService.client.auth.resend(
         type: OtpType.signup,
         email: widget.email,
-        emailRedirectTo: 'docai://email-verified',
+        emailRedirectTo: 'doky://email-verified',
       );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
