@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'dart:async';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -16,6 +17,9 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isLoading = true;
   bool _showPopupModal = false;
   String _popupUrl = '';
+  Timer? _authCheckTimer;
+  bool _isVerificationInProgress = false;
+  String _verificationStartTime = '';
 
   @override
   void initState() {
@@ -25,7 +29,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _initializeWebView() {
     late final PlatformWebViewControllerCreationParams params;
-    
     if (WebViewPlatform.instance is WebKitWebViewPlatform) {
       params = WebKitWebViewControllerCreationParams(
         allowsInlineMediaPlayback: true,
@@ -86,7 +89,9 @@ class _ChatScreenState extends State<ChatScreen> {
             final url = data.substring(6);
             _showPopup(url);
           } else if (data == 'popup:close') {
-            _closePopup();
+            _handlePopupClose();
+          } else if (data.startsWith('auth:')) {
+            _handleAuthUpdate(data.substring(5));
           }
         },
       )
@@ -109,14 +114,13 @@ class _ChatScreenState extends State<ChatScreen> {
       'verification',
       'puter.js',
     ];
-    
-    return popupPatterns.any((pattern) => 
-      url.toLowerCase().contains(pattern)) ||
-      url != 'https://docai.is-best.net/gaia/?i=1';
+    return popupPatterns.any((pattern) =>
+        url.toLowerCase().contains(pattern)) ||
+        url != 'https://docai.is-best.net/gaia/?i=1';
   }
 
   void _injectPopupHandler() {
-    // Inyectar JavaScript para interceptar window.open
+    // Inyectar JavaScript para interceptar window.open y monitorear auth
     const script = '''
       (function() {
         const originalOpen = window.open;
@@ -127,8 +131,8 @@ class _ChatScreenState extends State<ChatScreen> {
           }
           return null;
         };
-        
-        // Interceptar eventos de Puter.js
+
+        // Interceptar eventos de Puter.js y autenticación
         document.addEventListener('DOMContentLoaded', function() {
           // Buscar elementos que puedan trigger popups
           const observer = new MutationObserver(function(mutations) {
@@ -136,7 +140,7 @@ class _ChatScreenState extends State<ChatScreen> {
               mutation.addedNodes.forEach(function(node) {
                 if (node.nodeType === 1) { // Element node
                   // Verificar si es un iframe o elemento de verificación
-                  if (node.tagName === 'IFRAME' || 
+                  if (node.tagName === 'IFRAME' ||
                       node.className.includes('verification') ||
                       node.className.includes('auth')) {
                     if (window.PopupHandler) {
@@ -153,9 +157,46 @@ class _ChatScreenState extends State<ChatScreen> {
             subtree: true
           });
         });
+
+        // Monitorear cambios en el estado de autenticación
+        const checkAuthState = () => {
+          try {
+            // Verificar múltiples indicadores de autenticación
+            const authIndicators = [
+              () => localStorage.getItem('auth_token'),
+              () => localStorage.getItem('user_session'),
+              () => sessionStorage.getItem('authenticated'),
+              () => document.cookie.includes('auth'),
+              () => document.cookie.includes('session'),
+              () => document.querySelector('[data-authenticated="true"]'),
+              () => window.location.href.includes('authenticated'),
+              () => document.body.innerText.toLowerCase().includes('authenticated'),
+              () => document.body.innerText.toLowerCase().includes('logged in'),
+              () => document.querySelector('.user-info, .profile, .logout')
+            ];
+            
+            const isAuthenticated = authIndicators.some(check => {
+              try {
+                return check();
+              } catch (e) {
+                return false;
+              }
+            });
+            
+            if (isAuthenticated && window.PopupHandler) {
+              window.PopupHandler.postMessage('auth:success');
+            }
+          } catch (e) {
+            console.log('Error checking auth state:', e);
+          }
+        };
+        
+        // Verificar estado inicial y periódicamente
+        setInterval(checkAuthState, 1000);
+        setTimeout(checkAuthState, 500);
       })();
     ''';
-
+    
     _webController.runJavaScript(script);
   }
 
@@ -185,15 +226,13 @@ class _ChatScreenState extends State<ChatScreen> {
         };
         
         restoreAuthState();
-        
         // Guardar estado periódicamente
         setInterval(saveAuthState, 5000);
-        
         // Guardar al cerrar
         window.addEventListener('beforeunload', saveAuthState);
       }
     ''';
-
+    
     _webController.runJavaScript(cookieScript);
   }
 
@@ -201,22 +240,19 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() {
       _popupUrl = url;
       _showPopupModal = true;
+      _isVerificationInProgress = true;
+      _verificationStartTime = DateTime.now().toIso8601String();
     });
-
+    
     // Crear controlador para el popup
     _createPopupController(url);
-
-    // Auto-cerrar después de verificación (simulamos el comportamiento del navegador)
-    Future.delayed(const Duration(seconds: 5), () {
-      if (_showPopupModal) {
-        _checkAndClosePopup();
-      }
-    });
+    
+    // Iniciar monitoreo continuo de autenticación
+    _startAuthMonitoring();
   }
 
   void _createPopupController(String url) {
     late final PlatformWebViewControllerCreationParams params;
-    
     if (WebViewPlatform.instance is WebKitWebViewPlatform) {
       params = WebKitWebViewControllerCreationParams(
         allowsInlineMediaPlayback: true,
@@ -227,7 +263,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     _popupController = WebViewController.fromPlatformCreationParams(params);
-
+    
     _popupController!
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setUserAgent(
@@ -239,61 +275,200 @@ class _ChatScreenState extends State<ChatScreen> {
             // Verificar si la página de verificación ha terminado
             _checkVerificationComplete(finishedUrl);
           },
+          onNavigationRequest: (NavigationRequest request) {
+            // Interceptar redirects que indican verificación exitosa
+            if (request.url.contains('success') || 
+                request.url.contains('authenticated') ||
+                request.url.contains('complete')) {
+              _handleVerificationSuccess();
+              return NavigationDecision.prevent;
+            }
+            return NavigationDecision.navigate;
+          },
         ),
       )
       ..loadRequest(Uri.parse(url));
   }
 
-  void _checkVerificationComplete(String url) {
-    // Verificar si la verificación está completa
-    const checkScript = '''
-      (function() {
-        // Buscar indicadores de verificación completa
-        const indicators = [
-          'success', 'complete', 'verified', 'authenticated',
-          'done', 'finished', 'close'
-        ];
-        
-        const bodyText = document.body.innerText.toLowerCase();
-        const hasCompleteIndicator = indicators.some(indicator => 
-          bodyText.includes(indicator)
-        );
-        
-        // También verificar si la página está intentando cerrarse
-        const hasCloseScript = document.querySelector('script[src*="close"]') ||
-          document.body.innerHTML.includes('window.close') ||
-          document.body.innerHTML.includes('self.close');
-        
-        return hasCompleteIndicator || hasCloseScript;
-      })();
-    ''';
-
-    _popupController?.runJavaScriptReturningResult(checkScript).then((result) {
-      if (result.toString() == 'true') {
-        Future.delayed(const Duration(seconds: 2), () {
-          _closePopup();
-        });
+  void _startAuthMonitoring() {
+    // Cancelar timer previo si existe
+    _authCheckTimer?.cancel();
+    
+    // Iniciar monitoreo cada 2 segundos
+    _authCheckTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (_isVerificationInProgress) {
+        _checkMainPageAuthentication();
+      } else {
+        timer.cancel();
       }
     });
   }
 
-  void _checkAndClosePopup() {
-    if (_popupController != null) {
-      _checkVerificationComplete(_popupUrl);
+  void _checkMainPageAuthentication() {
+    // Script para verificar autenticación en la página principal
+    const checkScript = '''
+      (function() {
+        try {
+          // Verificar múltiples indicadores de autenticación
+          const authChecks = [
+            () => localStorage.getItem('auth_token'),
+            () => localStorage.getItem('user_session'),
+            () => sessionStorage.getItem('authenticated'),
+            () => document.cookie.includes('auth'),
+            () => document.cookie.includes('session'),
+            () => document.querySelector('[data-authenticated="true"]'),
+            () => window.location.href.includes('authenticated'),
+            () => document.body.innerText.toLowerCase().includes('bienvenido'),
+            () => document.body.innerText.toLowerCase().includes('welcome'),
+            () => document.body.innerText.toLowerCase().includes('authenticated'),
+            () => document.querySelector('.user-info, .profile, .logout, .dashboard'),
+            () => document.querySelector('button[onclick*="logout"]'),
+            () => document.querySelector('a[href*="logout"]')
+          ];
+          
+          return authChecks.some(check => {
+            try {
+              const result = check();
+              return result && result !== 'null' && result !== 'undefined';
+            } catch (e) {
+              return false;
+            }
+          });
+        } catch (e) {
+          return false;
+        }
+      })();
+    ''';
+
+    _webController.runJavaScriptReturningResult(checkScript).then((result) {
+      if (result.toString() == 'true') {
+        _handleVerificationSuccess();
+      }
+    }).catchError((error) {
+      print('Error verificando autenticación: $error');
+    });
+  }
+
+  void _checkVerificationComplete(String url) {
+    if (_popupController == null) return;
+
+    // Verificar si la verificación está completa en el popup
+    const checkScript = '''
+      (function() {
+        try {
+          // Buscar indicadores de verificación completa
+          const indicators = [
+            'success', 'complete', 'verified', 'authenticated',
+            'done', 'finished', 'close', 'cerrar', 'completado',
+            'verificado', 'éxito', 'listo'
+          ];
+          
+          const bodyText = document.body.innerText.toLowerCase();
+          const hasCompleteIndicator = indicators.some(indicator =>
+            bodyText.includes(indicator)
+          );
+          
+          // También verificar si la página está intentando cerrarse
+          const hasCloseScript = document.querySelector('script[src*="close"]') ||
+                                 document.body.innerHTML.includes('window.close') ||
+                                 document.body.innerHTML.includes('self.close') ||
+                                 document.body.innerHTML.includes('window.parent.close');
+          
+          // Verificar elementos específicos de UI que indican éxito
+          const hasSuccessUI = document.querySelector('.success, .check, .verified') ||
+                              document.querySelector('[class*="success"]') ||
+                              document.querySelector('[id*="success"]');
+          
+          return hasCompleteIndicator || hasCloseScript || hasSuccessUI;
+        } catch (e) {
+          return false;
+        }
+      })();
+    ''';
+
+    _popupController!.runJavaScriptReturningResult(checkScript).then((result) {
+      if (result.toString() == 'true') {
+        // Dar tiempo para que la autenticación se propague
+        Future.delayed(const Duration(seconds: 3), () {
+          _handleVerificationSuccess();
+        });
+      }
+    }).catchError((error) {
+      print('Error verificando completado: $error');
+    });
+  }
+
+  void _handleVerificationSuccess() {
+    if (!_isVerificationInProgress) return;
+
+    setState(() {
+      _isVerificationInProgress = false;
+    });
+    
+    _authCheckTimer?.cancel();
+    
+    // Cerrar popup si está abierto
+    if (_showPopupModal) {
+      _closePopup();
+    }
+    
+    // Recargar la página principal para reflejar los cambios
+    _webController.reload();
+    
+    // Mostrar mensaje de éxito
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Verificación completada exitosamente'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  void _handlePopupClose() {
+    // Manejar cierre del popup sin interrumpir la verificación
+    if (_isVerificationInProgress) {
+      // Continuar monitoreando en segundo plano
+      _closePopupUI();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Verificación continúa en segundo plano...'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     } else {
       _closePopup();
     }
   }
 
+  void _handleAuthUpdate(String status) {
+    if (status == 'success') {
+      _handleVerificationSuccess();
+    }
+  }
+
+  void _closePopupUI() {
+    // Cerrar solo la UI del popup, mantener el proceso de verificación
+    setState(() {
+      _showPopupModal = false;
+    });
+  }
+
   void _closePopup() {
+    // Cerrar popup completamente y detener verificación
     setState(() {
       _showPopupModal = false;
       _popupController = null;
       _popupUrl = '';
+      _isVerificationInProgress = false;
     });
-
-    // Recargar la página principal para que reconozca la nueva autenticación
-    _webController.reload();
+    
+    _authCheckTimer?.cancel();
   }
 
   @override
@@ -330,6 +505,42 @@ class _ChatScreenState extends State<ChatScreen> {
                     CircularProgressIndicator(),
                     SizedBox(height: 16),
                     Text('Cargando Gaia...'),
+                  ],
+                ),
+              ),
+            ),
+          
+          // Indicador de verificación en progreso (cuando popup está cerrado)
+          if (_isVerificationInProgress && !_showPopupModal)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Verificando...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -377,7 +588,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                             IconButton(
                               icon: const Icon(Icons.close, color: Colors.white),
-                              onPressed: _closePopup,
+                              onPressed: _handlePopupClose,
                             ),
                           ],
                         ),
@@ -405,7 +616,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             const SizedBox(width: 8),
                             const Expanded(
                               child: Text(
-                                'Esta ventana se cerrará automáticamente',
+                                'La verificación continuará aunque cierres esta ventana',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey,
@@ -413,8 +624,8 @@ class _ChatScreenState extends State<ChatScreen> {
                               ),
                             ),
                             TextButton(
-                              onPressed: _closePopup,
-                              child: const Text('Cerrar'),
+                              onPressed: _handlePopupClose,
+                              child: const Text('Minimizar'),
                             ),
                           ],
                         ),
@@ -430,6 +641,12 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _clearCookiesAndReload() {
+    // Detener verificación en curso
+    setState(() {
+      _isVerificationInProgress = false;
+    });
+    _authCheckTimer?.cancel();
+    
     // Limpiar cookies y datos almacenados
     _webController.clearCache();
     _webController.clearLocalStorage();
@@ -452,6 +669,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    _authCheckTimer?.cancel();
     _popupController = null;
     super.dispose();
   }
