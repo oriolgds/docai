@@ -49,42 +49,51 @@ class _ChatInputState extends State<ChatInput> {
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                minLines: 1,
-                maxLines: 6,
-                textInputAction: TextInputAction.newline,
-                decoration: const InputDecoration(
-                  hintText: 'Escribe tu consulta médica...',
+            // Row 1: Text input
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    minLines: 1,
+                    maxLines: 6,
+                    textInputAction: TextInputAction.newline,
+                    decoration: const InputDecoration(
+                      hintText: 'Escribe tu consulta médica...',
+                    ),
+                    onSubmitted: (_) => _submit(),
+                  ),
                 ),
-                onSubmitted: (_) => _submit(),
-              ),
+                const SizedBox(width: 8),
+                // Icon-only send button
+                IconButton.filled(
+                  onPressed: widget.isSending ? null : _submit,
+                  icon: widget.isSending
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.send_rounded),
+                  tooltip: 'Enviar',
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            _ModelDropdown(
-              selected: current,
-              allProfiles: widget.allProfiles,
-              onChanged: (p) => widget.onProfileChanged(p),
-              onRequestPro: widget.onRequestPro,
-            ),
-            const SizedBox(width: 8),
-            ElevatedButton.icon(
-              onPressed: widget.isSending ? null : _submit,
-              icon: widget.isSending
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Icon(Icons.send, size: 18),
-              label: const Text('Enviar'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              ),
+            const SizedBox(height: 8),
+            // Row 2: compact model selector
+            Row(
+              children: [
+                _ModelDropdown(
+                  selected: current,
+                  allProfiles: widget.allProfiles,
+                  onChanged: (p) => widget.onProfileChanged(p),
+                  onRequestPro: widget.onRequestPro,
+                ),
+              ],
             ),
           ],
         ),
@@ -140,12 +149,9 @@ class _ModelDropdown extends StatelessWidget {
               value: isHeynos ? null : p,
               child: Row(
                 children: [
-                  if (isHeynos)
-                    const Icon(Icons.lock_outline, size: 16, color: Colors.black54)
-                  else if (p.reasoning)
-                    const Icon(Icons.psychology_alt_outlined, size: 16, color: Colors.black54)
-                  else
-                    const Icon(Icons.bolt, size: 16, color: Colors.black54),
+                  _brandIcon(brand, locked: isHeynos),
+                  const SizedBox(width: 6),
+                  _tierIcon(p),
                   const SizedBox(width: 8),
                   Text('${_brandShort(brand)} • ${p.tier}'),
                 ],
@@ -160,7 +166,7 @@ class _ModelDropdown extends StatelessWidget {
         return entries;
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           border: Border.all(color: const Color(0xFFE0E0E0)),
           borderRadius: BorderRadius.circular(10),
@@ -169,10 +175,10 @@ class _ModelDropdown extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.model_training, size: 18, color: Colors.black87),
+            _brandIcon(selected.brand),
             const SizedBox(width: 6),
-            Text('${_brandShort(selected.brand)} • ${selected.tier}'),
-            const SizedBox(width: 6),
+            Text(_tierAbbr(selected.tier)),
+            const SizedBox(width: 4),
             const Icon(Icons.arrow_drop_down, size: 18),
           ],
         ),
@@ -199,6 +205,55 @@ class _ModelDropdown extends StatelessWidget {
         return 'Gaia';
       case BrandName.heynos:
         return 'Heynos';
+    }
+  }
+
+  Widget _brandIcon(BrandName b, {bool locked = false}) {
+    final color = brandColor(b);
+    if (locked) {
+      return Icon(Icons.workspace_premium, size: 18, color: color);
+    }
+    switch (b) {
+      case BrandName.feya:
+        return Icon(Icons.bolt_rounded, size: 18, color: color);
+      case BrandName.gaia:
+        return Icon(Icons.eco_outlined, size: 18, color: color);
+      case BrandName.heynos:
+        return Icon(Icons.workspace_premium, size: 18, color: color);
+    }
+  }
+
+  Widget _tierIcon(ModelProfile p) {
+    final col = brandColor(p.brand).withOpacity(0.8);
+    switch (p.tier.toLowerCase()) {
+      case 'instant':
+      case 'fast':
+        return Icon(Icons.speed_rounded, size: 16, color: col);
+      case 'balanced':
+        return Icon(Icons.tune_rounded, size: 16, color: col);
+      case 'reasoning':
+        return Icon(Icons.psychology_alt_rounded, size: 16, color: col);
+      case 'pro':
+        return Icon(Icons.rocket_launch_rounded, size: 16, color: col);
+      default:
+        return Icon(Icons.bubble_chart_rounded, size: 16, color: col);
+    }
+  }
+
+  String _tierAbbr(String tier) {
+    switch (tier.toLowerCase()) {
+      case 'instant':
+        return 'Inst';
+      case 'fast':
+        return 'Fast';
+      case 'balanced':
+        return 'Bal';
+      case 'reasoning':
+        return 'Rsn';
+      case 'pro':
+        return 'Pro';
+      default:
+        return tier;
     }
   }
 }

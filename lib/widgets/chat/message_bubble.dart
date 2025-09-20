@@ -3,10 +3,13 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../models/chat_message.dart';
 
 class MessageBubble extends StatelessWidget {
-  final ChatMessage message;
+  final String message;
   final bool isAssistant;
   final String assistantLabel;
   final Color accentColor;
+  final bool isStreaming;
+  final VoidCallback? onRegenerate;
+  final bool showRegenerateButton;
 
   const MessageBubble({
     super.key,
@@ -14,6 +17,9 @@ class MessageBubble extends StatelessWidget {
     required this.isAssistant,
     required this.assistantLabel,
     required this.accentColor,
+    this.isStreaming = false,
+    this.onRegenerate,
+    this.showRegenerateButton = false,
   });
 
   @override
@@ -43,43 +49,61 @@ class MessageBubble extends StatelessWidget {
           crossAxisAlignment:
               isAssistant ? CrossAxisAlignment.start : CrossAxisAlignment.end,
           children: [
-            if (isAssistant)
+            if (message.trim().isNotEmpty)
+              MarkdownBody(
+                data: message,
+                styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+                  p: TextStyle(color: fg, fontSize: 15, height: 1.35),
+                  code: TextStyle(
+                    backgroundColor: isAssistant ? Colors.white : Colors.black,
+                    color: isAssistant ? Colors.black : Colors.white,
+                  ),
+                ),
+                selectable: true,
+              ),
+            if (isAssistant && isStreaming)
               Padding(
-                padding: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.only(top: 6),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      margin: const EdgeInsets.only(right: 6),
-                      decoration: BoxDecoration(
-                        color: accentColor,
-                        shape: BoxShape.circle,
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(accentColor),
                       ),
                     ),
-                    Text(
-                      assistantLabel,
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Pensando...',
                       style: TextStyle(
                         fontSize: 12,
-                        color: accentColor,
-                        fontWeight: FontWeight.w600,
+                        color: Colors.grey,
                       ),
                     ),
                   ],
                 ),
               ),
-            MarkdownBody(
-              data: message.content,
-              styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
-                p: TextStyle(color: fg, fontSize: 15, height: 1.35),
-                code: TextStyle(
-                  backgroundColor: isAssistant ? Colors.white : Colors.black,
-                  color: isAssistant ? Colors.black : Colors.white,
+            if (isAssistant && !isStreaming && showRegenerateButton && onRegenerate != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: onRegenerate,
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: const Text('Regenerar'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: accentColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
                 ),
               ),
-              selectable: true,
-            ),
           ],
         ),
       ),

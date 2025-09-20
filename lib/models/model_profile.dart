@@ -50,7 +50,7 @@ class ModelProfile {
           brand: BrandName.feya,
           tier: 'Instant',
           displayName: 'Feya • Instant',
-          modelId: 'google/gemini-2.0-flash-exp:free',
+      modelId: 'x-ai/grok-4-fast:free',
           description: 'Respuestas rápidas y concisas para dudas cotidianas.',
         ),
         ModelProfile(
@@ -79,26 +79,7 @@ class ModelProfile {
           modelId: 'deepseek/deepseek-r1-distill-llama-70b:free',
           description: 'Mejor capacidad de razonamiento para casos complejos.',
           reasoning: true,
-        ),
-
-        // Heynos (pro)
-        ModelProfile(
-          id: 'heynos_fast',
-          brand: BrandName.heynos,
-          tier: 'Fast',
-          displayName: 'Heynos • Fast',
-          modelId: 'x-ai/grok-4-fast:free',
-          description: 'Velocidad pro con buena calidad.',
-        ),
-        ModelProfile(
-          id: 'heynos_pro',
-          brand: BrandName.heynos,
-          tier: 'Pro',
-          displayName: 'Heynos • Pro',
-          modelId: 'deepseek/deepseek-r1-distill-llama-70b:free',
-          description: 'Razonamiento avanzado para consultas exigentes.',
-          reasoning: true,
-        ),
+    ),
       ];
 
   static Map<BrandName, List<ModelProfile>> groupedByBrand() {

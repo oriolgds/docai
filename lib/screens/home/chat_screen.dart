@@ -21,6 +21,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isSending = false;
   late OpenRouterService _service;
   bool _showDisclaimer = true;
+  int? _streamingIndex;
 
   @override
   void initState() {
@@ -41,9 +42,8 @@ class _ChatScreenState extends State<ChatScreen> {
       '${brandDisplayName(_selectedProfile.brand)} • ${_selectedProfile.tier}';
 
   void _addInitialAssistantMessage() {
-    final label = _assistantLabel();
     _messages.add(ChatMessage.assistant(
-        'Hola, soy $label. ¿En qué puedo ayudarte hoy?'));
+        'Hola, soy DocAI. ¿En qué puedo ayudarte hoy?'));
   }
 
   Future<void> _sendMessage(String text) async {
@@ -61,23 +61,57 @@ class _ChatScreenState extends State<ChatScreen> {
       final history = historyAll.length > 24
           ? historyAll.sublist(historyAll.length - 24)
           : historyAll;
-      final reply = await _service.chatCompletion(
+      // Add assistant placeholder
+      setState(() {
+        _messages.add(ChatMessage.assistant(''));
+        _streamingIndex = _messages.length - 1;
+      });
+      _scrollToBottom();
+
+      final stream = _service.streamChatCompletion(
         messages: history,
         profile: _selectedProfile,
       );
-      setState(() {
-        _messages.add(ChatMessage.assistant(reply));
-      });
+      await for (final chunk in stream) {
+        if (!mounted) break;
+        setState(() {
+          if (_streamingIndex != null && _streamingIndex! < _messages.length) {
+            final curr = _messages[_streamingIndex!];
+            _messages[_streamingIndex!] = ChatMessage(
+              id: curr.id,
+              role: curr.role,
+              content: curr.content + chunk,
+              createdAt: curr.createdAt,
+            );
+          }
+        });
+        _scrollToBottom();
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Error: ${e.toString()}'),
           behavior: SnackBarBehavior.floating,
         ));
+        // Show error in the assistant bubble if placeholder exists
+        if (_streamingIndex != null && _streamingIndex! < _messages.length) {
+          final curr = _messages[_streamingIndex!];
+          setState(() {
+            _messages[_streamingIndex!] = ChatMessage(
+              id: curr.id,
+              role: curr.role,
+              content: 'Lo siento, ha ocurrido un error al generar la respuesta.',
+              createdAt: curr.createdAt,
+            );
+          });
+        }
       }
     } finally {
       if (mounted) {
-        setState(() => _isSending = false);
+        setState(() {
+          _isSending = false;
+          _streamingIndex = null;
+        });
         _scrollToBottom();
       }
     }
@@ -182,7 +216,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final accent = brandColor(_selectedProfile.brand);
     return Scaffold(
       appBar: AppBar(
-        title: Text('DocAI ${brandDisplayName(_selectedProfile.brand)}'),
+        title: const Text('Docai'),
         actions: [
           IconButton(
             tooltip: 'Aviso',
@@ -249,6 +283,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   isAssistant: isAssistant,
                   assistantLabel: _assistantLabel(),
                   accentColor: accent,
+                  isStreaming: isAssistant && _streamingIndex == index && _isSending,
                 );
               },
             ),
