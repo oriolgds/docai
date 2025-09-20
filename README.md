@@ -1,5 +1,5 @@
 DocAI - Your Personal AI Doctor
-DocAI is a mobile application built with Flutter that acts as a personal AI-powered doctor. It features a smart chat interface (using a ChatGPT wrapper), chat history, predefined health presets (e.g., medications, natural remedies), a profile page for subscription management, and a minimalist login screen. This README provides instructions to set up, install, and run the app on your local machine.
+DocAI is a mobile application built with Flutter that acts as a personal AI-powered doctor. It features a native chat interface powered by OpenRouter, chat history (mock for now), predefined health presets (e.g., medications, natural remedies), a profile page for subscription management, and a minimalist login screen. This README provides instructions to set up, install, and run the app on your local machine.
 Prerequisites
 Before you begin, ensure you have the following installed:
 
@@ -16,7 +16,7 @@ Node.js and npm (for potential future web builds, optional)
 Git (for cloning the repository)
 Accounts and API keys:
 Supabase account (supabase.com)
-OpenAI API Key (openai.com)
+OpenRouter API Key (openrouter.ai)
 
 
 
@@ -33,11 +33,12 @@ flutter pub get
 Create a .env file in the project root and add your API keys:
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
-OPENAI_API_KEY=your_openai_api_key
+OPENROUTER_API_KEY=your_openrouter_api_key
+OPENROUTER_SITE_URL=https://your-site-or-landing-page.example (optional, improves rate limits)
 
 
 Obtain the Supabase URL and anon key from your Supabase project dashboard.
-Get the OpenAI API key from your OpenAI account.
+Get the OpenRouter API key from your OpenRouter account.
 
 4. Configure Supabase
 
@@ -108,4 +109,11 @@ Acknowledgments
 
 Built with Flutter.
 Backend powered by Supabase.
-AI integration using OpenAI API.
+AI integration using OpenRouter API.
+
+Model selection (camouflaged):
+- Feya (sencillo)
+- Gaia (normal)
+- Heynos (pro)
+
+Each brand has tiers like Instant/Balanced/Reasoning/Pro, which map internally to OpenRouter free models (e.g., google/gemini-2.0-flash-exp:free, deepseek/deepseek-chat-v3.1:free, x-ai/grok-4-fast:free, meta-llama/llama-4-maverick:free). The UI only exposes brand and tier names.
