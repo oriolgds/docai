@@ -73,7 +73,10 @@ class _ChatScreenState extends State<ChatScreen> {
       _isSending = true;
       _showDisclaimer = false;
     });
-    _scrollToBottom();
+    
+    // Wait for the next frame to ensure the view has updated
+    await Future.delayed(Duration.zero);
+    await _scrollToBottom(force: true);
 
     try {
       final historyAll = _messages
@@ -88,7 +91,10 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.add(ChatMessage.assistant(''));
         _streamingIndex = _messages.length - 1;
       });
-      _scrollToBottom();
+      
+      // Wait for the next frame to ensure the view has updated
+      await Future.delayed(Duration.zero);
+      await _scrollToBottom(force: true);
 
       final stream = _service.streamChatCompletion(
         messages: history,
@@ -150,28 +156,25 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
   }
 
-  void _scrollToBottom({bool force = false}) {
+  Future<void> _scrollToBottom({bool force = false}) async {
     if (!_scrollController.hasClients) return;
 
     // Cancel any pending scroll
     _scrollTimer?.cancel();
 
-    if (force) {
-      // Immediate scroll without animation
+    // Wait for the next frame to ensure the view has updated
+    await Future.delayed(Duration.zero);
+
+    if (force || !_scrollController.position.outOfRange) {
+      // Immediate scroll without animation for force or when near bottom
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     } else {
-      // Debounce the scroll to prevent excessive animations
-      _shouldScroll = true;
-      _scrollTimer = Timer(const Duration(milliseconds: 100), () {
-        if (_shouldScroll && _scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-          );
-          _shouldScroll = false;
-        }
-      });
+      // Smooth scroll when user has scrolled up
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     }
   }
 
