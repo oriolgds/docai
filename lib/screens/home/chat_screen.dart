@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/chat_input.dart';
+import '../../widgets/chat/model_selector.dart';
 import '../../services/openrouter_service.dart';
 import '../../models/model_profile.dart';
 import '../../models/chat_message.dart';
@@ -22,6 +24,8 @@ class _ChatScreenState extends State<ChatScreen> {
   late OpenRouterService _service;
   bool _showDisclaimer = true;
   int? _streamingIndex;
+  Timer? _scrollTimer;
+  bool _shouldScroll = false;
 
   @override
   void initState() {
@@ -33,6 +37,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    _scrollTimer?.cancel();
     _scrollController.dispose();
     _service.dispose();
     super.dispose();
@@ -46,9 +51,25 @@ class _ChatScreenState extends State<ChatScreen> {
         'Hola, soy DocAI. ¿En qué puedo ayudarte hoy?'));
   }
 
-  Future<void> _sendMessage(String text) async {
+  Future<void> _sendMessage(
+    String text, {
+    int? regenerateIndex,
+    ModelProfile? overrideProfile,
+  }) async {
+    final userMessage = ChatMessage.user(text);
+    
     setState(() {
-      _messages.add(ChatMessage.user(text));
+      if (regenerateIndex == null) {
+        _messages.add(userMessage);
+      } else {
+        // Regeneration: remove only messages AFTER the given user message, keeping the user message itself
+        // regenerateIndex points to the preceding user message index
+        if (regenerateIndex >= 0 && regenerateIndex < _messages.length - 1) {
+          _messages.removeRange(regenerateIndex + 1, _messages.length);
+        } else if (regenerateIndex == _messages.length - 1) {
+          // If the last message is the user message, nothing to remove
+        }
+      }
       _isSending = true;
       _showDisclaimer = false;
     });
@@ -61,6 +82,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final history = historyAll.length > 24
           ? historyAll.sublist(historyAll.length - 24)
           : historyAll;
+      
       // Add assistant placeholder
       setState(() {
         _messages.add(ChatMessage.assistant(''));
@@ -70,8 +92,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
       final stream = _service.streamChatCompletion(
         messages: history,
-        profile: _selectedProfile,
+        profile: overrideProfile ?? _selectedProfile,
       );
+
+      // Initial scroll to bottom before starting the stream
+      _scrollToBottom(force: true);
+
       await for (final chunk in stream) {
         if (!mounted) break;
         setState(() {
@@ -85,7 +111,14 @@ class _ChatScreenState extends State<ChatScreen> {
             );
           }
         });
-        _scrollToBottom();
+
+        // Only scroll if we're near the bottom
+        final maxScroll = _scrollController.position.maxScrollExtent;
+        final currentScroll = _scrollController.offset;
+        if (maxScroll - currentScroll < 300) {
+          // 300px from bottom
+          _scrollToBottom();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -95,13 +128,13 @@ class _ChatScreenState extends State<ChatScreen> {
         ));
         // Show error in the assistant bubble if placeholder exists
         if (_streamingIndex != null && _streamingIndex! < _messages.length) {
-          final curr = _messages[_streamingIndex!];
           setState(() {
             _messages[_streamingIndex!] = ChatMessage(
-              id: curr.id,
-              role: curr.role,
-              content: 'Lo siento, ha ocurrido un error al generar la respuesta.',
-              createdAt: curr.createdAt,
+              id: _messages[_streamingIndex!].id,
+              role: ChatRole.assistant,
+              content:
+                  'Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.',
+              createdAt: DateTime.now(),
             );
           });
         }
@@ -112,21 +145,34 @@ class _ChatScreenState extends State<ChatScreen> {
           _isSending = false;
           _streamingIndex = null;
         });
-        _scrollToBottom();
       }
     }
+    _scrollToBottom();
   }
 
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent + 80,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+  void _scrollToBottom({bool force = false}) {
+    if (!_scrollController.hasClients) return;
+
+    // Cancel any pending scroll
+    _scrollTimer?.cancel();
+
+    if (force) {
+      // Immediate scroll without animation
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    } else {
+      // Debounce the scroll to prevent excessive animations
+      _shouldScroll = true;
+      _scrollTimer = Timer(const Duration(milliseconds: 100), () {
+        if (_shouldScroll && _scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+          _shouldScroll = false;
+        }
+      });
+    }
   }
 
   void _showProModal() {
@@ -211,6 +257,80 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Future<ModelProfile?> _showModelPickerSheet({
+    required ModelProfile initial,
+  }) async {
+    ModelProfile temp = initial;
+    return await showModalBottomSheet<ModelProfile>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Elegir modelo para regenerar',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  ),
+                  const SizedBox(height: 12),
+                  ModelSelector(
+                    selected: temp,
+                    onSelected: (p) => setState(() => temp = p),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Cancelar'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(temp),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                          child: const Text('Regenerar'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _regenerateResponse(int assistantIndex) async {
+    if (_isSending) return;
+    if (assistantIndex <= 0) return;
+    if (_messages[assistantIndex - 1].role != ChatRole.user) return;
+    final userMessage = _messages[assistantIndex - 1];
+    final picked = await _showModelPickerSheet(initial: _selectedProfile);
+    if (picked == null) return;
+    await _sendMessage(
+      userMessage.content,
+      regenerateIndex: assistantIndex - 1,
+      overrideProfile: picked,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final accent = brandColor(_selectedProfile.brand);
@@ -277,19 +397,35 @@ class _ChatScreenState extends State<ChatScreen> {
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final m = _messages[index];
-                final isAssistant = m.role == ChatRole.assistant;
-                return MessageBubble(
-                  message: m,
-                  isAssistant: isAssistant,
-                  assistantLabel: _assistantLabel(),
-                  accentColor: accent,
-                  isStreaming: isAssistant && _streamingIndex == index && _isSending,
-                );
+                Widget _buildMessageBubble(ChatMessage message, int index) {
+                  final isAssistant = message.role == ChatRole.assistant;
+                  // Determina si es el mensaje de bienvenida (primer mensaje del asistente)
+                  final isWelcomeMessage = index == 0 && isAssistant;
+
+                  return MessageBubble(
+                    message: message.content,
+                    isAssistant: isAssistant,
+                    assistantLabel: _assistantLabel(),
+                    accentColor: brandColor(_selectedProfile.brand),
+                    isStreaming:
+                        isAssistant &&
+                        _streamingIndex != null &&
+                        index == _streamingIndex,
+                    showRegenerateButton: isAssistant && !isWelcomeMessage,
+                    onRegenerate: isAssistant && !isWelcomeMessage
+                        ? () {
+                            _regenerateResponse(index);
+                          }
+                        : null,
+                  );
+                }
+
+                return _buildMessageBubble(m, index);
               },
             ),
           ),
           ChatInput(
-            onSend: _sendMessage,
+            onSend: (text) => _sendMessage(text),
             isSending: _isSending,
             selectedProfile: _selectedProfile,
             allProfiles: ModelProfile.defaults(),

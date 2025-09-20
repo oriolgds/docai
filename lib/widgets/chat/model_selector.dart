@@ -22,14 +22,24 @@ class _ModelSelectorState extends State<ModelSelector> {
     _byBrand = ModelProfile.groupedByBrand();
     _profile = widget.selected;
     _brand = _profile.brand;
+    // Ensure current brand exists; otherwise pick the first available
+    if (!_byBrand.containsKey(_brand) || (_byBrand[_brand]?.isEmpty ?? true)) {
+      if (_byBrand.isNotEmpty) {
+        _brand = _byBrand.keys.first;
+        _profile = _byBrand[_brand]!.first;
+        WidgetsBinding.instance.addPostFrameCallback((_) => widget.onSelected(_profile));
+      }
+    }
   }
 
   void _selectBrand(BrandName b) {
     setState(() => _brand = b);
-    final list = _byBrand[b]!;
-    final p = list.first;
-    setState(() => _profile = p);
-    widget.onSelected(p);
+    final list = _byBrand[b] ?? [];
+    if (list.isNotEmpty) {
+      final p = list.first;
+      setState(() => _profile = p);
+      widget.onSelected(p);
+    }
   }
 
   void _selectProfile(ModelProfile p) {
@@ -39,7 +49,7 @@ class _ModelSelectorState extends State<ModelSelector> {
 
   @override
   Widget build(BuildContext context) {
-    final brands = BrandName.values;
+    final brands = _byBrand.keys.toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,7 +86,7 @@ class _ModelSelectorState extends State<ModelSelector> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            for (final p in _byBrand[_brand]!)
+            for (final p in (_byBrand[_brand] ?? []))
               FilterChip(
                 label: Text(p.tier),
                 selected: _profile.id == p.id,

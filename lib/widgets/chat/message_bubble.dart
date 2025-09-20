@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import '../../models/chat_message.dart';
 
 class MessageBubble extends StatelessWidget {
   final String message;
@@ -8,8 +7,8 @@ class MessageBubble extends StatelessWidget {
   final String assistantLabel;
   final Color accentColor;
   final bool isStreaming;
-  final VoidCallback? onRegenerate;
   final bool showRegenerateButton;
+  final VoidCallback? onRegenerate;
 
   const MessageBubble({
     super.key,
@@ -18,8 +17,8 @@ class MessageBubble extends StatelessWidget {
     required this.assistantLabel,
     required this.accentColor,
     this.isStreaming = false,
-    this.onRegenerate,
     this.showRegenerateButton = false,
+    this.onRegenerate,
   });
 
   @override
@@ -60,7 +59,11 @@ class MessageBubble extends StatelessWidget {
                   ),
                 ),
                 selectable: true,
-              ),
+              )
+            else if (isStreaming)
+              const SizedBox.shrink()
+            else
+              const Text('No hay respuesta', style: TextStyle(color: Colors.grey)),
             if (isAssistant && isStreaming)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
