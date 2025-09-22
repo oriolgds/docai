@@ -24,11 +24,18 @@ android {
     ndkVersion = flutter.ndkVersion
 
     signingConfigs {
-        create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
-            storeFile = file(keystoreProperties["storeFile"] as String)
-            storePassword = keystoreProperties["storePassword"] as String
+        // Solo crear la configuración de release si todas las propiedades existen
+        if (keystoreProperties["keyAlias"] != null && 
+            keystoreProperties["keyPassword"] != null && 
+            keystoreProperties["storeFile"] != null && 
+            keystoreProperties["storePassword"] != null) {
+            
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
         }
     }
 
@@ -42,18 +49,23 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.oriolgds.doky"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
+
     buildTypes {
+        debug {
+            // Usa automáticamente el debug keystore predeterminado
+        }
+        
         release {
-            signingConfig = signingConfigs.getByName("release")
+            // Solo usar signing config si existe
+            if (signingConfigs.findByName("release") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 }
