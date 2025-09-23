@@ -1,171 +1,141 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../config/openrouter_config.dart';
-import '../models/chat_message.dart';
 import '../models/model_profile.dart';
+import '../models/chat_message.dart';
+import '../config/openrouter_config.dart';
+import 'medical_preferences_service.dart';
 
 class OpenRouterService {
-  final http.Client _client;
-  OpenRouterService({http.Client? client}) : _client = client ?? http.Client();
+  final http.Client _client = http.Client();
+  final MedicalPreferencesService _medicalService = MedicalPreferencesService();
 
-  Future<String> chatCompletion({
-    required List<ChatMessage> messages,
-    required ModelProfile profile,
-    String? systemPromptOverride,
-    double temperature = 0.3,
-    bool useReasoning = false,
-  }) async {
-    final headers = OpenRouterConfig.defaultHeaders();
-
-    final payload = <String, dynamic>{
-      'model': profile.modelId,
-      'messages': [
-        {
-          'role': 'system',
-          'content': systemPromptOverride ?? OpenRouterConfig.medicalSystemPrompt,
-        },
-        ...messages.map((m) => m.toOpenRouterMessage()),
-      ],
-      'temperature': temperature,
-    };
-
-    // Solo agregar el parámetro de razonamiento si está habilitado
-    // y usar el formato correcto para la API de OpenRouter/Grok
-    if (useReasoning) {
-      payload['extra'] = {
-        'reasoning': true,
-      };
-    }
-
-    final uri = Uri.parse('${OpenRouterConfig.baseUrl}/chat/completions');
-    final resp = await _client.post(
-      uri,
-      headers: headers,
-      body: jsonEncode(payload),
-    );
-
-    if (resp.statusCode != 200) {
-      var message = 'OpenRouter error (${resp.statusCode})';
-      try {
-        final data = jsonDecode(resp.body);
-        if (data is Map && data['error'] != null) {
-          message = data['error']['message']?.toString() ?? message;
-        }
-      } catch (_) {}
-      throw Exception(message);
-    }
-
-    final data = jsonDecode(resp.body) as Map<String, dynamic>;
-    final choices = data['choices'] as List?;
-    if (choices == null || choices.isEmpty) {
-      throw Exception('Respuesta vacía del modelo');
-    }
-    final message = choices.first['message'] as Map<String, dynamic>;
-    final content = message['content']?.toString() ?? '';
-    if (content.trim().isEmpty) {
-      throw Exception('Contenido vacío de la respuesta');
-    }
-    return content;
+  void dispose() {
+    _client.close();
   }
 
-  // Stream token-by-token (SSE) from OpenRouter
   Stream<String> streamChatCompletion({
     required List<ChatMessage> messages,
     required ModelProfile profile,
-    String? systemPromptOverride,
-    double temperature = 0.3,
     bool useReasoning = false,
   }) async* {
-    final headers = OpenRouterConfig.defaultHeaders();
-    final payload = <String, dynamic>{
-      'model': profile.modelId,
-      'messages': [
-        {
-          'role': 'system',
-          'content': systemPromptOverride ?? OpenRouterConfig.medicalSystemPrompt,
-        },
-        ...messages.map((m) => m.toOpenRouterMessage()),
-      ],
-      'temperature': temperature,
-      'stream': true,
-    };
-
-    // Solo agregar el parámetro de razonamiento si está habilitado
-    // y usar el formato correcto para la API de OpenRouter/Grok
-    if (useReasoning) {
-      payload['extra'] = {
-        'reasoning': true,
-      };
-    }
-
-    final uri = Uri.parse('${OpenRouterConfig.baseUrl}/chat/completions');
-    final request = http.Request('POST', uri)
-      ..headers.addAll(headers)
-      ..body = jsonEncode(payload);
-    final streamedResponse = await _client.send(request);
-
-    if (streamedResponse.statusCode != 200) {
-      final body = await streamedResponse.stream.bytesToString();
-      var message = 'OpenRouter error (${streamedResponse.statusCode})';
+    try {
+      // Obtener contexto médico personalizado
+      String medicalContext = '';
       try {
-        final data = jsonDecode(body);
-        if (data is Map && data['error'] != null) {
-          message = data['error']['message']?.toString() ?? message;
-        }
-      } catch (_) {}
-      throw Exception(message);
-    }
+        medicalContext = await _medicalService.getMedicalContext();
+      } catch (e) {
+        // Si hay error obteniendo preferencias, usar disclaimer por defecto
+        medicalContext = OpenRouterConfig.disclaimerText;
+      }
 
-    // Parse SSE events separated by double newlines
-    final completer = Completer<void>();
-    final controller = StreamController<String>();
+      // Construir mensajes con contexto médico
+      final systemMessage = ChatMessage.system(_buildSystemPrompt(medicalContext, useReasoning));
+      final allMessages = [systemMessage, ...messages];
 
-    var buffer = '';
-    late StreamSubscription sub;
-    sub = streamedResponse.stream.transform(utf8.decoder).listen((chunk) {
-      buffer += chunk;
-      while (true) {
-        final idx = buffer.indexOf('\n\n');
-        if (idx == -1) break;
-        final event = buffer.substring(0, idx);
-        buffer = buffer.substring(idx + 2);
-        for (final line in event.split('\n')) {
-          final l = line.trim();
-          if (!l.startsWith('data:')) continue;
-          final dataStr = l.substring(5).trim();
-          if (dataStr == '[DONE]') {
-            controller.close();
-            sub.cancel();
-            completer.complete();
-            return;
-          }
-          try {
-            final json = jsonDecode(dataStr) as Map<String, dynamic>;
-            final choices = json['choices'] as List?;
-            if (choices == null || choices.isEmpty) continue;
-            final c0 = choices.first as Map<String, dynamic>;
-            final delta = (c0['delta'] ?? c0['message']) as Map<String, dynamic>?;
-            final text = delta?['content']?.toString();
-            if (text != null && text.isNotEmpty) {
-              controller.add(text);
+      final headers = {
+        'Authorization': 'Bearer ${OpenRouterConfig.apiKey}',
+        'Content-Type': 'application/json',
+        'HTTP-Referer': OpenRouterConfig.httpReferer,
+        'X-Title': OpenRouterConfig.appName,
+      };
+
+      final body = {
+        'model': profile.modelId,
+        'messages': allMessages
+            .map((m) => {
+                  'role': m.role.name,
+                  'content': m.content,
+                })
+            .toList(),
+        'stream': true,
+        'temperature': profile.temperature,
+        'top_p': profile.topP,
+        'max_tokens': profile.maxTokens,
+        if (useReasoning) 'reasoning': true,
+      };
+
+      final request = http.Request('POST', Uri.parse(OpenRouterConfig.baseUrl));
+      request.headers.addAll(headers);
+      request.body = json.encode(body);
+
+      final response = await _client.send(request);
+
+      if (response.statusCode != 200) {
+        final error = await response.stream.bytesToString();
+        throw Exception('API Error: ${response.statusCode} - $error');
+      }
+
+      await for (final chunk in response.stream.transform(utf8.decoder)) {
+        final lines = chunk.split('\n');
+        for (final line in lines) {
+          if (line.startsWith('data: ')) {
+            final data = line.substring(6);
+            if (data.trim() == '[DONE]') continue;
+
+            try {
+              final json = jsonDecode(data);
+              final delta = json['choices']?[0]?['delta'];
+              if (delta != null && delta['content'] != null) {
+                yield delta['content'];
+              }
+            } catch (e) {
+              // Skip malformed JSON chunks
+              continue;
             }
-          } catch (_) {
-            // ignore malformed chunk
           }
         }
       }
-    }, onError: (e) {
-      if (!controller.isClosed) controller.addError(e);
-      if (!completer.isCompleted) completer.completeError(e);
-    }, onDone: () {
-      if (!controller.isClosed) controller.close();
-      if (!completer.isCompleted) completer.complete();
-    });
-
-    yield* controller.stream;
-    await completer.future;
+    } catch (e) {
+      throw Exception('Error en comunicación con OpenRouter: $e');
+    }
   }
 
-  void dispose() => _client.close();
+  String _buildSystemPrompt(String medicalContext, bool useReasoning) {
+    String basePrompt = '''Eres DocAI (Gaia), un asistente médico AI especializado en proporcionar información médica educativa y consejos de salud. Tu objetivo es ayudar a los usuarios con sus consultas médicas de manera responsable y precisa.
+
+CONTEXTO MÉDICO DEL USUARIO:
+$medicalContext
+
+INSTRUCCIONES IMPORTANTES:
+1. SIEMPRE recuerda que DocAI no sustituye el consejo médico profesional
+2. La información que proporcionas tiene fines educativos únicamente
+3. Para diagnósticos, tratamientos específicos o emergencias, recomienda acudir a un profesional de la salud
+4. Ten en cuenta las preferencias médicas del usuario (medicina natural/convencional, alergias, etc.)
+5. Personaliza tus respuestas según el contexto médico proporcionado
+6. Si hay alergias conocidas, siempre mencionarlas en tratamientos relevantes
+7. Respeta las preferencias de tratamiento del usuario
+8. Sé empático y comprensivo
+9. Proporciona información clara y bien estructurada
+10. Si detectas síntomas graves, recomienda atención médica inmediata''';
+
+    if (useReasoning) {
+      basePrompt += '''
+
+MODO RAZONAMIENTO ACTIVADO:
+- Proporciona un análisis paso a paso de la consulta
+- Explica tu proceso de pensamiento médico
+- Considera múltiples factores y posibilidades
+- Estructura tu respuesta con mayor detalle y fundamentación científica
+- Incluye referencias a estudios o guías médicas cuando sea apropiado''';
+    }
+
+    return basePrompt;
+  }
+
+  Future<String> getChatCompletion({
+    required List<ChatMessage> messages,
+    required ModelProfile profile,
+    bool useReasoning = false,
+  }) async {
+    final chunks = <String>[];
+    await for (final chunk in streamChatCompletion(
+      messages: messages,
+      profile: profile,
+      useReasoning: useReasoning,
+    )) {
+      chunks.add(chunk);
+    }
+    return chunks.join();
+  }
 }

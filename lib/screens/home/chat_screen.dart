@@ -4,6 +4,7 @@ import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/chat_input.dart';
 import '../../widgets/chat/model_selector.dart';
 import '../../services/openrouter_service.dart';
+import '../../services/medical_preferences_service.dart';
 import '../../models/model_profile.dart';
 import '../../models/chat_message.dart';
 import '../../config/openrouter_config.dart';
@@ -22,17 +23,20 @@ class _ChatScreenState extends State<ChatScreen> {
   late ModelProfile _selectedProfile;
   bool _isSending = false;
   late OpenRouterService _service;
+  final MedicalPreferencesService _medicalService = MedicalPreferencesService();
   bool _showDisclaimer = true;
   int? _streamingIndex;
   Timer? _scrollTimer;
   bool _shouldScroll = false;
-  bool _useReasoning = false; // Nueva variable para controlar el razonamiento
+  bool _useReasoning = false;
+  String _medicalContext = '';
 
   @override
   void initState() {
     super.initState();
     _service = OpenRouterService();
     _selectedProfile = ModelProfile.defaultProfile;
+    _loadMedicalContext();
     _addInitialAssistantMessage();
   }
 
@@ -44,15 +48,24 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  Future<void> _loadMedicalContext() async {
+    try {
+      _medicalContext = await _medicalService.getMedicalContext();
+    } catch (e) {
+      _medicalContext = OpenRouterConfig.disclaimerText;
+    }
+  }
+
   String _assistantLabel() {
-    // Mostrar solo "Gaia" o "Gaia • Razonamiento" sin subcategoría "Fast"
     final baseName = brandDisplayName(_selectedProfile.brand);
     return _useReasoning ? '$baseName • Razonamiento' : baseName;
   }
 
   void _addInitialAssistantMessage() {
     _messages.add(ChatMessage.assistant(
-        'Hola, soy Gaia. ¿En qué puedo ayudarte hoy?'));
+        'Hola, soy Gaia, tu asistente médico AI. ¿En qué puedo ayudarte hoy?\n\n'
+        '💡 **Recuerda:** DocAI no sustituye el consejo médico profesional. '
+        'Para diagnósticos, tratamientos o emergencias, acude a un profesional de la salud.'));
   }
 
   Future<void> _sendMessage(
@@ -67,19 +80,14 @@ class _ChatScreenState extends State<ChatScreen> {
       if (regenerateIndex == null) {
         _messages.add(userMessage);
       } else {
-        // Regeneration: remove only messages AFTER the given user message, keeping the user message itself
-        // regenerateIndex points to the preceding user message index
         if (regenerateIndex >= 0 && regenerateIndex < _messages.length - 1) {
           _messages.removeRange(regenerateIndex + 1, _messages.length);
-        } else if (regenerateIndex == _messages.length - 1) {
-          // If the last message is the user message, nothing to remove
         }
       }
       _isSending = true;
       _showDisclaimer = false;
     });
     
-    // Wait for the next frame to ensure the view has updated
     await Future.delayed(Duration.zero);
     await _scrollToBottom(force: true);
 
@@ -91,23 +99,20 @@ class _ChatScreenState extends State<ChatScreen> {
           ? historyAll.sublist(historyAll.length - 24)
           : historyAll;
       
-      // Add assistant placeholder
       setState(() {
         _messages.add(ChatMessage.assistant(''));
         _streamingIndex = _messages.length - 1;
       });
       
-      // Wait for the next frame to ensure the view has updated
       await Future.delayed(Duration.zero);
       await _scrollToBottom(force: true);
 
       final stream = _service.streamChatCompletion(
         messages: history,
         profile: overrideProfile ?? _selectedProfile,
-        useReasoning: overrideReasoning ?? _useReasoning, // Usar el parámetro de razonamiento
+        useReasoning: overrideReasoning ?? _useReasoning,
       );
 
-      // Initial scroll to bottom before starting the stream
       _scrollToBottom(force: true);
 
       await for (final chunk in stream) {
@@ -124,11 +129,9 @@ class _ChatScreenState extends State<ChatScreen> {
           }
         });
 
-        // Only scroll if we're near the bottom
         final maxScroll = _scrollController.position.maxScrollExtent;
         final currentScroll = _scrollController.offset;
         if (maxScroll - currentScroll < 300) {
-          // 300px from bottom
           _scrollToBottom();
         }
       }
@@ -138,14 +141,14 @@ class _ChatScreenState extends State<ChatScreen> {
           content: Text('Error: ${e.toString()}'),
           behavior: SnackBarBehavior.floating,
         ));
-        // Show error in the assistant bubble if placeholder exists
         if (_streamingIndex != null && _streamingIndex! < _messages.length) {
           setState(() {
             _messages[_streamingIndex!] = ChatMessage(
               id: _messages[_streamingIndex!].id,
               role: ChatRole.assistant,
               content:
-                  'Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.',
+                  'Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.\n\n'
+                  '⚠️ **Recuerda:** Si tienes una emergencia médica, contacta inmediatamente con servicios de emergencia.',
               createdAt: DateTime.now(),
             );
           });
@@ -165,17 +168,12 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _scrollToBottom({bool force = false}) async {
     if (!_scrollController.hasClients) return;
 
-    // Cancel any pending scroll
     _scrollTimer?.cancel();
-
-    // Wait for the next frame to ensure the view has updated
     await Future.delayed(Duration.zero);
 
     if (force || !_scrollController.position.outOfRange) {
-      // Immediate scroll without animation for force or when near bottom
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     } else {
-      // Smooth scroll when user has scrolled up
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 300),
@@ -184,7 +182,6 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // Simplificamos el modal ya que solo hay un modelo
   Future<bool?> _showReasoningPickerSheet() async {
     bool tempReasoning = _useReasoning;
     
@@ -213,7 +210,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                   ),
                   const SizedBox(height: 12),
-                  // Mostrar solo el modelo actual sin opciones de cambio
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -250,12 +246,11 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Control de razonamiento
                   Row(
                     children: [
                       Icon(Icons.psychology, size: 20, color: brandColor(_selectedProfile.brand)),
                       const SizedBox(width: 8),
-                      const Text('Razonamiento avanzado'),
+                      const Text('Razonamiento médico avanzado'),
                       const Spacer(),
                       Switch(
                         value: tempReasoning,
@@ -268,7 +263,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
-                        'Gaia proporcionará un análisis paso a paso más detallado.',
+                        'Gaia proporcionará un análisis médico paso a paso más detallado, '
+                        'considerando tu perfil médico personalizado.',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -286,9 +282,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       const SizedBox(width: 8),
                       ElevatedButton(
                         onPressed: () => Navigator.of(context).pop(tempReasoning),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                          child: const Text('Regenerar'),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                          child: Text('Regenerar'),
                         ),
                       ),
                     ],
@@ -310,7 +306,6 @@ class _ChatScreenState extends State<ChatScreen> {
     final newReasoning = await _showReasoningPickerSheet();
     if (newReasoning == null) return;
     
-    // Actualizar el estado del razonamiento si cambió
     if (newReasoning != _useReasoning) {
       setState(() {
         _useReasoning = newReasoning;
@@ -325,6 +320,49 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _showMedicalPreferencesInfo() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.medical_services, color: Colors.blue),
+            const SizedBox(width: 8),
+            const Text('Personalización Médica'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_medicalContext.isNotEmpty 
+                ? 'Tu perfil médico personalizado está activo. Gaia tendrá en cuenta tus preferencias y condiciones médicas.'
+                : 'No tienes un perfil médico configurado. Ve a tu perfil para personalizar DocAI.'),
+            const SizedBox(height: 16),
+            if (_medicalContext.isEmpty)
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                  );
+                },
+                icon: const Icon(Icons.settings),
+                label: const Text('Configurar Perfil'),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final accent = brandColor(_selectedProfile.brand);
@@ -333,7 +371,15 @@ class _ChatScreenState extends State<ChatScreen> {
         title: const Text('Docai'),
         actions: [
           IconButton(
-            tooltip: 'Aviso',
+            tooltip: 'Personalización médica',
+            icon: Icon(
+              Icons.medical_services,
+              color: _medicalContext.isNotEmpty ? Colors.blue : Colors.grey,
+            ),
+            onPressed: _showMedicalPreferencesInfo,
+          ),
+          IconButton(
+            tooltip: 'Aviso médico',
             icon: const Icon(Icons.info_outline),
             onPressed: () {
               showDialog(
@@ -393,7 +439,6 @@ class _ChatScreenState extends State<ChatScreen> {
                 final m = _messages[index];
                 Widget _buildMessageBubble(ChatMessage message, int index) {
                   final isAssistant = message.role == ChatRole.assistant;
-                  // Determina si es el mensaje de bienvenida (primer mensaje del asistente)
                   final isWelcomeMessage = index == 0 && isAssistant;
 
                   return MessageBubble(
@@ -423,18 +468,18 @@ class _ChatScreenState extends State<ChatScreen> {
             isSending: _isSending,
             selectedProfile: _selectedProfile,
             allProfiles: ModelProfile.defaults(),
-            useReasoning: _useReasoning, // Pasar el estado del razonamiento
+            useReasoning: _useReasoning,
             onProfileChanged: (p) {
               setState(() {
                 _selectedProfile = p;
               });
             },
-            onReasoningChanged: (enabled) { // Nuevo callback para el razonamiento
+            onReasoningChanged: (enabled) {
               setState(() {
                 _useReasoning = enabled;
               });
             },
-            onRequestPro: () {}, // Ya no necesario con un solo modelo
+            onRequestPro: () {},
           ),
         ],
       ),

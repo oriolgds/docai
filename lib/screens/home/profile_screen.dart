@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../services/supabase_service.dart';
+import '../../widgets/medical_preferences_button.dart';
+import '../../widgets/medical_preferences_status.dart';
 import '../auth/login_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,6 +69,25 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            
+            // Medical Preferences Status Card
+            const MedicalPreferencesStatus(),
+            const SizedBox(height: 16),
+            
+            // Medical Preferences Button
+            MedicalPreferencesButton(
+              onPreferencesUpdated: () {
+                setState(() {}); // Refresh the status card
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Preferencias médicas actualizadas'),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
             
             // Subscription Card
             Container(
