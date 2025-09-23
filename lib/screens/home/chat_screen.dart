@@ -7,7 +7,9 @@ import '../../services/openrouter_service.dart';
 import '../../models/model_profile.dart';
 import '../../models/chat_message.dart';
 import '../../config/openrouter_config.dart';
+import '../../services/supabase_service.dart';
 import 'profile_screen.dart';
+import 'personalization_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -27,6 +29,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Timer? _scrollTimer;
   bool _shouldScroll = false;
   bool _useReasoning = false; // Nueva variable para controlar el razonamiento
+  bool _showFirstTimeWarning = false;
 
   @override
   void initState() {
@@ -34,6 +37,20 @@ class _ChatScreenState extends State<ChatScreen> {
     _service = OpenRouterService();
     _selectedProfile = ModelProfile.defaultProfile;
     _addInitialAssistantMessage();
+    _checkFirstTimeUser();
+  }
+
+  Future<void> _checkFirstTimeUser() async {
+    try {
+      final isFirstTime = await SupabaseService.isFirstTimeUser();
+      if (mounted) {
+        setState(() {
+          _showFirstTimeWarning = isFirstTime;
+        });
+      }
+    } catch (e) {
+      // Silently fail if we can't check - not critical
+    }
   }
 
   @override
@@ -380,6 +397,93 @@ class _ChatScreenState extends State<ChatScreen> {
                     tooltip: 'Cerrar',
                     icon: const Icon(Icons.close, size: 18),
                     onPressed: () => setState(() => _showDisclaimer = false),
+                  ),
+                ],
+              ),
+            ),
+          if (_showFirstTimeWarning)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade50, Colors.blue.shade100],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade300),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.tune, color: Colors.blue.shade700),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Personaliza tu experiencia',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        tooltip: 'Cerrar',
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () async {
+                          await SupabaseService.markAsNotFirstTime();
+                          setState(() => _showFirstTimeWarning = false);
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Para ofrecerte recomendaciones más precisas, configura tus preferencias médicas, alergias y condiciones.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.blue.shade800,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () async {
+                          await SupabaseService.markAsNotFirstTime();
+                          setState(() => _showFirstTimeWarning = false);
+                        },
+                        child: Text(
+                          'Ahora no',
+                          style: TextStyle(color: Colors.blue.shade600),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () async {
+                          await SupabaseService.markAsNotFirstTime();
+                          setState(() => _showFirstTimeWarning = false);
+                          if (mounted) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PersonalizationScreen(),
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade700,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Personalizar'),
+                      ),
+                    ],
                   ),
                 ],
               ),

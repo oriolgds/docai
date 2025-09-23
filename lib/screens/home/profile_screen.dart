@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/supabase_service.dart';
 import '../auth/login_screen.dart';
+import 'personalization_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -134,6 +135,11 @@ class ProfileScreen extends StatelessWidget {
             
             // Menu Items
             _buildMenuItem(
+              icon: Icons.tune,
+              title: 'Personalización',
+              onTap: () => _navigateToPersonalization(context),
+            ),
+            _buildMenuItem(
               icon: Icons.person_outline,
               title: 'Edit Profile',
               onTap: () {},
@@ -204,6 +210,21 @@ class ProfileScreen extends StatelessWidget {
         tileColor: const Color(0xFFFAFAFA),
       ),
     );
+  }
+
+  Future<void> _navigateToPersonalization(BuildContext context) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PersonalizationScreen(),
+      ),
+    );
+    
+    // Optionally refresh the profile if preferences were saved
+    if (result == true) {
+      // Could add a setState here if ProfileScreen becomes stateful
+      // and needs to update based on new preferences
+    }
   }
 
   void _showLogoutDialog(BuildContext context) {
