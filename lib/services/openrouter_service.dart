@@ -39,12 +39,8 @@ class OpenRouterService {
       
       final allMessages = [systemMessage, ...messages];
 
-      final headers = {
-        'Authorization': 'Bearer ${OpenRouterConfig.apiKey}',
-        'Content-Type': 'application/json',
-        'HTTP-Referer': OpenRouterConfig.httpReferer,
-        'X-Title': OpenRouterConfig.appName,
-      };
+      // Usar los headers del config
+      final headers = OpenRouterConfig.defaultHeaders();
 
       final body = {
         'model': profile.modelId,
@@ -55,14 +51,15 @@ class OpenRouterService {
                 })
             .toList(),
         'stream': true,
-        'temperature': profile.temperature,
-        'top_p': profile.topP,
-        'max_tokens': profile.maxTokens,
+        // Parámetros por defecto para el modelo médico
+        'temperature': 0.7,
+        'top_p': 0.9,
+        'max_tokens': 4000,
         // IMPORTANTE: Aquí se activa el reasoning para Grok-4
         if (useReasoning) 'reasoning': true,
       };
 
-      final request = http.Request('POST', Uri.parse(OpenRouterConfig.baseUrl));
+      final request = http.Request('POST', Uri.parse('${OpenRouterConfig.baseUrl}/chat/completions'));
       request.headers.addAll(headers);
       request.body = json.encode(body);
 
@@ -114,17 +111,21 @@ INSTRUCCIONES IMPORTANTES:
 7. Respeta las preferencias de tratamiento del usuario
 8. Sé empático y comprensivo
 9. Proporciona información clara y bien estructurada
-10. Si detectas síntomas graves, recomienda atención médica inmediata''';
+10. Si detectas síntomas graves, recomienda atención médica inmediata
+
+${OpenRouterConfig.medicalSystemPrompt}''';
 
     if (useReasoning) {
       basePrompt += '''
 
-MODO RAZONAMIENTO ACTIVADO:
-- Proporciona un análisis paso a paso de la consulta
-- Explica tu proceso de pensamiento médico
-- Considera múltiples factores y posibilidades
+MODO RAZONAMIENTO MÉDICO ACTIVADO:
+- Proporciona un análisis paso a paso de la consulta médica
+- Explica tu proceso de pensamiento médico y diagnóstico diferencial
+- Considera múltiples factores: síntomas, historial, factores de riesgo
 - Estructura tu respuesta con mayor detalle y fundamentación científica
-- Incluye referencias a estudios o guías médicas cuando sea apropiado''';
+- Incluye referencias a estudios médicos, guías clínicas o literatura cuando sea apropiado
+- Explica la lógica detrás de tus recomendaciones
+- Considera posibles complicaciones o señales de alarma''';
     }
 
     return basePrompt;
