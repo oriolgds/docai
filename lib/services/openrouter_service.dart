@@ -14,10 +14,11 @@ class OpenRouterService {
     required ModelProfile profile,
     String? systemPromptOverride,
     double temperature = 0.3,
+    bool useReasoning = false,
   }) async {
     final headers = OpenRouterConfig.defaultHeaders();
 
-    final payload = {
+    final payload = <String, dynamic>{
       'model': profile.modelId,
       'messages': [
         {
@@ -28,6 +29,14 @@ class OpenRouterService {
       ],
       'temperature': temperature,
     };
+
+    // Solo agregar el parámetro de razonamiento si está habilitado
+    // y usar el formato correcto para la API de OpenRouter/Grok
+    if (useReasoning) {
+      payload['extra'] = {
+        'reasoning': true,
+      };
+    }
 
     final uri = Uri.parse('${OpenRouterConfig.baseUrl}/chat/completions');
     final resp = await _client.post(
@@ -66,9 +75,10 @@ class OpenRouterService {
     required ModelProfile profile,
     String? systemPromptOverride,
     double temperature = 0.3,
+    bool useReasoning = false,
   }) async* {
     final headers = OpenRouterConfig.defaultHeaders();
-    final payload = {
+    final payload = <String, dynamic>{
       'model': profile.modelId,
       'messages': [
         {
@@ -80,6 +90,14 @@ class OpenRouterService {
       'temperature': temperature,
       'stream': true,
     };
+
+    // Solo agregar el parámetro de razonamiento si está habilitado
+    // y usar el formato correcto para la API de OpenRouter/Grok
+    if (useReasoning) {
+      payload['extra'] = {
+        'reasoning': true,
+      };
+    }
 
     final uri = Uri.parse('${OpenRouterConfig.baseUrl}/chat/completions');
     final request = http.Request('POST', uri)

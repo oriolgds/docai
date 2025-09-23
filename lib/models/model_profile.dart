@@ -1,34 +1,26 @@
 import 'package:flutter/material.dart';
 
-enum BrandName { feya, gaia, heynos }
+enum BrandName { gaia }
 
 String brandDisplayName(BrandName b) {
   switch (b) {
-    case BrandName.feya:
-      return 'Feya';
     case BrandName.gaia:
       return 'Gaia';
-    case BrandName.heynos:
-      return 'Heynos';
   }
 }
 
 Color brandColor(BrandName b) {
   switch (b) {
-    case BrandName.feya:
-      return Colors.teal;
     case BrandName.gaia:
       return Colors.indigo;
-    case BrandName.heynos:
-      return Colors.deepPurple;
   }
 }
 
 class ModelProfile {
-  final String id; // e.g., 'gaia_balanced'
+  final String id; // e.g., 'gaia'
   final BrandName brand;
-  final String tier; // e.g., 'Balanced', 'Reasoning', 'Pro'
-  final String displayName; // e.g., 'Gaia • Balanced'
+  final String tier; // Ya no se usa pero se mantiene para compatibilidad
+  final String displayName; // e.g., 'Gaia'
   final String modelId; // OpenRouter model string
   final String description;
   final bool reasoning;
@@ -44,42 +36,15 @@ class ModelProfile {
   });
 
   static List<ModelProfile> defaults() => const [
-        // Feya (sencillo)
+        // Solo Gaia, sin subcategorías
         ModelProfile(
-          id: 'feya_instant',
-          brand: BrandName.feya,
-          tier: 'Instant',
-          displayName: 'Feya • Instant',
-      modelId: 'x-ai/grok-4-fast:free',
-          description: 'Respuestas rápidas y concisas para dudas cotidianas.',
-        ),
-        ModelProfile(
-          id: 'feya_balanced',
-          brand: BrandName.feya,
-          tier: 'Balanced',
-          displayName: 'Feya • Balanced',
-          modelId: 'meta-llama/llama-4-maverick:free',
-          description: 'Equilibrio entre velocidad y calidad.',
-        ),
-
-        // Gaia (normal)
-        ModelProfile(
-          id: 'gaia_balanced',
+          id: 'gaia',
           brand: BrandName.gaia,
-          tier: 'Balanced',
-          displayName: 'Gaia • Balanced',
-          modelId: 'deepseek/deepseek-chat-v3.1:free',
-          description: 'Calidad consistente para consultas de salud generales.',
+          tier: '', // Sin tier/subcategoría
+          displayName: 'Gaia',
+          modelId: 'x-ai/grok-4-fast:free',
+          description: 'Asistente médico inteligente con razonamiento opcional.',
         ),
-        ModelProfile(
-          id: 'gaia_reasoning',
-          brand: BrandName.gaia,
-          tier: 'Reasoning',
-          displayName: 'Gaia • Reasoning',
-          modelId: 'deepseek/deepseek-r1-distill-llama-70b:free',
-          description: 'Mejor capacidad de razonamiento para casos complejos.',
-          reasoning: true,
-    ),
       ];
 
   static Map<BrandName, List<ModelProfile>> groupedByBrand() {
@@ -91,5 +56,5 @@ class ModelProfile {
   }
 
   static ModelProfile get defaultProfile =>
-      defaults().firstWhere((p) => p.id == 'gaia_balanced', orElse: () => defaults().first);
+      defaults().firstWhere((p) => p.id == 'gaia', orElse: () => defaults().first);
 }

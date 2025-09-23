@@ -26,6 +26,7 @@ class _ChatScreenState extends State<ChatScreen> {
   int? _streamingIndex;
   Timer? _scrollTimer;
   bool _shouldScroll = false;
+  bool _useReasoning = false; // Nueva variable para controlar el razonamiento
 
   @override
   void initState() {
@@ -43,18 +44,22 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  String _assistantLabel() =>
-      '${brandDisplayName(_selectedProfile.brand)} • ${_selectedProfile.tier}';
+  String _assistantLabel() {
+    // Mostrar solo "Gaia" o "Gaia • Razonamiento" sin subcategoría "Fast"
+    final baseName = brandDisplayName(_selectedProfile.brand);
+    return _useReasoning ? '$baseName • Razonamiento' : baseName;
+  }
 
   void _addInitialAssistantMessage() {
     _messages.add(ChatMessage.assistant(
-        'Hola, soy DocAI. ¿En qué puedo ayudarte hoy?'));
+        'Hola, soy Gaia. ¿En qué puedo ayudarte hoy?'));
   }
 
   Future<void> _sendMessage(
     String text, {
     int? regenerateIndex,
     ModelProfile? overrideProfile,
+    bool? overrideReasoning,
   }) async {
     final userMessage = ChatMessage.user(text);
     
@@ -99,6 +104,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final stream = _service.streamChatCompletion(
         messages: history,
         profile: overrideProfile ?? _selectedProfile,
+        useReasoning: overrideReasoning ?? _useReasoning, // Usar el parámetro de razonamiento
       );
 
       // Initial scroll to bottom before starting the stream
@@ -178,93 +184,11 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _showProModal() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF7C4DFF), Color(0xFF536DFE)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.all(Radius.circular(16)),
-            ),
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: const [
-                    Icon(Icons.workspace_premium, color: Colors.white),
-                    SizedBox(width: 8),
-                    Text('Desbloquea Heynos Pro', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Accede a respuestas más profundas y razonamiento avanzado. Ideal para casos complejos y explicaciones detalladas.',
-                  style: TextStyle(color: Colors.white70),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: const [
-                    Icon(Icons.check_circle, color: Colors.white, size: 18),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text('Razonamiento de nivel profesional', style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: const [
-                    Icon(Icons.check_circle, color: Colors.white, size: 18),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text('Respuestas más completas y útiles', style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                          );
-                        },
-                        child: const Text('Ir a suscripción Pro'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<ModelProfile?> _showModelPickerSheet({
-    required ModelProfile initial,
-  }) async {
-    ModelProfile temp = initial;
-    return await showModalBottomSheet<ModelProfile>(
+  // Simplificamos el modal ya que solo hay un modelo
+  Future<bool?> _showReasoningPickerSheet() async {
+    bool tempReasoning = _useReasoning;
+    
+    return await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -285,15 +209,73 @@ class _ChatScreenState extends State<ChatScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Elegir modelo para regenerar',
+                    'Configurar regeneración',
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                   ),
                   const SizedBox(height: 12),
-                  ModelSelector(
-                    selected: temp,
-                    onSelected: (p) => setState(() => temp = p),
+                  // Mostrar solo el modelo actual sin opciones de cambio
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFE0E0E0)),
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.grey[50],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [
+                                brandColor(_selectedProfile.brand),
+                                Color.lerp(brandColor(_selectedProfile.brand), Colors.black, 0.2)!,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          _selectedProfile.displayName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                  // Control de razonamiento
+                  Row(
+                    children: [
+                      Icon(Icons.psychology, size: 20, color: brandColor(_selectedProfile.brand)),
+                      const SizedBox(width: 8),
+                      const Text('Razonamiento avanzado'),
+                      const Spacer(),
+                      Switch(
+                        value: tempReasoning,
+                        onChanged: (value) => setState(() => tempReasoning = value),
+                        activeColor: brandColor(_selectedProfile.brand),
+                      ),
+                    ],
+                  ),
+                  if (tempReasoning)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Gaia proporcionará un análisis paso a paso más detallado.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -303,7 +285,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: () => Navigator.of(context).pop(temp),
+                        onPressed: () => Navigator.of(context).pop(tempReasoning),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
                           child: const Text('Regenerar'),
@@ -325,12 +307,21 @@ class _ChatScreenState extends State<ChatScreen> {
     if (assistantIndex <= 0) return;
     if (_messages[assistantIndex - 1].role != ChatRole.user) return;
     final userMessage = _messages[assistantIndex - 1];
-    final picked = await _showModelPickerSheet(initial: _selectedProfile);
-    if (picked == null) return;
+    final newReasoning = await _showReasoningPickerSheet();
+    if (newReasoning == null) return;
+    
+    // Actualizar el estado del razonamiento si cambió
+    if (newReasoning != _useReasoning) {
+      setState(() {
+        _useReasoning = newReasoning;
+      });
+    }
+    
     await _sendMessage(
       userMessage.content,
       regenerateIndex: assistantIndex - 1,
-      overrideProfile: picked,
+      overrideProfile: _selectedProfile,
+      overrideReasoning: newReasoning,
     );
   }
 
@@ -432,12 +423,18 @@ class _ChatScreenState extends State<ChatScreen> {
             isSending: _isSending,
             selectedProfile: _selectedProfile,
             allProfiles: ModelProfile.defaults(),
+            useReasoning: _useReasoning, // Pasar el estado del razonamiento
             onProfileChanged: (p) {
               setState(() {
                 _selectedProfile = p;
               });
             },
-            onRequestPro: _showProModal,
+            onReasoningChanged: (enabled) { // Nuevo callback para el razonamiento
+              setState(() {
+                _useReasoning = enabled;
+              });
+            },
+            onRequestPro: () {}, // Ya no necesario con un solo modelo
           ),
         ],
       ),

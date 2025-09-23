@@ -8,6 +8,8 @@ class ChatInput extends StatefulWidget {
   final List<ModelProfile> allProfiles;
   final ValueChanged<ModelProfile> onProfileChanged;
   final VoidCallback onRequestPro;
+  final bool useReasoning;
+  final ValueChanged<bool> onReasoningChanged;
 
   const ChatInput({
     super.key,
@@ -17,6 +19,8 @@ class ChatInput extends StatefulWidget {
     required this.allProfiles,
     required this.onProfileChanged,
     required this.onRequestPro,
+    this.useReasoning = false,
+    required this.onReasoningChanged,
   });
 
   @override
@@ -53,14 +57,24 @@ class _ChatInputState extends State<ChatInput> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Model selector row
+            // Model selector row with reasoning toggle
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-              child: _ModelDropdown(
-                selected: current,
-                allProfiles: widget.allProfiles,
-                onChanged: (p) => widget.onProfileChanged(p),
-                onRequestPro: widget.onRequestPro,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _ModelDisplay(
+                      selected: current,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Botón de razonamiento
+                  _ReasoningToggle(
+                    useReasoning: widget.useReasoning,
+                    onChanged: widget.onReasoningChanged,
+                    accentColor: brandColor(current.brand),
+                  ),
+                ],
               ),
             ),
             
@@ -123,184 +137,110 @@ class _ChatInputState extends State<ChatInput> {
   }
 }
 
-class _ModelDropdown extends StatelessWidget {
-  final ModelProfile selected;
-  final List<ModelProfile> allProfiles;
-  final ValueChanged<ModelProfile> onChanged;
-  final VoidCallback onRequestPro;
+class _ReasoningToggle extends StatelessWidget {
+  final bool useReasoning;
+  final ValueChanged<bool> onChanged;
+  final Color accentColor;
 
-  const _ModelDropdown({
-    required this.selected,
-    required this.allProfiles,
+  const _ReasoningToggle({
+    required this.useReasoning,
     required this.onChanged,
-    required this.onRequestPro,
+    required this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final itemsByBrand = <BrandName, List<ModelProfile>>{};
-    for (final p in allProfiles) {
-      itemsByBrand.putIfAbsent(p.brand, () => []).add(p);
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return PopupMenuButton<ModelProfile?>(
-          tooltip: 'Cambiar modelo',
-          onSelected: (choice) {
-            if (choice == null) {
-              onRequestPro();
-              return;
-            }
-            onChanged(choice);
-          },
-          itemBuilder: (context) {
-            return [
-              PopupMenuItem<ModelProfile?>(
-                enabled: false,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.circular(10),
+        color: useReasoning ? accentColor.withOpacity(0.1) : Colors.white,
+      ),
+      child: InkWell(
+        onTap: () => onChanged(!useReasoning),
+        borderRadius: BorderRadius.circular(10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.psychology,
+              size: 20,
+              color: useReasoning ? accentColor : Colors.grey,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'Razonamiento',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: useReasoning ? accentColor : Colors.grey[700],
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              width: 32,
+              height: 18,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(9),
+                color: useReasoning ? accentColor : Colors.grey[300],
+              ),
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 200),
+                alignment: useReasoning ? Alignment.centerRight : Alignment.centerLeft,
                 child: Container(
-                  width: constraints.maxWidth * 0.8,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (final brand in itemsByBrand.keys) ..._buildBrandSection(brand, itemsByBrand[brand]!)
-                    ],
+                  width: 14,
+                  height: 14,
+                  margin: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
                   ),
                 ),
               ),
-            ];
-          },
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minWidth: 100,
-              maxWidth: 200,
             ),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFE0E0E0)),
-                borderRadius: BorderRadius.circular(10),
-                color: Colors.white,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildGradientCircle(selected.brand),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${_brandShort(selected.brand)} • ${selected.tier}',
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.arrow_drop_down, size: 20, color: Colors.grey),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  List<Widget> _buildBrandSection(BrandName brand, List<ModelProfile> profiles) {
-    return [
-      Padding(
-        padding: const EdgeInsets.only(top: 8, bottom: 4, left: 4, right: 4),
-        child: Text(
-          _brandHeader(brand),
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Colors.black54,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ),
-      ...profiles.map((p) => _buildProfileItem(p)),
-      const SizedBox(height: 4),
-    ];
-  }
-
-  Widget _buildProfileItem(ModelProfile profile) {
-    final isHeynos = profile.brand == BrandName.heynos;
-    final color = brandColor(profile.brand);
-    
-    return PopupMenuItem<ModelProfile?>(
-      value: isHeynos ? null : profile,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            _buildGradientCircle(profile.brand, size: 24, isLocked: isHeynos),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${_brandShort(profile.brand)} • ${profile.tier}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: isHeynos ? Colors.grey : null,
-                    ),
-                  ),
-                  if (profile.description.isNotEmpty)
-                    Text(
-                      profile.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[600],
-                        height: 1.2,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            if (isHeynos)
-              const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
           ],
         ),
       ),
     );
   }
+}
 
-  String _brandHeader(BrandName b) {
-    switch (b) {
-      case BrandName.feya:
-        return 'Feya (sencillo)';
-      case BrandName.gaia:
-        return 'Gaia (normal)';
-      case BrandName.heynos:
-        return 'Heynos (pro)';
-    }
+// Nuevo widget simplificado que solo muestra el modelo sin selector
+class _ModelDisplay extends StatelessWidget {
+  final ModelProfile selected;
+
+  const _ModelDisplay({
+    required this.selected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildGradientCircle(selected.brand),
+          const SizedBox(width: 8),
+          Text(
+            selected.displayName, // Solo "Gaia", sin subcategoría
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  String _brandShort(BrandName b) {
-    switch (b) {
-      case BrandName.feya:
-        return 'Feya';
-      case BrandName.gaia:
-        return 'Gaia';
-      case BrandName.heynos:
-        return 'Heynos';
-    }
-  }
-
-  Widget _buildGradientCircle(BrandName b, {double size = 20, bool isLocked = false}) {
+  Widget _buildGradientCircle(BrandName b, {double size = 20}) {
     final color = brandColor(b);
     final colors = [
       color,
@@ -313,7 +253,7 @@ class _ModelDropdown extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
-          colors: isLocked ? [Colors.grey, Colors.grey.shade700] : colors,
+          colors: colors,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -325,34 +265,6 @@ class _ModelDropdown extends StatelessWidget {
           ),
         ],
       ),
-      child: isLocked 
-          ? Icon(Icons.lock_outline, size: size * 0.6, color: Colors.white)
-          : null,
     );
-  }
-
-  // Keep this for backward compatibility
-  Widget _brandIcon(BrandName b, {bool locked = false}) {
-    return _buildGradientCircle(b, isLocked: locked);
-  }
-
-  // Tier icon is now part of the profile item design
-  Widget _tierIcon(ModelProfile p) => const SizedBox.shrink();
-
-  String _tierAbbr(String tier) {
-    switch (tier.toLowerCase()) {
-      case 'instant':
-        return 'Inst';
-      case 'fast':
-        return 'Fast';
-      case 'balanced':
-        return 'Bal';
-      case 'reasoning':
-        return 'Rsn';
-      case 'pro':
-        return 'Pro';
-      default:
-        return tier;
-    }
   }
 }
