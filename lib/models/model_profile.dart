@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
 
-enum BrandName { gaia }
+enum BrandName { doky }
 
 String brandDisplayName(BrandName b) {
   switch (b) {
-    case BrandName.gaia:
-      return 'Gaia';
+    case BrandName.doky:
+      return 'Doky 1.0';
   }
 }
 
 Color brandColor(BrandName b) {
   switch (b) {
-    case BrandName.gaia:
+    case BrandName.doky:
       return Colors.indigo;
   }
 }
 
 class ModelProfile {
-  final String id; // e.g., 'gaia'
+  final String id; // e.g., 'doky'
   final BrandName brand;
   final String tier; // Ya no se usa pero se mantiene para compatibilidad
-  final String displayName; // e.g., 'Gaia'
+  final String displayName; // e.g., 'Doky 1'
   final String modelId; // OpenRouter model string
   final String description;
   final bool reasoning;
@@ -36,12 +36,12 @@ class ModelProfile {
   });
 
   static List<ModelProfile> defaults() => const [
-        // Solo Gaia, sin subcategorías
+        // Solo Doky 1, sin subcategorías
         ModelProfile(
-          id: 'gaia',
-          brand: BrandName.gaia,
+          id: 'doky',
+          brand: BrandName.doky,
           tier: '', // Sin tier/subcategoría
-          displayName: 'Gaia',
+          displayName: 'Doky 1.0',
           modelId: 'x-ai/grok-4-fast:free',
           description: 'Asistente médico inteligente con razonamiento opcional.',
         ),
@@ -56,5 +56,5 @@ class ModelProfile {
   }
 
   static ModelProfile get defaultProfile =>
-      defaults().firstWhere((p) => p.id == 'gaia', orElse: () => defaults().first);
+      defaults().firstWhere((p) => p.id == 'doky', orElse: () => defaults().first);
 }
