@@ -30,7 +30,13 @@ class OpenRouterService {
       }
 
       // Construir mensajes con contexto médico
-      final systemMessage = ChatMessage.system(_buildSystemPrompt(medicalContext, useReasoning));
+      final systemMessage = ChatMessage(
+        id: 'system-${DateTime.now().millisecondsSinceEpoch}',
+        role: ChatRole.system,
+        content: _buildSystemPrompt(medicalContext, useReasoning),
+        createdAt: DateTime.now(),
+      );
+      
       final allMessages = [systemMessage, ...messages];
 
       final headers = {
@@ -52,6 +58,7 @@ class OpenRouterService {
         'temperature': profile.temperature,
         'top_p': profile.topP,
         'max_tokens': profile.maxTokens,
+        // IMPORTANTE: Aquí se activa el reasoning para Grok-4
         if (useReasoning) 'reasoning': true,
       };
 
