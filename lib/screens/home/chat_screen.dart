@@ -6,6 +6,7 @@ import '../../widgets/chat/model_selector.dart';
 import '../../services/openrouter_service.dart';
 import '../../models/model_profile.dart';
 import '../../models/chat_message.dart';
+import '../../models/user_preferences.dart';
 import '../../config/openrouter_config.dart';
 import '../../services/supabase_service.dart';
 import 'profile_screen.dart';
@@ -30,6 +31,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _shouldScroll = false;
   bool _useReasoning = false; // Nueva variable para controlar el razonamiento
   bool _showFirstTimeWarning = false;
+  UserPreferences? _userPreferences; // Almacenar las preferencias del usuario
 
   @override
   void initState() {
@@ -38,6 +40,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _selectedProfile = ModelProfile.defaultProfile;
     _addInitialAssistantMessage();
     _checkFirstTimeUser();
+    _loadUserPreferences();
   }
 
   Future<void> _checkFirstTimeUser() async {
@@ -53,6 +56,82 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _loadUserPreferences() async {
+    try {
+      final preferences = await SupabaseService.getUserPreferences();
+      if (mounted) {
+        setState(() {
+          _userPreferences = preferences;
+        });
+      }
+    } catch (e) {
+      // Silently fail if we can't load preferences - not critical
+    }
+  }
+
+  String _buildPersonalizedSystemPrompt() {
+    String basePrompt = OpenRouterConfig.medicalSystemPrompt;
+    
+    if (_userPreferences == null) {
+      return basePrompt;
+    }
+    
+    List<String> personalizations = [];
+    
+    // Agregar información sobre alergias
+    if (_userPreferences!.allergies.isNotEmpty) {
+      personalizations.add(
+        'IMPORTANTE: El usuario tiene las siguientes alergias: ${_userPreferences!.allergies.join(", ")}. '
+        'SIEMPRE considera estas alergias al dar recomendaciones médicas, medicamentos o tratamientos.'
+      );
+    }
+    
+    // Agregar preferencia de medicina
+    if (_userPreferences!.medicinePreference != MedicinePreference.both) {
+      String preferenceText = _userPreferences!.medicinePreference == MedicinePreference.natural
+          ? 'El usuario prefiere medicina natural y remedios alternativos'
+          : 'El usuario prefiere medicina convencional y tratamientos farmacológicos';
+      personalizations.add('$preferenceText. Ajusta tus recomendaciones según esta preferencia.');
+    }
+    
+    // Agregar condiciones crónicas
+    if (_userPreferences!.chronicConditions.isNotEmpty) {
+      personalizations.add(
+        'El usuario tiene las siguientes condiciones crónicas: ${_userPreferences!.chronicConditions.join(", ")}. '
+        'Ten en cuenta estas condiciones al proporcionar consejos médicos.'
+      );
+    }
+    
+    // Agregar medicamentos actuales
+    if (_userPreferences!.currentMedications.isNotEmpty) {
+      personalizations.add(
+        'El usuario toma actualmente los siguientes medicamentos: ${_userPreferences!.currentMedications.join(", ")}. '
+        'Verifica posibles interacciones medicamentosas antes de recomendar nuevos tratamientos.'
+      );
+    }
+    
+    // Agregar información de edad y género si están disponibles
+    if (_userPreferences!.ageRange != null) {
+      personalizations.add('El usuario está en el rango de edad: ${_userPreferences!.ageRange!.displayName}.');
+    }
+    
+    if (_userPreferences!.gender != null && _userPreferences!.gender != Gender.preferNotToSay) {
+      personalizations.add('Género del usuario: ${_userPreferences!.gender!.displayName}.');
+    }
+    
+    // Agregar notas adicionales
+    if (_userPreferences!.additionalNotes != null && _userPreferences!.additionalNotes!.isNotEmpty) {
+      personalizations.add('Notas adicionales del usuario: ${_userPreferences!.additionalNotes}');
+    }
+    
+    // Construir el prompt personalizado
+    if (personalizations.isNotEmpty) {
+      return '$basePrompt\n\nINFORMACIÓN PERSONALIZADA DEL USUARIO:\n${personalizations.join("\n\n")}';
+    }
+    
+    return basePrompt;
+  }
+
   @override
   void dispose() {
     _scrollTimer?.cancel();
@@ -62,14 +141,14 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String _assistantLabel() {
-    // Mostrar solo "Gaia" o "Gaia • Razonamiento" sin subcategoría "Fast"
+    // Mostrar solo Docai • Razonamiento" sin subcategoría "Fast"
     final baseName = brandDisplayName(_selectedProfile.brand);
     return _useReasoning ? '$baseName • Razonamiento' : baseName;
   }
 
   void _addInitialAssistantMessage() {
     _messages.add(ChatMessage.assistant(
-        'Hola, soy Gaia. ¿En qué puedo ayudarte hoy?'));
+        'Hola, soy Docai. ¿En qué puedo ayudarte hoy?'));
   }
 
   Future<void> _sendMessage(
@@ -121,6 +200,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final stream = _service.streamChatCompletion(
         messages: history,
         profile: overrideProfile ?? _selectedProfile,
+        systemPromptOverride: _buildPersonalizedSystemPrompt(),
         useReasoning: overrideReasoning ?? _useReasoning, // Usar el parámetro de razonamiento
       );
 
@@ -285,7 +365,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
-                        'Gaia proporcionará un análisis paso a paso más detallado.',
+                        'Docai proporcionará un análisis paso a paso más detallado.',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -469,12 +549,14 @@ class _ChatScreenState extends State<ChatScreen> {
                           await SupabaseService.markAsNotFirstTime();
                           setState(() => _showFirstTimeWarning = false);
                           if (mounted) {
-                            Navigator.push(
+                            await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => const PersonalizationScreen(),
                               ),
                             );
+                            // Recargar preferencias cuando regrese de personalización
+                            await _loadUserPreferences();
                           }
                         },
                         style: ElevatedButton.styleFrom(
