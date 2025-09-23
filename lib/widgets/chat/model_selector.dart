@@ -88,7 +88,7 @@ class _ModelSelectorState extends State<ModelSelector> {
           children: [
             for (final p in (_byBrand[_brand] ?? []))
               FilterChip(
-                label: Text(p.tier),
+                label: Text(p.displayName),
                 selected: _profile.id == p.id,
                 onSelected: (_) => _selectProfile(p),
                 selectedColor: brandColor(_brand).withOpacity(0.15),

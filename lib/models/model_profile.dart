@@ -5,7 +5,7 @@ enum BrandName { doky }
 String brandDisplayName(BrandName b) {
   switch (b) {
     case BrandName.doky:
-      return 'Doky 1';
+      return 'Doky 1.0';
   }
 }
 
@@ -41,7 +41,7 @@ class ModelProfile {
           id: 'doky',
           brand: BrandName.doky,
           tier: '', // Sin tier/subcategoría
-          displayName: 'Doky 1',
+          displayName: 'Doky 1.0',
           modelId: 'x-ai/grok-4-fast:free',
           description: 'Asistente médico inteligente con razonamiento opcional.',
         ),

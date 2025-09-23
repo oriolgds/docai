@@ -538,9 +538,12 @@ class _ChatScreenState extends State<ChatScreen> {
                           await SupabaseService.markAsNotFirstTime();
                           setState(() => _showFirstTimeWarning = false);
                         },
-                        child: Text(
-                          'Ahora no',
-                          style: TextStyle(color: Colors.blue.shade600),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            'Ahora no',
+                            style: TextStyle(color: Colors.blue.shade600),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -563,7 +566,10 @@ class _ChatScreenState extends State<ChatScreen> {
                           backgroundColor: Colors.blue.shade700,
                           foregroundColor: Colors.white,
                         ),
-                        child: const Text('Personalizar'),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: const Text('Personalizar'),
+                        ),
                       ),
                     ],
                   ),
