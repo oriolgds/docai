@@ -31,7 +31,7 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.24.0'  # Usa la versión estable más reciente
+        flutter-version: '3.35.4'  # Usa la versión estable más reciente
         channel: 'stable'
     
     - name: Create firebase_options.dart from secret
