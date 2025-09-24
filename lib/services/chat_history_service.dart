@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_conversation.dart';
@@ -9,6 +10,7 @@ import 'openrouter_service.dart';
 class ChatHistoryService {
   static const String _localChatsKey = 'local_chats';
   static const String _cloudSyncEnabledKey = 'cloud_sync_enabled';
+  static const String _lastSyncKey = 'last_sync_timestamp';
   
   // Singleton
   static final ChatHistoryService _instance = ChatHistoryService._internal();
@@ -17,6 +19,11 @@ class ChatHistoryService {
 
   SharedPreferences? _prefs;
   final OpenRouterService _openRouterService = OpenRouterService();
+  
+  // Cache para optimizar rendimiento
+  List<ChatConversation>? _cachedLocalConversations;
+  DateTime? _cacheTimestamp;
+  static const Duration _cacheValidDuration = Duration(minutes: 1);
   
   Future<void> _initPrefs() async {
     _prefs ??= await SharedPreferences.getInstance();
@@ -38,45 +45,118 @@ class ChatHistoryService {
     }
   }
 
+  // Métodos de utilidad para cache
+  bool _isCacheValid() {
+    return _cachedLocalConversations != null && 
+           _cacheTimestamp != null && 
+           DateTime.now().difference(_cacheTimestamp!) < _cacheValidDuration;
+  }
+
+  void _invalidateCache() {
+    _cachedLocalConversations = null;
+    _cacheTimestamp = null;
+  }
+
   // Gestión de conversaciones locales
-  Future<List<ChatConversation>> getLocalConversations() async {
-    await _initPrefs();
-    final chatsJson = _prefs!.getStringList(_localChatsKey) ?? [];
-    
-    return chatsJson.map((chatJson) {
-      final data = jsonDecode(chatJson) as Map<String, dynamic>;
-      return ChatConversation.fromJson(data);
-    }).toList()..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+  Future<List<ChatConversation>> getLocalConversations({bool forceRefresh = false}) async {
+    // Usar cache si es válido y no se fuerza refresh
+    if (!forceRefresh && _isCacheValid()) {
+      return List.from(_cachedLocalConversations!);
+    }
+
+    try {
+      await _initPrefs();
+      final chatsJson = _prefs!.getStringList(_localChatsKey) ?? [];
+      
+      final conversations = chatsJson.map((chatJson) {
+        try {
+          final data = jsonDecode(chatJson) as Map<String, dynamic>;
+          return ChatConversation.fromJson(data);
+        } catch (e) {
+          debugPrint('Error parsing conversation: $e');
+          return null;
+        }
+      }).whereType<ChatConversation>().toList()
+        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+      // Actualizar cache
+      _cachedLocalConversations = conversations;
+      _cacheTimestamp = DateTime.now();
+
+      return List.from(conversations);
+    } catch (e) {
+      debugPrint('Error loading local conversations: $e');
+      // Si hay error, devolver cache si existe, o lista vacía
+      return _cachedLocalConversations != null 
+          ? List.from(_cachedLocalConversations!) 
+          : <ChatConversation>[];
+    }
   }
 
   Future<void> saveLocalConversation(ChatConversation conversation) async {
-    await _initPrefs();
-    final conversations = await getLocalConversations();
-    
-    // Buscar si ya existe la conversación
-    final existingIndex = conversations.indexWhere((c) => c.id == conversation.id);
-    
-    if (existingIndex != -1) {
-      conversations[existingIndex] = conversation;
-    } else {
-      conversations.add(conversation);
+    try {
+      await _initPrefs();
+      final conversations = await getLocalConversations(forceRefresh: true);
+      
+      // Buscar si ya existe la conversación
+      final existingIndex = conversations.indexWhere((c) => c.id == conversation.id);
+      
+      if (existingIndex != -1) {
+        conversations[existingIndex] = conversation;
+      } else {
+        conversations.add(conversation);
+      }
+      
+      // Ordenar por fecha de actualización
+      conversations.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      
+      // Guardar en SharedPreferences
+      final chatsJson = conversations.map((c) {
+        try {
+          return jsonEncode(c.toJson());
+        } catch (e) {
+          debugPrint('Error encoding conversation ${c.id}: $e');
+          return null;
+        }
+      }).whereType<String>().toList();
+      
+      await _prefs!.setStringList(_localChatsKey, chatsJson);
+      
+      // Invalidar cache para forzar recarga en la próxima consulta
+      _invalidateCache();
+      
+    } catch (e) {
+      debugPrint('Error saving local conversation: $e');
+      rethrow;
     }
-    
-    // Ordenar por fecha de actualización
-    conversations.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-    
-    // Guardar en SharedPreferences
-    final chatsJson = conversations.map((c) => jsonEncode(c.toJson())).toList();
-    await _prefs!.setStringList(_localChatsKey, chatsJson);
   }
 
   Future<void> deleteLocalConversation(String conversationId) async {
-    await _initPrefs();
-    final conversations = await getLocalConversations();
-    conversations.removeWhere((c) => c.id == conversationId);
-    
-    final chatsJson = conversations.map((c) => jsonEncode(c.toJson())).toList();
-    await _prefs!.setStringList(_localChatsKey, chatsJson);
+    try {
+      await _initPrefs();
+      final conversations = await getLocalConversations(forceRefresh: true);
+      final initialCount = conversations.length;
+      
+      conversations.removeWhere((c) => c.id == conversationId);
+      
+      // Solo guardar si realmente se eliminó algo
+      if (conversations.length < initialCount) {
+        final chatsJson = conversations.map((c) {
+          try {
+            return jsonEncode(c.toJson());
+          } catch (e) {
+            debugPrint('Error encoding conversation ${c.id}: $e');
+            return null;
+          }
+        }).whereType<String>().toList();
+        
+        await _prefs!.setStringList(_localChatsKey, chatsJson);
+        _invalidateCache();
+      }
+    } catch (e) {
+      debugPrint('Error deleting local conversation: $e');
+      rethrow;
+    }
   }
 
   // Gestión de conversaciones en la nube
@@ -333,10 +413,29 @@ class ChatHistoryService {
     }
   }
 
+  // Métodos para manejo de timestamps de sincronización
+  Future<DateTime?> getLastSyncTime() async {
+    await _initPrefs();
+    final timestamp = _prefs!.getString(_lastSyncKey);
+    return timestamp != null ? DateTime.parse(timestamp) : null;
+  }
+
+  Future<void> setLastSyncTime(DateTime time) async {
+    await _initPrefs();
+    await _prefs!.setString(_lastSyncKey, time.toIso8601String());
+  }
+
   // Limpiar datos locales (útil para testing o reset)
   Future<void> clearLocalData() async {
-    await _initPrefs();
-    await _prefs!.remove(_localChatsKey);
+    try {
+      await _initPrefs();
+      await _prefs!.remove(_localChatsKey);
+      await _prefs!.remove(_lastSyncKey);
+      _invalidateCache();
+    } catch (e) {
+      debugPrint('Error clearing local data: $e');
+      rethrow;
+    }
   }
 
   // Eliminar todo el historial (local y en la nube)
@@ -348,10 +447,28 @@ class ChatHistoryService {
       // Si está habilitada la sincronización en la nube, también limpiar ahí
       if (await isCloudSyncEnabled() && SupabaseService.isSignedIn) {
         await SupabaseService.clearAllConversations();
+        await setLastSyncTime(DateTime.now());
       }
+      
+      // Invalidar cache
+      _invalidateCache();
+      
     } catch (e) {
       debugPrint('Error clearing all history: $e');
       rethrow;
     }
+  }
+
+  // Método para verificar si necesita sincronización
+  Future<bool> needsSync() async {
+    if (!await isCloudSyncEnabled() || !SupabaseService.isSignedIn) {
+      return false;
+    }
+    
+    final lastSync = await getLastSyncTime();
+    if (lastSync == null) return true;
+    
+    // Necesita sync si han pasado más de 5 minutos
+    return DateTime.now().difference(lastSync) > const Duration(minutes: 5);
   }
 }

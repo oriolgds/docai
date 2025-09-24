@@ -4,7 +4,7 @@ import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/chat_input.dart';
 
 import '../../services/openrouter_service.dart';
-import '../../services/chat_history_service.dart';
+import '../../services/chat_state_manager.dart';
 import '../../models/model_profile.dart';
 import '../../models/chat_message.dart';
 import '../../models/chat_conversation.dart';
@@ -26,7 +26,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
-  final ChatHistoryService _historyService = ChatHistoryService();
+  final ChatStateManager _stateManager = ChatStateManager();
   late List<ChatMessage> _messages;
   late ModelProfile _selectedProfile;
   bool _isSending = false;
@@ -42,6 +42,7 @@ class _ChatScreenState extends State<ChatScreen> {
   // Variables para el historial
   ChatConversation? _currentConversation;
   bool _hasFirstMessage = false;
+  String? _conversationId; // ID único para esta sesión de chat
 
   @override
   void initState() {
@@ -51,12 +52,19 @@ class _ChatScreenState extends State<ChatScreen> {
     
     // Inicializar con conversación existente o nueva
     if (widget.existingConversation != null) {
-      _currentConversation = widget.existingConversation;
-      _messages = List.from(widget.existingConversation!.messages);
+      // Obtener la conversación más actualizada del state manager
+      final updatedConversation = _stateManager.getConversationById(widget.existingConversation!.id) 
+          ?? widget.existingConversation!;
+      
+      _currentConversation = updatedConversation;
+      _conversationId = updatedConversation.id;
+      _messages = List.from(updatedConversation.messages);
       _hasFirstMessage = _messages.any((m) => m.role == ChatRole.user);
       _showDisclaimer = _messages.isEmpty;
     } else {
+      // Nueva conversación
       _messages = [];
+      _conversationId = null; // Se asignará cuando se cree la conversación
       _addInitialAssistantMessage();
     }
     
@@ -158,6 +166,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollTimer?.cancel();
     _scrollController.dispose();
     _service.dispose();
+    // Note: No need to dispose _stateManager as it's a singleton
     super.dispose();
   }
 
@@ -173,8 +182,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _createOrUpdateConversation(String firstUserMessage) async {
     if (_currentConversation == null) {
-      // Crear nueva conversación
-      _currentConversation = await _historyService.createNewConversation(firstUserMessage);
+      // Crear nueva conversación usando el state manager
+      _currentConversation = await _stateManager.createConversation(firstUserMessage);
+      _conversationId = _currentConversation!.id;
+      
       // Actualizar el título en el AppBar inmediatamente
       if (mounted) {
         setState(() {
@@ -184,14 +195,14 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     
     // Solo actualizar y guardar la conversación si tenemos mensajes
-    if (_messages.isNotEmpty) {
+    if (_messages.isNotEmpty && _currentConversation != null) {
       // Actualizar la conversación con los mensajes actuales
       final updatedConversation = _currentConversation!.copyWith(
         messages: List.from(_messages), // Crear nueva lista para evitar referencias
         updatedAt: DateTime.now(),
       );
       
-      await _historyService.saveConversation(updatedConversation);
+      await _stateManager.saveConversation(updatedConversation);
       _currentConversation = updatedConversation;
     }
   }
@@ -224,6 +235,7 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() {
       _messages.clear();
       _currentConversation = null;
+      _conversationId = null; // Reset conversation ID
       _hasFirstMessage = false;
       _showDisclaimer = true;
       _showFirstTimeWarning = false;
@@ -274,13 +286,14 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       }
       
-      // Eliminar todo el historial
-      await _historyService.clearAllHistory();
+      // Eliminar todo el historial usando el state manager
+      await _stateManager.clearAllHistory();
       
       // Limpiar el estado actual y empezar nueva conversación
       setState(() {
         _messages.clear();
         _currentConversation = null;
+        _conversationId = null; // Reset conversation ID
         _hasFirstMessage = false;
         _showDisclaimer = true;
         _showFirstTimeWarning = false;

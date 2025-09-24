@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../models/chat_conversation.dart';
-import '../../services/chat_history_service.dart';
-import '../auth/login_screen.dart';
+import '../../services/chat_state_manager.dart';
 import 'chat_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -12,122 +12,66 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserver {
-  final ChatHistoryService _historyService = ChatHistoryService();
-  List<ChatConversation> _conversations = [];
-  bool _isLoading = true;
-  bool _cloudSyncEnabled = false;
-  bool _isSyncingCloud = false;
+  final ChatStateManager _stateManager = ChatStateManager();
+  late final StreamSubscription? _conversationsSubscription;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _loadLocalConversations(); // Cargar inmediatamente datos locales
-    _loadSyncSettings();
-    _syncCloudInBackground(); // Sincronizar en segundo plano
+    
+    // Inicializar el state manager
+    _stateManager.initialize();
+    
+    // Escuchar cambios en las conversaciones
+    _conversationsSubscription = _stateManager.conversationsStream.listen((_) {
+      if (mounted) setState(() {});
+    });
+    
+    // Escuchar cambios generales del state manager
+    _stateManager.addListener(_onStateChanged);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Actualizar cada vez que se muestra la página
-    _loadLocalConversations();
+    // El state manager se encarga automáticamente de mantener los datos actualizados
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _conversationsSubscription?.cancel();
+    _stateManager.removeListener(_onStateChanged);
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // Recargar datos locales inmediatamente cuando la app vuelve al foreground
-      _loadLocalConversations();
-      // Sincronizar en la nube si está habilitado
-      _syncCloudInBackground();
-    }
+    _stateManager.onAppLifecycleStateChanged(state);
   }
 
-  Future<void> _loadLocalConversations() async {
-    if (!mounted) return;
-    
-    // Solo mostrar loading en la primera carga
-    if (_conversations.isEmpty) {
-      setState(() => _isLoading = true);
-    }
-    
-    try {
-      final conversations = await _historyService.getAllConversations();
-      if (mounted) {
-        setState(() {
-          _conversations = conversations;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error cargando conversaciones: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _syncCloudInBackground() async {
-    if (!mounted || !_cloudSyncEnabled || _isSyncingCloud) return;
-    
-    setState(() => _isSyncingCloud = true);
-    
-    try {
-      // Sincronizar con la nube si está habilitado
-      if (_cloudSyncEnabled) {
-        await _historyService.forceSyncAllConversations();
-        // Recargar conversaciones después de sincronizar
-        await _loadLocalConversations();
-      }
-    } catch (e) {
-      // Fallo silencioso para la sincronización en segundo plano
-      print('Error sincronizando en segundo plano: $e');
-    } finally {
-      if (mounted) {
-        setState(() => _isSyncingCloud = false);
-      }
-    }
+  void _onStateChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _forceRefresh() async {
     if (!mounted) return;
     
-    setState(() => _isLoading = true);
-    
-    // Cargar datos locales primero
-    await _loadLocalConversations();
-    
-    // Luego sincronizar con la nube
-    await _syncCloudInBackground();
-  }
-
-  Future<void> _loadSyncSettings() async {
-    final enabled = await _historyService.isCloudSyncEnabled();
-    if (mounted) {
-      setState(() => _cloudSyncEnabled = enabled);
+    try {
+      await _stateManager.refresh();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error refrescando: $e')),
+        );
+      }
     }
   }
 
   Future<void> _toggleCloudSync(bool enabled) async {
     try {
-      await _historyService.setCloudSyncEnabled(enabled);
-      setState(() => _cloudSyncEnabled = enabled);
-      
-      if (enabled) {
-        // Forzar sincronización cuando se habilita
-        await _historyService.forceSyncAllConversations();
-      }
-      
-      await _forceRefresh(); // Forzar actualización completa tras cambio de sync
+      await _stateManager.toggleCloudSync(enabled);
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -142,6 +86,32 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _forceSyncNow() async {
+    if (!mounted) return;
+    
+    try {
+      await _stateManager.forceSyncNow();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sincronización completada'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error en sincronización: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -169,8 +139,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
 
     if (confirmed == true) {
       try {
-        await _historyService.deleteConversation(conversation.id);
-        await _loadLocalConversations(); // Actualización local inmediata tras eliminación
+        await _stateManager.deleteConversation(conversation.id);
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -227,11 +196,8 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
         );
       }
       
-      // Eliminar todo el historial
-      await _historyService.clearAllHistory();
-      
-      // Recargar la lista
-      await _loadLocalConversations();
+      // Eliminar todo el historial usando el state manager
+      await _stateManager.clearAllHistory();
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -254,18 +220,18 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
   }
 
   void _openConversation(ChatConversation conversation) {
+    // Obtener la conversación más actualizada del state manager
+    final updatedConversation = _stateManager.getConversationById(conversation.id) ?? conversation;
+    
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ChatScreen(
-          existingConversation: conversation,
+          existingConversation: updatedConversation,
         ),
       ),
-    ).then((_) {
-      // Actualizar conversaciones cuando se regresa del chat
-      _loadLocalConversations(); // Cargar inmediatamente datos locales actualizados
-      _syncCloudInBackground(); // Sincronizar en segundo plano si está habilitado
-    });
+    );
+    // El state manager se encarga automáticamente de la sincronización
   }
 
   void _startNewConversation() {
@@ -274,40 +240,45 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       MaterialPageRoute(
         builder: (context) => const ChatScreen(),
       ),
-    ).then((_) {
-      // Actualizar conversaciones cuando se regresa del chat nuevo (CRÍTICO)
-      _loadLocalConversations(); // Cargar inmediatamente para mostrar el nuevo chat
-      _syncCloudInBackground(); // Sincronizar en segundo plano si está habilitado
-    });
+    );
+    // El state manager se encarga automáticamente de mantener los datos actualizados
   }
 
   Widget _buildSyncSettings() {
+    final cloudSyncEnabled = _stateManager.cloudSyncEnabled;
+    final isSyncing = _stateManager.isSyncing;
+    final lastSyncTime = _stateManager.lastSyncTime;
+    final hasError = _stateManager.hasError;
+    
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: hasError ? Colors.red.shade50 : Colors.blue.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.shade200),
+        border: Border.all(color: hasError ? Colors.red.shade200 : Colors.blue.shade200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.cloud_outlined, color: Colors.blue.shade700),
+              Icon(
+                hasError ? Icons.cloud_off : Icons.cloud_outlined, 
+                color: hasError ? Colors.red.shade700 : Colors.blue.shade700
+              ),
               const SizedBox(width: 8),
               Text(
                 'Sincronización en la nube',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Colors.blue.shade700,
+                  color: hasError ? Colors.red.shade700 : Colors.blue.shade700,
                 ),
               ),
               const Spacer(),
               Switch(
-                value: _cloudSyncEnabled,
+                value: cloudSyncEnabled,
                 onChanged: _toggleCloudSync,
                 activeColor: Colors.blue.shade700,
               ),
@@ -318,16 +289,14 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
             children: [
               Expanded(
                 child: Text(
-                  _cloudSyncEnabled
-                      ? (_isSyncingCloud ? 'Sincronizando con la nube...' : 'Tus conversaciones se sincronizan automáticamente en la nube')
-                      : 'Tus conversaciones se guardan solo en este dispositivo',
+                  _getSyncStatusText(cloudSyncEnabled, isSyncing, lastSyncTime, hasError),
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.blue.shade600,
+                    color: hasError ? Colors.red.shade600 : Colors.blue.shade600,
                   ),
                 ),
               ),
-              if (_isSyncingCloud) ...[
+              if (isSyncing) ...[
                 const SizedBox(width: 8),
                 SizedBox(
                   width: 16,
@@ -338,9 +307,28 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                   ),
                 ),
               ],
+              if (cloudSyncEnabled && !isSyncing) ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(Icons.refresh, size: 20, color: Colors.blue.shade600),
+                  onPressed: _forceSyncNow,
+                  tooltip: 'Sincronizar ahora',
+                ),
+              ],
             ],
           ),
-          if (_cloudSyncEnabled) ...[
+          if (hasError) ...[
+            const SizedBox(height: 8),
+            Text(
+              _stateManager.error!,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.red.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+          if (cloudSyncEnabled && !hasError) ...[
             const SizedBox(height: 12),
             Row(
               children: [
@@ -361,6 +349,37 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
         ],
       ),
     );
+  }
+
+  String _getSyncStatusText(bool cloudSyncEnabled, bool isSyncing, DateTime? lastSyncTime, bool hasError) {
+    if (hasError) {
+      return 'Error en la sincronización. Toca refrescar para intentar de nuevo.';
+    }
+    
+    if (!cloudSyncEnabled) {
+      return 'Tus conversaciones se guardan solo en este dispositivo';
+    }
+    
+    if (isSyncing) {
+      return 'Sincronizando con la nube...';
+    }
+    
+    if (lastSyncTime != null) {
+      final now = DateTime.now();
+      final difference = now.difference(lastSyncTime);
+      
+      if (difference.inMinutes < 1) {
+        return 'Sincronizado hace menos de un minuto';
+      } else if (difference.inMinutes < 60) {
+        return 'Última sincronización: hace ${difference.inMinutes} minutos';
+      } else if (difference.inHours < 24) {
+        return 'Última sincronización: hace ${difference.inHours} horas';
+      } else {
+        return 'Última sincronización: hace ${difference.inDays} días';
+      }
+    }
+    
+    return 'Tus conversaciones se sincronizan automáticamente en la nube';
   }
 
   Widget _buildConversationTile(ChatConversation conversation) {
@@ -517,6 +536,9 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
 
   @override
   Widget build(BuildContext context) {
+    final conversations = _stateManager.conversations;
+    final isLoading = _stateManager.isLoading;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Historial'),
@@ -527,14 +549,14 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
             onPressed: _startNewConversation,
             tooltip: 'Nueva conversación',
           ),
-          if (_conversations.isNotEmpty)
+          if (conversations.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.refresh),
-              onPressed: _forceRefresh, // Forzar actualización completa (local + nube)
+              onPressed: _forceRefresh,
               tooltip: 'Actualizar',
             ),
           // Botón para eliminar todo el historial
-          if (_conversations.isNotEmpty)
+          if (conversations.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_sweep_outlined),
               onPressed: _clearAllHistory,
@@ -542,21 +564,21 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
             ),
         ],
       ),
-      body: _isLoading
+      body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
                 _buildSyncSettings(),
-                if (_conversations.isEmpty)
+                if (conversations.isEmpty)
                   Expanded(child: _buildEmptyState())
                 else
                   Expanded(
                     child: RefreshIndicator(
-                      onRefresh: _forceRefresh, // Pull-to-refresh completo (local + nube)
+                      onRefresh: _forceRefresh,
                       child: ListView.builder(
-                        itemCount: _conversations.length,
+                        itemCount: conversations.length,
                         itemBuilder: (context, index) {
-                          return _buildConversationTile(_conversations[index]);
+                          return _buildConversationTile(conversations[index]);
                         },
                       ),
                     ),
