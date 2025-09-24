@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_conversation.dart';
 import '../models/chat_message.dart';
 import 'supabase_service.dart';
+import 'openrouter_service.dart';
 
 class ChatHistoryService {
   static const String _localChatsKey = 'local_chats';
@@ -15,6 +16,7 @@ class ChatHistoryService {
   ChatHistoryService._internal();
 
   SharedPreferences? _prefs;
+  final OpenRouterService _openRouterService = OpenRouterService();
   
   Future<void> _initPrefs() async {
     _prefs ??= await SharedPreferences.getInstance();
@@ -237,9 +239,19 @@ class ChatHistoryService {
   }
 
   Future<ChatConversation> createNewConversation(String firstMessage) async {
+    // Generar título usando IA
+    String title;
+    try {
+      title = await _openRouterService.generateConversationTitle(firstMessage);
+    } catch (e) {
+      // Si falla la generación con IA, usar el método por defecto
+      debugPrint('Error generating AI title: $e');
+      title = ChatConversation.generateTitle(firstMessage);
+    }
+    
     final conversation = ChatConversation(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
-      title: ChatConversation.generateTitle(firstMessage),
+      title: title,
       messages: [],
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -325,5 +337,21 @@ class ChatHistoryService {
   Future<void> clearLocalData() async {
     await _initPrefs();
     await _prefs!.remove(_localChatsKey);
+  }
+
+  // Eliminar todo el historial (local y en la nube)
+  Future<void> clearAllHistory() async {
+    try {
+      // Limpiar datos locales
+      await clearLocalData();
+      
+      // Si está habilitada la sincronización en la nube, también limpiar ahí
+      if (await isCloudSyncEnabled() && SupabaseService.isSignedIn) {
+        await SupabaseService.clearAllConversations();
+      }
+    } catch (e) {
+      debugPrint('Error clearing all history: $e');
+      rethrow;
+    }
   }
 }

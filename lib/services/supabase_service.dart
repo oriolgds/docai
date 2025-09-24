@@ -246,4 +246,34 @@ class SupabaseService {
       throw Exception('Error deleting conversation: $e');
     }
   }
+
+  static Future<void> clearAllConversations() async {
+    final user = currentUser;
+    if (user == null) throw Exception('User not authenticated');
+    
+    try {
+      // Obtener todas las conversaciones del usuario
+      final conversations = await client
+          .from('chat_conversations')
+          .select('id')
+          .eq('user_id', user.id);
+      
+      // Eliminar todos los mensajes del usuario
+      for (final conv in conversations) {
+        await client
+            .from('chat_messages')
+            .delete()
+            .eq('conversation_id', conv['id']);
+      }
+      
+      // Eliminar todas las conversaciones del usuario
+      await client
+          .from('chat_conversations')
+          .delete()
+          .eq('user_id', user.id);
+          
+    } catch (e) {
+      throw Exception('Error clearing all conversations: $e');
+    }
+  }
 }

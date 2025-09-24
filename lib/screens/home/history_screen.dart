@@ -187,6 +187,72 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
     }
   }
 
+  Future<void> _clearAllHistory() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar todo el historial'),
+        content: const Text(
+          '¿Estás seguro de que quieres eliminar todo el historial de chats? '
+          'Esta acción no se puede deshacer y eliminará todas las conversaciones '
+          'tanto localmente como en la nube.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Eliminar todo'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirmed != true) return;
+    
+    try {
+      // Mostrar indicador de carga
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Eliminando historial...'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      
+      // Eliminar todo el historial
+      await _historyService.clearAllHistory();
+      
+      // Recargar la lista
+      await _loadLocalConversations();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Historial eliminado correctamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al eliminar historial: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _openConversation(ChatConversation conversation) {
     Navigator.push(
       context,
@@ -436,10 +502,14 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: _startNewConversation,
-            icon: const Icon(Icons.chat),
-            label: const Text('Iniciar nueva conversación'),
-          ),
+  onPressed: _startNewConversation,
+  icon: const Icon(Icons.chat),
+  label: const Text('Iniciar nueva conversación'),
+  style: ElevatedButton.styleFrom(
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+  ),
+),
+
         ],
       ),
     );
@@ -462,6 +532,13 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
               icon: const Icon(Icons.refresh),
               onPressed: _forceRefresh, // Forzar actualización completa (local + nube)
               tooltip: 'Actualizar',
+            ),
+          // Botón para eliminar todo el historial
+          if (_conversations.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.delete_sweep_outlined),
+              onPressed: _clearAllHistory,
+              tooltip: 'Eliminar todo el historial',
             ),
         ],
       ),
