@@ -2,6 +2,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_preferences.dart';
+import '../models/chat_conversation.dart';
+import '../models/chat_message.dart';
 
 class SupabaseService {
   static bool _initialized = false;
@@ -150,6 +152,98 @@ class SupabaseService {
         userId: user.id,
         isFirstTime: false,
       ));
+    }
+  }
+
+  // Chat History methods
+  static Future<List<ChatConversation>> getUserConversations() async {
+    final user = currentUser;
+    if (user == null) return [];
+
+    try {
+      final conversationsData = await client
+          .from('chat_conversations')
+          .select()
+          .eq('user_id', user.id)
+          .order('updated_at', ascending: false);
+
+      List<ChatConversation> conversations = [];
+      
+      for (final convData in conversationsData) {
+        final conversation = ChatConversation.fromSupabaseJson(convData);
+        
+        // Cargar mensajes para esta conversación
+        final messagesData = await client
+            .from('chat_messages')
+            .select()
+            .eq('conversation_id', conversation.id)
+            .order('created_at', ascending: true);
+            
+        final messages = messagesData
+            .map((msgData) => ChatMessage.fromSupabaseJson(msgData))
+            .toList();
+            
+        conversations.add(conversation.copyWith(messages: messages));
+      }
+      
+      return conversations;
+    } catch (e) {
+      throw Exception('Error loading conversations: $e');
+    }
+  }
+
+  static Future<void> saveConversation(ChatConversation conversation) async {
+    final user = currentUser;
+    if (user == null) throw Exception('User not authenticated');
+    
+    try {
+      // Upsert conversation
+      await client
+          .from('chat_conversations')
+          .upsert(conversation.toSupabaseJson(user.id));
+      
+      // Delete existing messages for this conversation
+      await client
+          .from('chat_messages')
+          .delete()
+          .eq('conversation_id', conversation.id);
+      
+      // Insert new messages
+      if (conversation.messages.isNotEmpty) {
+        final messagesData = conversation.messages
+            .map((msg) => msg.toSupabaseJson(conversation.id))
+            .toList();
+            
+        await client
+            .from('chat_messages')
+            .insert(messagesData);
+      }
+      
+    } catch (e) {
+      throw Exception('Error saving conversation: $e');
+    }
+  }
+
+  static Future<void> deleteConversation(String conversationId) async {
+    final user = currentUser;
+    if (user == null) throw Exception('User not authenticated');
+    
+    try {
+      // Eliminar mensajes primero
+      await client
+          .from('chat_messages')
+          .delete()
+          .eq('conversation_id', conversationId);
+      
+      // Eliminar conversación
+      await client
+          .from('chat_conversations')
+          .delete()
+          .eq('id', conversationId)
+          .eq('user_id', user.id);
+          
+    } catch (e) {
+      throw Exception('Error deleting conversation: $e');
     }
   }
 }

@@ -4,8 +4,10 @@ import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/chat_input.dart';
 import '../../widgets/chat/model_selector.dart';
 import '../../services/openrouter_service.dart';
+import '../../services/chat_history_service.dart';
 import '../../models/model_profile.dart';
 import '../../models/chat_message.dart';
+import '../../models/chat_conversation.dart';
 import '../../models/user_preferences.dart';
 import '../../config/openrouter_config.dart';
 import '../../services/supabase_service.dart';
@@ -13,7 +15,9 @@ import 'profile_screen.dart';
 import 'personalization_screen.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  final ChatConversation? existingConversation;
+  
+  const ChatScreen({super.key, this.existingConversation});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -21,7 +25,8 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
-  final List<ChatMessage> _messages = [];
+  final ChatHistoryService _historyService = ChatHistoryService();
+  late List<ChatMessage> _messages;
   late ModelProfile _selectedProfile;
   bool _isSending = false;
   late OpenRouterService _service;
@@ -29,16 +34,31 @@ class _ChatScreenState extends State<ChatScreen> {
   int? _streamingIndex;
   Timer? _scrollTimer;
   bool _shouldScroll = false;
-  bool _useReasoning = false; // Nueva variable para controlar el razonamiento
+  bool _useReasoning = false;
   bool _showFirstTimeWarning = false;
-  UserPreferences? _userPreferences; // Almacenar las preferencias del usuario
+  UserPreferences? _userPreferences;
+  
+  // Variables para el historial
+  ChatConversation? _currentConversation;
+  bool _hasFirstMessage = false;
 
   @override
   void initState() {
     super.initState();
     _service = OpenRouterService();
     _selectedProfile = ModelProfile.defaultProfile;
-    _addInitialAssistantMessage();
+    
+    // Inicializar con conversación existente o nueva
+    if (widget.existingConversation != null) {
+      _currentConversation = widget.existingConversation;
+      _messages = List.from(widget.existingConversation!.messages);
+      _hasFirstMessage = _messages.any((m) => m.role == ChatRole.user);
+      _showDisclaimer = _messages.isEmpty;
+    } else {
+      _messages = [];
+      _addInitialAssistantMessage();
+    }
+    
     _checkFirstTimeUser();
     _loadUserPreferences();
   }
@@ -48,7 +68,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final isFirstTime = await SupabaseService.isFirstTimeUser();
       if (mounted) {
         setState(() {
-          _showFirstTimeWarning = isFirstTime;
+          _showFirstTimeWarning = isFirstTime && _messages.length <= 1;
         });
       }
     } catch (e) {
@@ -141,7 +161,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String _assistantLabel() {
-    // Mostrar solo Docai • Razonamiento" sin subcategoría "Fast"
     final baseName = brandDisplayName(_selectedProfile.brand);
     return _useReasoning ? '$baseName • Razonamiento' : baseName;
   }
@@ -149,6 +168,22 @@ class _ChatScreenState extends State<ChatScreen> {
   void _addInitialAssistantMessage() {
     _messages.add(ChatMessage.assistant(
         'Hola, soy Docai. ¿En qué puedo ayudarte hoy?'));
+  }
+
+  Future<void> _createOrUpdateConversation(String firstUserMessage) async {
+    if (_currentConversation == null) {
+      // Crear nueva conversación
+      _currentConversation = await _historyService.createNewConversation(firstUserMessage);
+    }
+    
+    // Actualizar la conversación con los mensajes actuales
+    final updatedConversation = _currentConversation!.copyWith(
+      messages: _messages,
+      updatedAt: DateTime.now(),
+    );
+    
+    await _historyService.saveConversation(updatedConversation);
+    _currentConversation = updatedConversation;
   }
 
   Future<void> _sendMessage(
@@ -164,16 +199,19 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.add(userMessage);
       } else {
         // Regeneration: remove only messages AFTER the given user message, keeping the user message itself
-        // regenerateIndex points to the preceding user message index
         if (regenerateIndex >= 0 && regenerateIndex < _messages.length - 1) {
           _messages.removeRange(regenerateIndex + 1, _messages.length);
-        } else if (regenerateIndex == _messages.length - 1) {
-          // If the last message is the user message, nothing to remove
         }
       }
       _isSending = true;
       _showDisclaimer = false;
     });
+
+    // Crear o actualizar conversación si es el primer mensaje del usuario
+    if (!_hasFirstMessage && regenerateIndex == null) {
+      _hasFirstMessage = true;
+      await _createOrUpdateConversation(text);
+    }
     
     // Wait for the next frame to ensure the view has updated
     await Future.delayed(Duration.zero);
@@ -201,7 +239,7 @@ class _ChatScreenState extends State<ChatScreen> {
         messages: history,
         profile: overrideProfile ?? _selectedProfile,
         systemPromptOverride: _buildPersonalizedSystemPrompt(),
-        useReasoning: overrideReasoning ?? _useReasoning, // Usar el parámetro de razonamiento
+        useReasoning: overrideReasoning ?? _useReasoning,
       );
 
       // Initial scroll to bottom before starting the stream
@@ -225,10 +263,15 @@ class _ChatScreenState extends State<ChatScreen> {
         final maxScroll = _scrollController.position.maxScrollExtent;
         final currentScroll = _scrollController.offset;
         if (maxScroll - currentScroll < 300) {
-          // 300px from bottom
           _scrollToBottom();
         }
       }
+
+      // Guardar la conversación después de que se complete la respuesta del asistente
+      if (_currentConversation != null) {
+        await _createOrUpdateConversation(text);
+      }
+
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -281,7 +324,6 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // Simplificamos el modal ya que solo hay un modelo
   Future<bool?> _showReasoningPickerSheet() async {
     bool tempReasoning = _useReasoning;
     
@@ -310,7 +352,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                   ),
                   const SizedBox(height: 12),
-                  // Mostrar solo el modelo actual sin opciones de cambio
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -347,7 +388,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Control de razonamiento
                   Row(
                     children: [
                       Icon(Icons.psychology, size: 20, color: brandColor(_selectedProfile.brand)),
@@ -383,9 +423,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       const SizedBox(width: 8),
                       ElevatedButton(
                         onPressed: () => Navigator.of(context).pop(tempReasoning),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                          child: const Text('Regenerar'),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                          child: Text('Regenerar'),
                         ),
                       ),
                     ],
@@ -407,7 +447,6 @@ class _ChatScreenState extends State<ChatScreen> {
     final newReasoning = await _showReasoningPickerSheet();
     if (newReasoning == null) return;
     
-    // Actualizar el estado del razonamiento si cambió
     if (newReasoning != _useReasoning) {
       setState(() {
         _useReasoning = newReasoning;
@@ -425,9 +464,10 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final accent = brandColor(_selectedProfile.brand);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Docai'),
+        title: Text(_currentConversation?.title ?? 'Docai'),
         actions: [
           IconButton(
             tooltip: 'Aviso',
@@ -558,7 +598,6 @@ class _ChatScreenState extends State<ChatScreen> {
                                 builder: (context) => const PersonalizationScreen(),
                               ),
                             );
-                            // Recargar preferencias cuando regrese de personalización
                             await _loadUserPreferences();
                           }
                         },
@@ -566,9 +605,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           backgroundColor: Colors.blue.shade700,
                           foregroundColor: Colors.white,
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: const Text('Personalizar'),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Text('Personalizar'),
                         ),
                       ),
                     ],
@@ -583,30 +622,23 @@ class _ChatScreenState extends State<ChatScreen> {
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final m = _messages[index];
-                Widget _buildMessageBubble(ChatMessage message, int index) {
-                  final isAssistant = message.role == ChatRole.assistant;
-                  // Determina si es el mensaje de bienvenida (primer mensaje del asistente)
-                  final isWelcomeMessage = index == 0 && isAssistant;
+                final isAssistant = m.role == ChatRole.assistant;
+                final isWelcomeMessage = index == 0 && isAssistant && _messages.length == 1;
 
-                  return MessageBubble(
-                    message: message.content,
-                    isAssistant: isAssistant,
-                    assistantLabel: _assistantLabel(),
-                    accentColor: brandColor(_selectedProfile.brand),
-                    isStreaming:
-                        isAssistant &&
-                        _streamingIndex != null &&
-                        index == _streamingIndex,
-                    showRegenerateButton: isAssistant && !isWelcomeMessage,
-                    onRegenerate: isAssistant && !isWelcomeMessage
-                        ? () {
-                            _regenerateResponse(index);
-                          }
-                        : null,
-                  );
-                }
-
-                return _buildMessageBubble(m, index);
+                return MessageBubble(
+                  message: m.content,
+                  isAssistant: isAssistant,
+                  assistantLabel: _assistantLabel(),
+                  accentColor: brandColor(_selectedProfile.brand),
+                  isStreaming:
+                      isAssistant &&
+                      _streamingIndex != null &&
+                      index == _streamingIndex,
+                  showRegenerateButton: isAssistant && !isWelcomeMessage,
+                  onRegenerate: isAssistant && !isWelcomeMessage
+                      ? () => _regenerateResponse(index)
+                      : null,
+                );
               },
             ),
           ),
@@ -615,18 +647,18 @@ class _ChatScreenState extends State<ChatScreen> {
             isSending: _isSending,
             selectedProfile: _selectedProfile,
             allProfiles: ModelProfile.defaults(),
-            useReasoning: _useReasoning, // Pasar el estado del razonamiento
+            useReasoning: _useReasoning,
             onProfileChanged: (p) {
               setState(() {
                 _selectedProfile = p;
               });
             },
-            onReasoningChanged: (enabled) { // Nuevo callback para el razonamiento
+            onReasoningChanged: (enabled) {
               setState(() {
                 _useReasoning = enabled;
               });
             },
-            onRequestPro: () {}, // Ya no necesario con un solo modelo
+            onRequestPro: () {},
           ),
         ],
       ),
