@@ -31,11 +31,11 @@ class OpenRouterService {
     };
 
     // Solo agregar el parámetro de razonamiento si está habilitado
-    // usar el formato correcto para la API de OpenRouter
+    // usar el formato correcto para la API de OpenRouter (objeto, no boolean)
     if (useReasoning) {
-      payload['reasoning'] = true;
-      // Opcional: configurar el effort level para el reasoning
-      payload['effort'] = 'high';
+      payload['reasoning'] = {
+        'effort': 'high',
+      };
     }
 
     final uri = Uri.parse('${OpenRouterConfig.baseUrl}/chat/completions');
@@ -92,11 +92,11 @@ class OpenRouterService {
     };
 
     // Solo agregar el parámetro de razonamiento si está habilitado
-    // usar el formato correcto para la API de OpenRouter
+    // usar el formato correcto para la API de OpenRouter (objeto, no boolean)
     if (useReasoning) {
-      payload['reasoning'] = true;
-      // Opcional: configurar el effort level para el reasoning
-      payload['effort'] = 'high';
+      payload['reasoning'] = {
+        'effort': 'high',
+      };
     }
 
     final uri = Uri.parse('${OpenRouterConfig.baseUrl}/chat/completions');

@@ -13,6 +13,7 @@ import '../../config/openrouter_config.dart';
 import '../../services/supabase_service.dart';
 import 'profile_screen.dart';
 import 'personalization_screen.dart';
+import 'history_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatConversation? existingConversation;
@@ -174,16 +175,63 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_currentConversation == null) {
       // Crear nueva conversación
       _currentConversation = await _historyService.createNewConversation(firstUserMessage);
+      // Actualizar el título en el AppBar inmediatamente
+      if (mounted) {
+        setState(() {
+          // Forzar reconstrucción del AppBar con el nuevo título
+        });
+      }
     }
     
-    // Actualizar la conversación con los mensajes actuales
-    final updatedConversation = _currentConversation!.copyWith(
-      messages: _messages,
-      updatedAt: DateTime.now(),
-    );
+    // Solo actualizar y guardar la conversación si tenemos mensajes
+    if (_messages.isNotEmpty) {
+      // Actualizar la conversación con los mensajes actuales
+      final updatedConversation = _currentConversation!.copyWith(
+        messages: List.from(_messages), // Crear nueva lista para evitar referencias
+        updatedAt: DateTime.now(),
+      );
+      
+      await _historyService.saveConversation(updatedConversation);
+      _currentConversation = updatedConversation;
+    }
+  }
+
+  Future<void> _startNewConversation() async {
+    // Confirmar si el usuario quiere iniciar una nueva conversación
+    if (_messages.length > 1) { // Solo preguntar si hay mensajes más allá del saludo inicial
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Nueva conversación'),
+          content: const Text('¿Estás seguro de que quieres iniciar una nueva conversación?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Nueva conversación'),
+            ),
+          ],
+        ),
+      );
+      
+      if (confirmed != true) return;
+    }
     
-    await _historyService.saveConversation(updatedConversation);
-    _currentConversation = updatedConversation;
+    // Limpiar el estado actual
+    setState(() {
+      _messages.clear();
+      _currentConversation = null;
+      _hasFirstMessage = false;
+      _showDisclaimer = true;
+      _showFirstTimeWarning = false;
+    });
+    
+    // Agregar mensaje inicial
+    _addInitialAssistantMessage();
+    await _scrollToBottom(force: true);
   }
 
   Future<void> _sendMessage(
@@ -469,6 +517,27 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: Text(_currentConversation?.title ?? 'Docai'),
         actions: [
+          // Botón para nueva conversación
+          if (_hasFirstMessage)
+            IconButton(
+              tooltip: 'Nueva conversación',
+              icon: const Icon(Icons.add_comment_outlined),
+              onPressed: _startNewConversation,
+            ),
+          // Botón para ver historial
+          if (_hasFirstMessage)
+            IconButton(
+              tooltip: 'Ver historial',
+              icon: const Icon(Icons.history),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HistoryScreen(),
+                  ),
+                );
+              },
+            ),
           IconButton(
             tooltip: 'Aviso',
             icon: const Icon(Icons.info_outline),

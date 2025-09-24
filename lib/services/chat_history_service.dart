@@ -200,20 +200,25 @@ class ChatHistoryService {
   }
 
   Future<void> saveConversation(ChatConversation conversation) async {
-    // Siempre guardar localmente
-    await saveLocalConversation(conversation);
-    
-    // Si la sincronización está habilitada, también guardar en la nube
-    if (await isCloudSyncEnabled() && SupabaseService.isSignedIn) {
-      try {
-        await saveCloudConversation(conversation);
-        // Marcar como sincronizado
-        final syncedConversation = conversation.copyWith(isCloudSynced: true);
-        await saveLocalConversation(syncedConversation);
-      } catch (e) {
-        debugPrint('Failed to sync conversation to cloud: $e');
-        // La conversación se mantiene local
+    try {
+      // Siempre guardar localmente primero
+      await saveLocalConversation(conversation);
+      
+      // Si la sincronización está habilitada, también guardar en la nube
+      if (await isCloudSyncEnabled() && SupabaseService.isSignedIn) {
+        try {
+          await saveCloudConversation(conversation);
+          // Marcar como sincronizado y guardar localmente de nuevo
+          final syncedConversation = conversation.copyWith(isCloudSynced: true);
+          await saveLocalConversation(syncedConversation);
+        } catch (e) {
+          debugPrint('Failed to sync conversation to cloud: $e');
+          // La conversación se mantiene local
+        }
       }
+    } catch (e) {
+      debugPrint('Error saving conversation: $e');
+      rethrow;
     }
   }
 
@@ -240,14 +245,19 @@ class ChatHistoryService {
       updatedAt: DateTime.now(),
     );
     
-    await saveConversation(conversation);
+    // No guardar automáticamente al crear - se guardará cuando se agreguen mensajes
     return conversation;
   }
 
   Future<void> addMessageToConversation(String conversationId, ChatMessage message) async {
     final conversations = await getAllConversations();
-    final conversation = conversations.firstWhere((c) => c.id == conversationId);
+    final conversationIndex = conversations.indexWhere((c) => c.id == conversationId);
     
+    if (conversationIndex == -1) {
+      throw Exception('Conversation not found: $conversationId');
+    }
+    
+    final conversation = conversations[conversationIndex];
     final updatedConversation = conversation.copyWith(
       messages: [...conversation.messages, message],
       updatedAt: DateTime.now(),
@@ -299,6 +309,16 @@ class ChatHistoryService {
     }
     
     await _syncLocalChatsToCloud();
+  }
+
+  // Obtener una conversación específica por ID
+  Future<ChatConversation?> getConversationById(String conversationId) async {
+    final conversations = await getAllConversations();
+    try {
+      return conversations.firstWhere((c) => c.id == conversationId);
+    } catch (e) {
+      return null;
+    }
   }
 
   // Limpiar datos locales (útil para testing o reset)
