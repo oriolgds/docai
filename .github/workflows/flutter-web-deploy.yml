@@ -34,6 +34,15 @@ jobs:
         flutter-version: '3.24.0'  # Usa la versión estable más reciente
         channel: 'stable'
     
+    - name: Create firebase_options.dart from secret
+      run: |
+        mkdir -p lib
+        echo '${{ secrets.FIREBASE_OPTIONS_DART }}' > lib/firebase_options.dart
+    
+    - name: Create .env file from secret
+      run: |
+        echo '${{ secrets.DOT_ENV }}' > .env
+    
     - name: Get dependencies
       run: flutter pub get
     
