@@ -598,6 +598,186 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  // Funciones de sincronización agregadas
+  Widget _buildSyncCard() {
+    final cloudSyncEnabled = _stateManager.cloudSyncEnabled;
+    final isSyncing = _stateManager.isSyncing;
+    final lastSyncTime = _stateManager.lastSyncTime;
+    final hasError = _stateManager.hasError;
+    
+    return Container(
+      margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: hasError ? Colors.red.shade50 : Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: hasError ? Colors.red.shade200 : Colors.blue.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                hasError ? Icons.cloud_off : Icons.cloud_outlined, 
+                color: hasError ? Colors.red.shade700 : Colors.blue.shade700,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Sincronización en la nube',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: hasError ? Colors.red.shade700 : Colors.blue.shade700,
+                ),
+              ),
+              const Spacer(),
+              Transform.scale(
+                scale: 0.8,
+                child: Switch(
+                  value: cloudSyncEnabled,
+                  onChanged: _toggleCloudSync,
+                  activeColor: Colors.blue.shade700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _getSyncStatusText(cloudSyncEnabled, isSyncing, lastSyncTime, hasError),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: hasError ? Colors.red.shade600 : Colors.blue.shade600,
+                  ),
+                ),
+              ),
+              if (isSyncing) ...[
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.blue.shade600,
+                  ),
+                ),
+              ],
+              if (cloudSyncEnabled && !isSyncing) ...[
+                const SizedBox(width: 4),
+                InkWell(
+                  onTap: _forceSyncNow,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.refresh, 
+                      size: 16, 
+                      color: Colors.blue.shade600
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (hasError) ...[
+            const SizedBox(height: 6),
+            Text(
+              _stateManager.error!,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.red.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _getSyncStatusText(bool cloudSyncEnabled, bool isSyncing, DateTime? lastSyncTime, bool hasError) {
+    if (hasError) {
+      return 'Error en la sincronización. Toca refrescar para intentar de nuevo.';
+    }
+    
+    if (!cloudSyncEnabled) {
+      return 'Conversaciones guardadas solo en este dispositivo';
+    }
+    
+    if (isSyncing) {
+      return 'Sincronizando...';
+    }
+    
+    if (lastSyncTime != null) {
+      final now = DateTime.now();
+      final difference = now.difference(lastSyncTime);
+      
+      if (difference.inMinutes < 1) {
+        return 'Sincronizado hace menos de un minuto';
+      } else if (difference.inMinutes < 60) {
+        return 'Sincronizado hace ${difference.inMinutes}m';
+      } else if (difference.inHours < 24) {
+        return 'Sincronizado hace ${difference.inHours}h';
+      } else {
+        return 'Sincronizado hace ${difference.inDays}d';
+      }
+    }
+    
+    return 'Sincronización automática habilitada';
+  }
+
+  Future<void> _toggleCloudSync(bool enabled) async {
+    try {
+      await _stateManager.toggleCloudSync(enabled);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(enabled 
+              ? 'Sincronización en la nube habilitada' 
+              : 'Sincronización en la nube deshabilitada'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _forceSyncNow() async {
+    if (!mounted) return;
+    
+    try {
+      await _stateManager.forceSyncNow();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sincronización completada'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error en sincronización: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final accent = brandColor(_selectedProfile.brand);
@@ -655,16 +835,27 @@ class _ChatScreenState extends State<ChatScreen> {
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
-              itemCount: _messages.length + (_showDisclaimer ? 1 : 0) + (_showFirstTimeWarning ? 1 : 0),
+              itemCount: _messages.length + 
+                (_showDisclaimer ? 1 : 0) + 
+                (_showFirstTimeWarning ? 1 : 0) + 
+                (_hasFirstMessage ? 1 : 0), // Card de sincronización
               itemBuilder: (context, index) {
                 int cardOffset = 0;
                 
-                // Mostrar card de disclaimer si está habilitada
-                if (_showDisclaimer) {
+                // Card de sincronización (aparece primero cuando hay primer mensaje)
+                if (_hasFirstMessage) {
                   if (index == 0) {
+                    return _buildSyncCard();
+                  }
+                  cardOffset++;
+                }
+                
+                // Card de disclaimer
+                if (_showDisclaimer) {
+                  if (index == cardOffset) {
                     return Container(
                       width: double.infinity,
-                      margin: const EdgeInsets.fromLTRB(0, 6, 0, 6),
+                      margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: accent.withOpacity(0.08),
@@ -674,7 +865,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.local_hospital_outlined, color: accent),
+                          Icon(Icons.local_hospital_outlined, color: accent, size: 20),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -682,10 +873,13 @@ class _ChatScreenState extends State<ChatScreen> {
                               style: const TextStyle(fontSize: 12, color: Colors.black87),
                             ),
                           ),
-                          IconButton(
-                            tooltip: 'Cerrar',
-                            icon: const Icon(Icons.close, size: 18),
-                            onPressed: () => setState(() => _showDisclaimer = false),
+                          InkWell(
+                            onTap: () => setState(() => _showDisclaimer = false),
+                            borderRadius: BorderRadius.circular(16),
+                            child: const Padding(
+                              padding: EdgeInsets.all(4),
+                              child: Icon(Icons.close, size: 16),
+                            ),
                           ),
                         ],
                       ),
@@ -694,13 +888,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   cardOffset++;
                 }
                 
-                // Mostrar card de primera vez si está habilitada
+                // Card de primera vez
                 if (_showFirstTimeWarning) {
                   if (index == cardOffset) {
                     return Container(
                       width: double.infinity,
-                      margin: const EdgeInsets.fromLTRB(0, 6, 0, 6),
-                      padding: const EdgeInsets.all(16),
+                      margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [Colors.blue.shade50, Colors.blue.shade100],
@@ -715,7 +909,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.tune, color: Colors.blue.shade700),
+                              Icon(Icons.tune, color: Colors.blue.shade700, size: 20),
                               const SizedBox(width: 8),
                               Text(
                                 'Personaliza tu experiencia',
@@ -726,13 +920,16 @@ class _ChatScreenState extends State<ChatScreen> {
                                 ),
                               ),
                               const Spacer(),
-                              IconButton(
-                                tooltip: 'Cerrar',
-                                icon: const Icon(Icons.close, size: 18),
-                                onPressed: () async {
+                              InkWell(
+                                onTap: () async {
                                   await SupabaseService.markAsNotFirstTime();
                                   setState(() => _showFirstTimeWarning = false);
                                 },
+                                borderRadius: BorderRadius.circular(16),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(4),
+                                  child: Icon(Icons.close, size: 16),
+                                ),
                               ),
                             ],
                           ),
@@ -740,11 +937,11 @@ class _ChatScreenState extends State<ChatScreen> {
                           Text(
                             'Para ofrecerte recomendaciones más precisas, configura tus preferencias médicas, alergias y condiciones.',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 12,
                               color: Colors.blue.shade800,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 10),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
@@ -753,15 +950,15 @@ class _ChatScreenState extends State<ChatScreen> {
                                   await SupabaseService.markAsNotFirstTime();
                                   setState(() => _showFirstTimeWarning = false);
                                 },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                                  child: Text(
-                                    'Ahora no',
-                                    style: TextStyle(color: Colors.blue.shade600),
+                                child: Text(
+                                  'Ahora no',
+                                  style: TextStyle(
+                                    color: Colors.blue.shade600,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
                               ElevatedButton(
                                 onPressed: () async {
                                   await SupabaseService.markAsNotFirstTime();
@@ -779,10 +976,11 @@ class _ChatScreenState extends State<ChatScreen> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue.shade700,
                                   foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 ),
-                                child: const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 8),
-                                  child: Text('Personalizar'),
+                                child: const Text(
+                                  'Personalizar',
+                                  style: TextStyle(fontSize: 12),
                                 ),
                               ),
                             ],
@@ -794,7 +992,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   cardOffset++;
                 }
                 
-                // Mostrar mensajes del chat
+                // Mensajes del chat
                 final messageIndex = index - cardOffset;
                 if (messageIndex >= 0 && messageIndex < _messages.length) {
                   final m = _messages[messageIndex];
