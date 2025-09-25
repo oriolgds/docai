@@ -317,7 +317,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
               ],
             ),
             
-            if (_stateManager.conversations.isNotEmpty) ..[
+            if (_stateManager.conversations.isNotEmpty) ...[
               const SizedBox(height: 10),
               SizedBox(
                 width: double.infinity,
@@ -411,7 +411,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                   ),
                 ),
               ),
-              if (isSyncing) ..[
+              if (isSyncing) ...[
                 const SizedBox(width: 8),
                 SizedBox(
                   width: 16,
@@ -422,7 +422,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                   ),
                 ),
               ],
-              if (cloudSyncEnabled && !isSyncing) ..[
+              if (cloudSyncEnabled && !isSyncing) ...[
                 const SizedBox(width: 8),
                 IconButton(
                   icon: Icon(Icons.refresh, size: 20, color: Colors.blue.shade600),
@@ -432,7 +432,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
               ],
             ],
           ),
-          if (hasError) ..[
+          if (hasError) ...[
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(8),
@@ -450,7 +450,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
               ),
             ),
           ],
-          if (cloudSyncEnabled && !hasError) ..[
+          if (cloudSyncEnabled && !hasError) ...[
             const SizedBox(height: 12),
             Row(
               children: [
