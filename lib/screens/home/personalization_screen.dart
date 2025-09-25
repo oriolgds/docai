@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/user_preferences.dart';
 import '../../services/supabase_service.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class PersonalizationScreen extends StatefulWidget {
   const PersonalizationScreen({super.key});
@@ -59,8 +60,9 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar preferencias: $e')),
+          SnackBar(content: Text(l10n.errorLoadingPreferences(e.toString()))),
         );
       }
     } finally {
@@ -89,7 +91,9 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
 
     try {
       final user = SupabaseService.currentUser;
-      if (user == null) throw Exception('Usuario no encontrado');
+      final l10n = AppLocalizations.of(context)!;
+      
+      if (user == null) throw Exception(l10n.userNotFound);
 
       final preferences = UserPreferences(
         id: _currentPreferences?.id,
@@ -110,8 +114,8 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Preferencias guardadas correctamente'),
+          SnackBar(
+            content: Text(l10n.preferencesSavedSuccess),
             backgroundColor: Colors.green,
           ),
         );
@@ -119,8 +123,9 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar: $e')),
+          SnackBar(content: Text(l10n.errorSavingPreferences(e.toString()))),
         );
       }
     } finally {
@@ -134,6 +139,8 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (_isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -142,7 +149,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Personalización'),
+        title: Text(l10n.personalization),
         actions: [
           TextButton(
             onPressed: _isSaving ? null : _savePreferences,
@@ -152,7 +159,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
                     height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Guardar'),
+                : Text(l10n.save),
           ),
         ],
       ),
@@ -177,9 +184,9 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
                       children: [
                         const Icon(Icons.tune, color: Colors.black),
                         const SizedBox(width: 8),
-                        const Text(
-                          'Personaliza tu experiencia',
-                          style: TextStyle(
+                        Text(
+                          l10n.personalizeExperience,
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -188,7 +195,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Ayúdanos a ofrecerte recomendaciones más precisas y personalizadas.',
+                      l10n.personalizeDescription,
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 14,
@@ -200,11 +207,11 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
               const SizedBox(height: 24),
 
               // Información básica
-              _buildSectionTitle('Información básica', Icons.person_outline),
+              _buildSectionTitle(l10n.basicInformation, Icons.person_outline),
               const SizedBox(height: 16),
               
               _buildDropdownField(
-                label: 'Rango de edad',
+                label: l10n.ageRange,
                 value: _ageRange,
                 items: AgeRange.values,
                 displayName: (age) => age.displayName,
@@ -213,7 +220,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
               const SizedBox(height: 16),
               
               _buildDropdownField(
-                label: 'Género',
+                label: l10n.gender,
                 value: _gender,
                 items: Gender.values,
                 displayName: (gender) => gender.displayName,
@@ -222,7 +229,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
               const SizedBox(height: 24),
 
               // Preferencias médicas
-              _buildSectionTitle('Preferencias médicas', Icons.local_hospital_outlined),
+              _buildSectionTitle(l10n.medicalPreferences, Icons.local_hospital_outlined),
               const SizedBox(height: 16),
               
               // Medicine preference card with consistent styling
@@ -239,9 +246,9 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Tipo de medicina preferida',
-                      style: TextStyle(
+                    Text(
+                      l10n.preferredMedicineType,
+                      style: const TextStyle(
                         fontWeight: FontWeight.w500,
                         fontSize: 16,
                       ),
@@ -285,41 +292,41 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
               const SizedBox(height: 24),
 
               // Información médica
-              _buildSectionTitle('Información médica', Icons.medical_information_outlined),
+              _buildSectionTitle(l10n.medicalInformation, Icons.medical_information_outlined),
               const SizedBox(height: 16),
               
               _buildTextFormField(
                 controller: _allergiesController,
-                label: 'Alergias',
-                hint: 'Ej: penicilina, frutos secos, polen (separadas por comas)',
+                label: l10n.allergies,
+                hint: l10n.allergiesHint,
                 maxLines: 2,
               ),
               const SizedBox(height: 16),
               
               _buildTextFormField(
                 controller: _chronicConditionsController,
-                label: 'Condiciones crónicas',
-                hint: 'Ej: diabetes, hipertensión, asma (separadas por comas)',
+                label: l10n.chronicConditions,
+                hint: l10n.chronicConditionsHint,
                 maxLines: 2,
               ),
               const SizedBox(height: 16),
               
               _buildTextFormField(
                 controller: _currentMedicationsController,
-                label: 'Medicamentos actuales',
-                hint: 'Ej: aspirina, omeprazol (separados por comas)',
+                label: l10n.currentMedications,
+                hint: l10n.currentMedicationsHint,
                 maxLines: 2,
               ),
               const SizedBox(height: 24),
 
               // Notas adicionales
-              _buildSectionTitle('Notas adicionales', Icons.note_outlined),
+              _buildSectionTitle(l10n.additionalNotes, Icons.note_outlined),
               const SizedBox(height: 16),
               
               _buildTextFormField(
                 controller: _additionalNotesController,
-                label: 'Información adicional',
-                hint: 'Cualquier otra información relevante para tu atención médica...',
+                label: l10n.additionalInformation,
+                hint: l10n.additionalInformationHint,
                 maxLines: 4,
               ),
               const SizedBox(height: 32),
@@ -339,7 +346,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Esta información nos ayuda a personalizar las respuestas, pero no reemplaza una consulta médica profesional.',
+                        l10n.disclaimerText,
                         style: TextStyle(
                           color: Colors.orange[700],
                           fontSize: 12,
