@@ -1,0 +1,182 @@
+{
+  "appTitle": "DocAI",
+  "@appTitle": {
+    "description": "The application title"
+  },
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile screen title"
+  },
+  "personalization": "Personalization",
+  "@personalization": {
+    "description": "Personalization menu item and screen title"
+  },
+  "editProfile": "Edit Profile",
+  "@editProfile": {
+    "description": "Edit profile menu item"
+  },
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Notifications menu item"
+  },
+  "privacySecurity": "Privacy & Security",
+  "@privacySecurity": {
+    "description": "Privacy and security menu item"
+  },
+  "helpSupport": "Help & Support",
+  "@helpSupport": {
+    "description": "Help and support menu item"
+  },
+  "about": "About",
+  "@about": {
+    "description": "About menu item"
+  },
+  "logout": "Logout",
+  "@logout": {
+    "description": "Logout menu item"
+  },
+  "noEmail": "No email",
+  "@noEmail": {
+    "description": "Placeholder when user has no email"
+  },
+  "user": "User",
+  "@user": {
+    "description": "Default username placeholder"
+  },
+  "premiumPlan": "Premium Plan",
+  "@premiumPlan": {
+    "description": "Premium subscription plan title"
+  },
+  "active": "Active",
+  "@active": {
+    "description": "Active subscription status"
+  },
+  "unlimitedConsultations": "Unlimited AI consultations",
+  "@unlimitedConsultations": {
+    "description": "Premium plan benefit"
+  },
+  "expiresOn": "Expires: March 15, 2025",
+  "@expiresOn": {
+    "description": "Subscription expiration date"
+  },
+  "medicalPreferencesUpdated": "Medical preferences updated",
+  "@medicalPreferencesUpdated": {
+    "description": "Success message when medical preferences are updated"
+  },
+  "logoutConfirmTitle": "Logout",
+  "@logoutConfirmTitle": {
+    "description": "Logout confirmation dialog title"
+  },
+  "logoutConfirmMessage": "Are you sure you want to logout?",
+  "@logoutConfirmMessage": {
+    "description": "Logout confirmation dialog message"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button text"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Save button text"
+  },
+  "personalizeExperience": "Personalize your experience",
+  "@personalizeExperience": {
+    "description": "Personalization screen header title"
+  },
+  "personalizeDescription": "Help us offer you more accurate and personalized recommendations.",
+  "@personalizeDescription": {
+    "description": "Personalization screen description"
+  },
+  "basicInformation": "Basic information",
+  "@basicInformation": {
+    "description": "Basic information section title"
+  },
+  "ageRange": "Age range",
+  "@ageRange": {
+    "description": "Age range field label"
+  },
+  "gender": "Gender",
+  "@gender": {
+    "description": "Gender field label"
+  },
+  "medicalPreferences": "Medical preferences",
+  "@medicalPreferences": {
+    "description": "Medical preferences section title"
+  },
+  "preferredMedicineType": "Preferred medicine type",
+  "@preferredMedicineType": {
+    "description": "Medicine preference field label"
+  },
+  "medicalInformation": "Medical information",
+  "@medicalInformation": {
+    "description": "Medical information section title"
+  },
+  "allergies": "Allergies",
+  "@allergies": {
+    "description": "Allergies field label"
+  },
+  "allergiesHint": "E.g: penicillin, nuts, pollen (comma separated)",
+  "@allergiesHint": {
+    "description": "Allergies field hint text"
+  },
+  "chronicConditions": "Chronic conditions",
+  "@chronicConditions": {
+    "description": "Chronic conditions field label"
+  },
+  "chronicConditionsHint": "E.g: diabetes, hypertension, asthma (comma separated)",
+  "@chronicConditionsHint": {
+    "description": "Chronic conditions field hint text"
+  },
+  "currentMedications": "Current medications",
+  "@currentMedications": {
+    "description": "Current medications field label"
+  },
+  "currentMedicationsHint": "E.g: aspirin, omeprazole (comma separated)",
+  "@currentMedicationsHint": {
+    "description": "Current medications field hint text"
+  },
+  "additionalNotes": "Additional notes",
+  "@additionalNotes": {
+    "description": "Additional notes section title"
+  },
+  "additionalInformation": "Additional information",
+  "@additionalInformation": {
+    "description": "Additional information field label"
+  },
+  "additionalInformationHint": "Any other relevant information for your medical care...",
+  "@additionalInformationHint": {
+    "description": "Additional information field hint text"
+  },
+  "disclaimerText": "This information helps us personalize responses, but does not replace professional medical consultation.",
+  "@disclaimerText": {
+    "description": "Medical disclaimer text"
+  },
+  "preferencesSavedSuccess": "Preferences saved successfully",
+  "@preferencesSavedSuccess": {
+    "description": "Success message when preferences are saved"
+  },
+  "errorLoadingPreferences": "Error loading preferences: {error}",
+  "@errorLoadingPreferences": {
+    "description": "Error message when loading preferences fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "errorSavingPreferences": "Error saving: {error}",
+  "@errorSavingPreferences": {
+    "description": "Error message when saving preferences fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "userNotFound": "User not found",
+  "@userNotFound": {
+    "description": "Error message when user is not found"
+  }
+}
