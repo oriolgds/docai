@@ -244,6 +244,104 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
     // El state manager se encarga automáticamente de mantener los datos actualizados
   }
 
+  // Modal para opciones avanzadas
+  void _showAdvancedOptionsModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            const Text(
+              'Opciones avanzadas',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            _buildSyncSettings(),
+            
+            const SizedBox(height: 20),
+            
+            // Botones de acción
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _forceRefresh();
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Actualizar'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _startNewConversation();
+                    },
+                    icon: const Icon(Icons.chat),
+                    label: const Text('Nueva'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            if (_stateManager.conversations.isNotEmpty) ..[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _clearAllHistory();
+                  },
+                  icon: const Icon(Icons.delete_sweep, color: Colors.red),
+                  label: const Text(
+                    'Eliminar todo el historial',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ),
+            ],
+            
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSyncSettings() {
     final cloudSyncEnabled = _stateManager.cloudSyncEnabled;
     final isSyncing = _stateManager.isSyncing;
@@ -251,32 +349,49 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
     final hasError = _stateManager.hasError;
     
     return Container(
-      margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: hasError ? Colors.red.shade50 : Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: hasError ? Colors.red.shade200 : Colors.blue.shade200),
+        gradient: LinearGradient(
+          colors: hasError 
+            ? [Colors.red.shade50, Colors.red.shade100]
+            : [Colors.blue.shade50, Colors.blue.shade100],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: hasError ? Colors.red.shade200 : Colors.blue.shade200,
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                hasError ? Icons.cloud_off : Icons.cloud_outlined, 
-                color: hasError ? Colors.red.shade700 : Colors.blue.shade700
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Sincronización en la nube',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: hasError ? Colors.red.shade100 : Colors.blue.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  hasError ? Icons.cloud_off : Icons.cloud_outlined, 
                   color: hasError ? Colors.red.shade700 : Colors.blue.shade700,
+                  size: 20,
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Sincronización en la nube',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: hasError ? Colors.red.shade700 : Colors.blue.shade700,
+                  ),
+                ),
+              ),
               Switch(
                 value: cloudSyncEnabled,
                 onChanged: _toggleCloudSync,
@@ -284,7 +399,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -296,7 +411,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                   ),
                 ),
               ),
-              if (isSyncing) ...[
+              if (isSyncing) ..[
                 const SizedBox(width: 8),
                 SizedBox(
                   width: 16,
@@ -307,7 +422,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                   ),
                 ),
               ],
-              if (cloudSyncEnabled && !isSyncing) ...[
+              if (cloudSyncEnabled && !isSyncing) ..[
                 const SizedBox(width: 8),
                 IconButton(
                   icon: Icon(Icons.refresh, size: 20, color: Colors.blue.shade600),
@@ -317,29 +432,37 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
               ],
             ],
           ),
-          if (hasError) ...[
+          if (hasError) ..[
             const SizedBox(height: 8),
-            Text(
-              _stateManager.error!,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.red.shade700,
-                fontWeight: FontWeight.w500,
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _stateManager.error!,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.red.shade700,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
-          if (cloudSyncEnabled && !hasError) ...[
+          if (cloudSyncEnabled && !hasError) ..[
             const SizedBox(height: 12),
             Row(
               children: [
                 Icon(Icons.security, size: 16, color: Colors.blue.shade600),
-                const SizedBox(width: 4),
+                const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Tus datos están protegidos con encriptación de extremo a extremo',
+                    'Tus datos están protegidos con encriptación',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.blue.shade600,
+                      fontStyle: FontStyle.italic,
                     ),
                   ),
                 ),
@@ -382,96 +505,162 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
     return 'Tus conversaciones se sincronizan automáticamente en la nube';
   }
 
-  Widget _buildConversationTile(ChatConversation conversation) {
+  Widget _buildCompactConversationCard(ChatConversation conversation) {
     final hasUserMessages = conversation.messages.any((m) => m.role.name == 'user');
     final lastUserMessage = hasUserMessages 
         ? conversation.messages.lastWhere((m) => m.role.name == 'user').content
         : 'Sin mensajes';
     
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.blue.shade100,
-          child: Icon(
-            Icons.chat_bubble_outline,
-            color: Colors.blue.shade700,
-            size: 20,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
-        ),
-        title: Text(
-          conversation.title,
-          style: const TextStyle(fontWeight: FontWeight.w500),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              lastUserMessage,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 13,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Row(
+        ],
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => _openConversation(conversation),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
               children: [
-                Text(
-                  _formatDate(conversation.updatedAt),
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 12,
+                // Avatar
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.blue.shade300, Colors.blue.shade500],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.chat_bubble_outline,
+                    color: Colors.white,
+                    size: 20,
                   ),
                 ),
-                const Spacer(),
-                if (conversation.isCloudSynced)
-                  Icon(
-                    Icons.cloud_done,
-                    size: 16,
-                    color: Colors.blue.shade400,
-                  )
-                else
-                  Icon(
-                    Icons.offline_pin,
-                    size: 16,
-                    color: Colors.grey.shade400,
+                const SizedBox(width: 12),
+                
+                // Contenido principal
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Título
+                      Text(
+                        conversation.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      
+                      // Último mensaje
+                      Text(
+                        lastUserMessage,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      
+                      // Info inferior
+                      Row(
+                        children: [
+                          Text(
+                            _formatDate(conversation.updatedAt),
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${conversation.messages.length}',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          
+                          // Indicador de sincronización
+                          Icon(
+                            conversation.isCloudSynced
+                                ? Icons.cloud_done
+                                : Icons.offline_pin,
+                            size: 14,
+                            color: conversation.isCloudSynced
+                                ? Colors.green.shade400
+                                : Colors.orange.shade400,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                const SizedBox(width: 4),
-                Text(
-                  '${conversation.messages.length} mensajes',
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 12,
+                ),
+                
+                // Menú de opciones
+                PopupMenuButton<String>(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: Icon(
+                    Icons.more_vert,
+                    color: Colors.grey.shade600,
+                    size: 18,
                   ),
+                  onSelected: (value) {
+                    if (value == 'delete') {
+                      _deleteConversation(conversation);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.delete_outline, color: Colors.red, size: 16),
+                          SizedBox(width: 8),
+                          Text('Eliminar', style: TextStyle(color: Colors.red, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
-        trailing: PopupMenuButton<String>(
-          onSelected: (value) {
-            if (value == 'delete') {
-              _deleteConversation(conversation);
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete_outline, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Eliminar', style: TextStyle(color: Colors.red)),
-                ],
-              ),
-            ),
-          ],
-        ),
-        onTap: () => _openConversation(conversation),
       ),
     );
   }
@@ -497,18 +686,25 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.history_outlined,
-            size: 64,
-            color: Colors.grey.shade300,
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.history_outlined,
+              size: 48,
+              color: Colors.grey.shade400,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Text(
             'No hay conversaciones',
             style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
+              fontSize: 20,
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
@@ -518,17 +714,22 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
               color: Colors.grey.shade500,
               fontSize: 14,
             ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           ElevatedButton.icon(
-  onPressed: _startNewConversation,
-  icon: const Icon(Icons.chat),
-  label: const Text('Iniciar nueva conversación'),
-  style: ElevatedButton.styleFrom(
-    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-  ),
-),
-
+            onPressed: _startNewConversation,
+            icon: const Icon(Icons.chat),
+            label: const Text('Iniciar nueva conversación'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -540,51 +741,62 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
     final isLoading = _stateManager.isLoading;
     
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Historial'),
-        actions: [
-          // Botón para nueva conversación
-          IconButton(
-            icon: const Icon(Icons.add_comment_outlined),
-            onPressed: _startNewConversation,
-            tooltip: 'Nueva conversación',
+        title: const Text(
+          'Historial',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
           ),
-          if (conversations.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _forceRefresh,
-              tooltip: 'Actualizar',
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        actions: [
+          // Botón del modal
+          IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.tune,
+                color: Colors.blue.shade700,
+                size: 20,
+              ),
             ),
-          // Botón para eliminar todo el historial
-          if (conversations.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete_sweep_outlined),
-              onPressed: _clearAllHistory,
-              tooltip: 'Eliminar todo el historial',
-            ),
+            onPressed: _showAdvancedOptionsModal,
+            tooltip: 'Opciones avanzadas',
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                _buildSyncSettings(),
-                if (conversations.isEmpty)
-                  Expanded(child: _buildEmptyState())
-                else
-                  Expanded(
-                    child: RefreshIndicator(
-                      onRefresh: _forceRefresh,
-                      child: ListView.builder(
-                        itemCount: conversations.length,
-                        itemBuilder: (context, index) {
-                          return _buildConversationTile(conversations[index]);
-                        },
-                      ),
-                    ),
+          : conversations.isEmpty
+              ? _buildEmptyState()
+              : RefreshIndicator(
+                  onRefresh: _forceRefresh,
+                  color: Colors.blue,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: conversations.length,
+                    itemBuilder: (context, index) {
+                      return _buildCompactConversationCard(conversations[index]);
+                    },
                   ),
-              ],
-            ),
+                ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _startNewConversation,
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
