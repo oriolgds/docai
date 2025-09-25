@@ -598,107 +598,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // Funciones de sincronización agregadas
-  Widget _buildSyncCard() {
-    final cloudSyncEnabled = _stateManager.cloudSyncEnabled;
-    final isSyncing = _stateManager.isSyncing;
-    final lastSyncTime = _stateManager.lastSyncTime;
-    final hasError = _stateManager.hasError;
-    
-    return Container(
-      margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: hasError ? Colors.red.shade50 : Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: hasError ? Colors.red.shade200 : Colors.blue.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                hasError ? Icons.cloud_off : Icons.cloud_outlined, 
-                color: hasError ? Colors.red.shade700 : Colors.blue.shade700,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Sincronización en la nube',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: hasError ? Colors.red.shade700 : Colors.blue.shade700,
-                ),
-              ),
-              const Spacer(),
-              Transform.scale(
-                scale: 0.8,
-                child: Switch(
-                  value: cloudSyncEnabled,
-                  onChanged: _toggleCloudSync,
-                  activeColor: Colors.blue.shade700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  _getSyncStatusText(cloudSyncEnabled, isSyncing, lastSyncTime, hasError),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: hasError ? Colors.red.shade600 : Colors.blue.shade600,
-                  ),
-                ),
-              ),
-              if (isSyncing) ...[
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.blue.shade600,
-                  ),
-                ),
-              ],
-              if (cloudSyncEnabled && !isSyncing) ...[
-                const SizedBox(width: 4),
-                InkWell(
-                  onTap: _forceSyncNow,
-                  borderRadius: BorderRadius.circular(16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.refresh, 
-                      size: 16, 
-                      color: Colors.blue.shade600
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          if (hasError) ...[
-            const SizedBox(height: 6),
-            Text(
-              _stateManager.error!,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.red.shade700,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
   String _getSyncStatusText(bool cloudSyncEnabled, bool isSyncing, DateTime? lastSyncTime, bool hasError) {
     if (hasError) {
       return 'Error en la sincronización. Toca refrescar para intentar de nuevo.';
@@ -842,13 +741,6 @@ class _ChatScreenState extends State<ChatScreen> {
               itemBuilder: (context, index) {
                 int cardOffset = 0;
                 
-                // Card de sincronización (aparece primero cuando hay primer mensaje)
-                if (_hasFirstMessage) {
-                  if (index == 0) {
-                    return _buildSyncCard();
-                  }
-                  cardOffset++;
-                }
                 
                 // Card de disclaimer
                 if (_showDisclaimer) {
