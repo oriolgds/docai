@@ -159,45 +159,136 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 24),
             
-            // Menu Items
-            _buildMenuItem(
-              icon: Icons.tune,
-              title: 'Personalización',
-              onTap: () => _navigateToPersonalization(context),
-            ),
-            _buildMenuItem(
-              icon: Icons.person_outline,
-              title: 'Edit Profile',
-              onTap: () {},
-            ),
-            _buildMenuItem(
-              icon: Icons.notifications_outlined,
-              title: 'Notifications',
-              onTap: () {},
-            ),
-            _buildMenuItem(
-              icon: Icons.security_outlined,
-              title: 'Privacy & Security',
-              onTap: () {},
-            ),
-            _buildMenuItem(
-              icon: Icons.help_outline,
-              title: 'Help & Support',
-              onTap: () {},
-            ),
-            _buildMenuItem(
-              icon: Icons.info_outline,
-              title: 'About',
-              onTap: () {},
-            ),
+            // Responsive Menu Items
+            _buildResponsiveMenuItems(),
+            
             const SizedBox(height: 16),
             
-            // Logout
+            // Logout (always full width)
             _buildMenuItem(
               icon: Icons.logout_outlined,
               title: 'Logout',
               onTap: () => _showLogoutDialog(context),
               isDestructive: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResponsiveMenuItems() {
+    final menuItems = [
+      _MenuItemData(
+        icon: Icons.tune,
+        title: 'Personalización',
+        onTap: () => _navigateToPersonalization(context),
+      ),
+      _MenuItemData(
+        icon: Icons.person_outline,
+        title: 'Edit Profile',
+        onTap: () {},
+      ),
+      _MenuItemData(
+        icon: Icons.notifications_outlined,
+        title: 'Notifications',
+        onTap: () {},
+      ),
+      _MenuItemData(
+        icon: Icons.security_outlined,
+        title: 'Privacy & Security',
+        onTap: () {},
+      ),
+      _MenuItemData(
+        icon: Icons.help_outline,
+        title: 'Help & Support',
+        onTap: () {},
+      ),
+      _MenuItemData(
+        icon: Icons.info_outline,
+        title: 'About',
+        onTap: () {},
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Use grid layout for screens wider than 600px (tablet/desktop)
+        if (constraints.maxWidth > 600) {
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: constraints.maxWidth > 900 ? 3 : 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 3.5,
+            ),
+            itemCount: menuItems.length,
+            itemBuilder: (context, index) {
+              final item = menuItems[index];
+              return _buildGridMenuItem(
+                icon: item.icon,
+                title: item.title,
+                onTap: item.onTap,
+              );
+            },
+          );
+        } else {
+          // Use vertical list for mobile screens
+          return Column(
+            children: menuItems.map((item) => _buildMenuItem(
+              icon: item.icon,
+              title: item.title,
+              onTap: item.onTap,
+            )).toList(),
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildGridMenuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFAFAFA),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFFEEEEEE),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: Colors.black,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: Color(0xFF9E9E9E),
+              size: 16,
             ),
           ],
         ),
@@ -283,4 +374,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+}
+
+class _MenuItemData {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+
+  _MenuItemData({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
 }
