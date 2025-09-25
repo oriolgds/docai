@@ -89,7 +89,7 @@ jobs:
     
     - name: Build web app
       run: |
-        flutter build web --release --web-renderer html --base-href "/docai/"
+        flutter build web --release --base-href "/docai/"
     
     - name: Upload build artifacts
       uses: actions/upload-pages-artifact@v3
