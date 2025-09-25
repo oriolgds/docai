@@ -165,10 +165,10 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
             children: [
               // Header
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFAFAFA),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,19 +225,63 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
               _buildSectionTitle('Preferencias médicas', Icons.local_hospital_outlined),
               const SizedBox(height: 16),
               
-              const Text(
-                'Tipo de medicina preferida',
-                style: TextStyle(fontWeight: FontWeight.w500),
+              // Medicine preference card with consistent styling
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFAFAFA),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFEEEEEE),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Tipo de medicina preferida',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    ...MedicinePreference.values.map((preference) => 
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: InkWell(
+                          onTap: () => setState(() => _medicinePreference = preference),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            child: Row(
+                              children: [
+                                Radio<MedicinePreference>(
+                                  value: preference,
+                                  groupValue: _medicinePreference,
+                                  onChanged: (value) => setState(() => _medicinePreference = value!),
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    preference.displayName,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 8),
-              
-              ...MedicinePreference.values.map((preference) => RadioListTile<MedicinePreference>(
-                title: Text(preference.displayName),
-                value: preference,
-                groupValue: _medicinePreference,
-                onChanged: (value) => setState(() => _medicinePreference = value!),
-                contentPadding: EdgeInsets.zero,
-              )),
               const SizedBox(height: 24),
 
               // Información médica
@@ -282,17 +326,17 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
 
               // Disclaimer
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.orange.withOpacity(0.3)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(Icons.info_outline, color: Colors.orange[700], size: 20),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Esta información nos ayuda a personalizar las respuestas, pero no reemplaza una consulta médica profesional.',
@@ -316,7 +360,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
   Widget _buildSectionTitle(String title, IconData icon) {
     return Row(
       children: [
-        Icon(icon, size: 20),
+        Icon(icon, size: 20, color: Colors.black),
         const SizedBox(width: 8),
         Text(
           title,
@@ -341,9 +385,25 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
         labelText: label,
         hintText: hint,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(
+            color: Color(0xFFEEEEEE),
+            width: 1,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(
+            color: Colors.black,
+            width: 1.5,
+          ),
         ),
         contentPadding: const EdgeInsets.all(16),
+        filled: true,
+        fillColor: const Color(0xFFFAFAFA),
       ),
       maxLines: maxLines,
     );
@@ -361,9 +421,25 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(
+            color: Color(0xFFEEEEEE),
+            width: 1,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(
+            color: Colors.black,
+            width: 1.5,
+          ),
         ),
         contentPadding: const EdgeInsets.all(16),
+        filled: true,
+        fillColor: const Color(0xFFFAFAFA),
       ),
       items: items.map((item) => DropdownMenuItem<T>(
         value: item,
