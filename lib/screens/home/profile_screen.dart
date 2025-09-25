@@ -4,6 +4,7 @@ import '../../widgets/medical_preferences_button.dart';
 import '../../widgets/medical_preferences_status.dart';
 import '../auth/login_screen.dart';
 import 'personalization_screen.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,9 +16,11 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text(l10n.profile),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -53,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    SupabaseService.currentUser?.userMetadata?['full_name'] ?? 'User',
+                    SupabaseService.currentUser?.userMetadata?['full_name'] ?? l10n.user,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -61,7 +64,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    SupabaseService.currentUser?.email ?? 'No email',
+                    SupabaseService.currentUser?.email ?? l10n.noEmail,
                     style: const TextStyle(
                       color: Color(0xFF6B6B6B),
                     ),
@@ -80,8 +83,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onPreferencesUpdated: () {
                 setState(() {}); // Refresh the status card
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Preferencias médicas actualizadas'),
+                  SnackBar(
+                    content: Text(l10n.medicalPreferencesUpdated),
                     backgroundColor: Colors.green,
                     behavior: SnackBarBehavior.floating,
                   ),
@@ -111,9 +114,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: Colors.white,
                       ),
                       const SizedBox(width: 8),
-                      const Text(
-                        'Premium Plan',
-                        style: TextStyle(
+                      Text(
+                        l10n.premiumPlan,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -129,9 +132,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
-                          'Active',
-                          style: TextStyle(
+                        child: Text(
+                          l10n.active,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
                           ),
@@ -140,16 +143,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Unlimited AI consultations',
-                    style: TextStyle(
+                  Text(
+                    l10n.unlimitedConsultations,
+                    style: const TextStyle(
                       color: Colors.white70,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Expires: March 15, 2025',
-                    style: TextStyle(
+                  Text(
+                    l10n.expiresOn,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 12,
                     ),
@@ -160,15 +163,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 24),
             
             // Responsive Menu Items
-            _buildResponsiveMenuItems(),
+            _buildResponsiveMenuItems(l10n),
             
             const SizedBox(height: 16),
             
             // Logout (always full width)
             _buildMenuItem(
               icon: Icons.logout_outlined,
-              title: 'Logout',
-              onTap: () => _showLogoutDialog(context),
+              title: l10n.logout,
+              onTap: () => _showLogoutDialog(context, l10n),
               isDestructive: true,
             ),
           ],
@@ -177,36 +180,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildResponsiveMenuItems() {
+  Widget _buildResponsiveMenuItems(AppLocalizations l10n) {
     final menuItems = [
       _MenuItemData(
         icon: Icons.tune,
-        title: 'Personalización',
+        title: l10n.personalization,
         onTap: () => _navigateToPersonalization(context),
       ),
       _MenuItemData(
         icon: Icons.person_outline,
-        title: 'Edit Profile',
+        title: l10n.editProfile,
         onTap: () {},
       ),
       _MenuItemData(
         icon: Icons.notifications_outlined,
-        title: 'Notifications',
+        title: l10n.notifications,
         onTap: () {},
       ),
       _MenuItemData(
         icon: Icons.security_outlined,
-        title: 'Privacy & Security',
+        title: l10n.privacySecurity,
         onTap: () {},
       ),
       _MenuItemData(
         icon: Icons.help_outline,
-        title: 'Help & Support',
+        title: l10n.helpSupport,
         onTap: () {},
       ),
       _MenuItemData(
         icon: Icons.info_outline,
-        title: 'About',
+        title: l10n.about,
         onTap: () {},
       ),
     ];
@@ -344,16 +347,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _showLogoutDialog(BuildContext context) {
+  void _showLogoutDialog(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: Text(l10n.logoutConfirmTitle),
+        content: Text(l10n.logoutConfirmMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -365,9 +368,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 (route) => false,
               );
             },
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Color(0xFFE53E3E)),
+            child: Text(
+              l10n.logout,
+              style: const TextStyle(color: Color(0xFFE53E3E)),
             ),
           ),
         ],
