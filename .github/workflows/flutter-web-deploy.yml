@@ -9,7 +9,7 @@ on:
 # Permite ejecutar este workflow manualmente desde la pestaña Actions
   workflow_dispatch:
 
-# Configura permisos para GitHub Pages
+# Configura permisos para GitHub Pages  
 permissions:
   contents: read
   pages: write
@@ -37,11 +37,51 @@ jobs:
     - name: Create firebase_options.dart from secret
       run: |
         mkdir -p lib
-        echo '${{ secrets.FIREBASE_OPTIONS_DART }}' > lib/firebase_options.dart
+        cat > lib/firebase_options.dart << 'EOF'
+        ${{ secrets.FIREBASE_OPTIONS_DART }}
+        EOF
+        
+        # Verify file was created and has content
+        if [ ! -s lib/firebase_options.dart ]; then
+          echo "Error: firebase_options.dart file is empty"
+          exit 1
+        fi
+        
+        echo "Firebase options file created successfully"
+        echo "File size: $(wc -c < lib/firebase_options.dart) bytes"
+        echo "Lines: $(wc -l < lib/firebase_options.dart)"
     
     - name: Create .env file from secret
       run: |
-        echo '${{ secrets.DOT_ENV }}' > .env
+        cat > .env << 'EOF'
+        ${{ secrets.DOT_ENV }}
+        EOF
+        
+        echo ".env file created successfully"
+        echo "File size: $(wc -c < .env) bytes"
+    
+    - name: Verify critical files
+      run: |
+        echo "Checking generated files..."
+        ls -la lib/firebase_options.dart .env
+        
+        # Check if firebase_options.dart has the expected structure
+        if grep -q "DefaultFirebaseOptions" lib/firebase_options.dart; then
+          echo "✓ firebase_options.dart contains DefaultFirebaseOptions class"
+        else
+          echo "✗ firebase_options.dart does not contain DefaultFirebaseOptions class"
+          echo "Content preview (first 10 lines):"
+          head -n 10 lib/firebase_options.dart
+          exit 1
+        fi
+        
+        # Check for common syntax issues
+        if grep -q "import.*firebase_core" lib/firebase_options.dart; then
+          echo "✓ firebase_options.dart contains Firebase Core import"
+        else
+          echo "✗ firebase_options.dart missing Firebase Core import"
+          exit 1
+        fi
     
     - name: Get dependencies
       run: flutter pub get
