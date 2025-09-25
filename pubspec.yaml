@@ -9,6 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
   cupertino_icons: ^1.0.8
   supabase_flutter: ^2.10.0
@@ -31,9 +34,11 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
 
   assets:
     - assets/logo/
+    - assets/i18n/
     - ./.env
 
 flutter_launcher_icons:
