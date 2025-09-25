@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import '../../services/supabase_service.dart';
 import '../../widgets/medical_preferences_button.dart';
 import '../../widgets/medical_preferences_status.dart';
+import '../../widgets/language_selector.dart';
 import '../auth/login_screen.dart';
 import 'personalization_screen.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../main.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -17,6 +19,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final localeProvider = LocaleProvider.of(context);
     
     return Scaffold(
       appBar: AppBar(
@@ -163,7 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 24),
             
             // Responsive Menu Items
-            _buildResponsiveMenuItems(l10n),
+            _buildResponsiveMenuItems(l10n, localeProvider),
             
             const SizedBox(height: 16),
             
@@ -180,7 +183,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildResponsiveMenuItems(AppLocalizations l10n) {
+  Widget _buildResponsiveMenuItems(AppLocalizations l10n, LocaleProvider? localeProvider) {
     final menuItems = [
       _MenuItemData(
         icon: Icons.tune,
@@ -218,33 +221,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, constraints) {
         // Use grid layout for screens wider than 600px (tablet/desktop)
         if (constraints.maxWidth > 600) {
-          return GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: constraints.maxWidth > 900 ? 3 : 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 3.5,
-            ),
-            itemCount: menuItems.length,
-            itemBuilder: (context, index) {
-              final item = menuItems[index];
-              return _buildGridMenuItem(
-                icon: item.icon,
-                title: item.title,
-                onTap: item.onTap,
-              );
-            },
+          return Column(
+            children: [
+              // Language selector (always full width on large screens)
+              if (localeProvider != null)
+                LanguageSelector(
+                  onLocaleChanged: localeProvider.onLocaleChanged,
+                ),
+              const SizedBox(height: 8),
+              // Grid for other menu items
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: constraints.maxWidth > 900 ? 3 : 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 3.5,
+                ),
+                itemCount: menuItems.length,
+                itemBuilder: (context, index) {
+                  final item = menuItems[index];
+                  return _buildGridMenuItem(
+                    icon: item.icon,
+                    title: item.title,
+                    onTap: item.onTap,
+                  );
+                },
+              ),
+            ],
           );
         } else {
           // Use vertical list for mobile screens
           return Column(
-            children: menuItems.map((item) => _buildMenuItem(
-              icon: item.icon,
-              title: item.title,
-              onTap: item.onTap,
-            )).toList(),
+            children: [
+              // Language selector
+              if (localeProvider != null)
+                LanguageSelector(
+                  onLocaleChanged: localeProvider.onLocaleChanged,
+                ),
+              // Other menu items
+              ...menuItems.map((item) => _buildMenuItem(
+                icon: item.icon,
+                title: item.title,
+                onTap: item.onTap,
+              )),
+            ],
           );
         }
       },
