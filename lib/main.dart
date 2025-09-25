@@ -11,6 +11,7 @@ import 'screens/auth/login_screen.dart';
 import 'screens/home/dashboard_screen.dart';
 import 'screens/auth/email_verified_screen.dart';
 import 'services/supabase_service.dart';
+import 'services/localization_service.dart';
 import 'l10n/generated/app_localizations.dart';
 
 Future<void> main() async {
@@ -41,12 +42,29 @@ class DocAIApp extends StatefulWidget {
 
 class _DocAIAppState extends State<DocAIApp> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  Locale? _currentLocale;
 
   @override
   void initState() {
     super.initState();
+    _initializeLocale();
     _setupAuthListener();
     _setupDeepLinks();
+  }
+  
+  Future<void> _initializeLocale() async {
+    final savedLocale = await LocalizationService.getSavedLocale();
+    if (savedLocale != null) {
+      setState(() {
+        _currentLocale = savedLocale;
+      });
+    }
+  }
+  
+  void _changeLocale(Locale locale) {
+    setState(() {
+      _currentLocale = locale;
+    });
   }
 
   void _setupDeepLinks() {
@@ -88,27 +106,40 @@ class _DocAIAppState extends State<DocAIApp> {
       home: _getInitialScreen(),
       debugShowCheckedModeBanner: false,
       // Localization configuration
+      locale: _currentLocale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('en'), // English
-        Locale('es'), // Spanish
-      ],
-      // Optionally set the locale resolution callback
+      supportedLocales: LocalizationService.supportedLocales,
+      // Locale resolution callback
       localeResolutionCallback: (locale, supportedLocales) {
-        // Check if the current device locale is supported
-        for (var supportedLocale in supportedLocales) {
-          if (supportedLocale.languageCode == locale?.languageCode) {
-            return supportedLocale;
+        // If we have a saved locale, use it
+        if (_currentLocale != null) {
+          return _currentLocale;
+        }
+        
+        // Otherwise, check if the current device locale is supported
+        if (locale != null) {
+          for (var supportedLocale in supportedLocales) {
+            if (supportedLocale.languageCode == locale.languageCode) {
+              return supportedLocale;
+            }
           }
         }
+        
         // If the locale of the device is not supported, use the first one
         // from the list (English, in this case).
         return supportedLocales.first;
+      },
+      // Pass the locale change callback down to the app
+      builder: (context, child) {
+        return LocaleProvider(
+          onLocaleChanged: _changeLocale,
+          child: child!,
+        );
       },
     );
   }
@@ -119,5 +150,25 @@ class _DocAIAppState extends State<DocAIApp> {
       return const DashboardScreen();
     }
     return const LoginScreen();
+  }
+}
+
+// Provider to pass locale change callback through the widget tree
+class LocaleProvider extends InheritedWidget {
+  final Function(Locale) onLocaleChanged;
+  
+  const LocaleProvider({
+    super.key,
+    required this.onLocaleChanged,
+    required super.child,
+  });
+  
+  static LocaleProvider? of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<LocaleProvider>();
+  }
+  
+  @override
+  bool updateShouldNotify(LocaleProvider oldWidget) {
+    return onLocaleChanged != oldWidget.onLocaleChanged;
   }
 }
