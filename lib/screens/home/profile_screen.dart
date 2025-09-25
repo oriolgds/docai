@@ -420,7 +420,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     return Column(
       children: [
         // Language selector
-        if (localeProvider != null) ..[
+        if (localeProvider != null)
           Container(
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(20),
@@ -439,7 +439,6 @@ class _ProfileScreenState extends State<ProfileScreen>
               onLocaleChanged: localeProvider.onLocaleChanged,
             ),
           ),
-        ],
         
         // Menu items grid/list
         LayoutBuilder(
@@ -528,8 +527,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                         fontSize: 16,
                       ),
                     ),
-                    if (item.subtitle != null) ..[
+                    if (item.subtitle != null)
                       const SizedBox(height: 4),
+                    if (item.subtitle != null)
                       Text(
                         item.subtitle!,
                         style: TextStyle(
@@ -538,7 +538,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                    ],
                   ],
                 ),
               ),
