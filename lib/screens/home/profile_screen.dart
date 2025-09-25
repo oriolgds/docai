@@ -87,7 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
-                    Icons.settings_outlined,
+                    Icons.settings,
                     color: Colors.black87,
                     size: 24,
                   ),
@@ -177,7 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ],
               ),
               child: const Icon(
-                Icons.person_rounded,
+                Icons.person,
                 color: Colors.white,
                 size: 48,
               ),
@@ -240,7 +240,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
-                  Icons.medical_information_outlined,
+                  Icons.local_hospital,
                   color: Color(0xFF6C5CE7),
                   size: 24,
                 ),
@@ -312,7 +312,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
-                  Icons.workspace_premium_rounded,
+                  Icons.star,
                   color: Colors.white,
                   size: 24,
                 ),
@@ -374,42 +374,42 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildResponsiveMenuItems(AppLocalizations l10n, LocaleProvider? localeProvider) {
     final menuItems = [
       _MenuItemData(
-        icon: Icons.tune_rounded,
+        icon: Icons.tune,
         title: l10n.personalization,
         subtitle: 'Customize your experience',
         color: const Color(0xFF6C5CE7),
         onTap: () => _navigateToPersonalization(context),
       ),
       _MenuItemData(
-        icon: Icons.person_outline_rounded,
+        icon: Icons.person_outline,
         title: l10n.editProfile,
         subtitle: 'Update your information',
         color: const Color(0xFF00B894),
         onTap: () {},
       ),
       _MenuItemData(
-        icon: Icons.notifications_outlined,
+        icon: Icons.notifications,
         title: l10n.notifications,
         subtitle: 'Manage your alerts',
         color: const Color(0xFFFFB400),
         onTap: () {},
       ),
       _MenuItemData(
-        icon: Icons.shield_outlined,
+        icon: Icons.security,
         title: l10n.privacySecurity,
         subtitle: 'Privacy & security settings',
         color: const Color(0xFFE84393),
         onTap: () {},
       ),
       _MenuItemData(
-        icon: Icons.help_outline_rounded,
+        icon: Icons.help_outline,
         title: l10n.helpSupport,
         subtitle: 'Get help when you need it',
         color: const Color(0xFF00CEC9),
         onTap: () {},
       ),
       _MenuItemData(
-        icon: Icons.info_outline_rounded,
+        icon: Icons.info_outline,
         title: l10n.about,
         subtitle: 'Learn more about DocAI',
         color: const Color(0xFF636E72),
@@ -542,7 +542,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               ),
               Icon(
-                Icons.arrow_forward_ios_rounded,
+                Icons.chevron_right,
                 color: const Color(0xFF6C757D).withOpacity(0.6),
                 size: 16,
               ),
@@ -575,7 +575,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.logout_rounded,
+                  Icons.logout,
                   color: const Color(0xFFE74C3C),
                   size: 22,
                 ),
