@@ -2,18 +2,23 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/chat_input.dart';
-import '../../widgets/chat/model_selector.dart';
+
 import '../../services/openrouter_service.dart';
+import '../../services/chat_state_manager.dart';
 import '../../models/model_profile.dart';
 import '../../models/chat_message.dart';
+import '../../models/chat_conversation.dart';
 import '../../models/user_preferences.dart';
 import '../../config/openrouter_config.dart';
 import '../../services/supabase_service.dart';
-import 'profile_screen.dart';
+
 import 'personalization_screen.dart';
+import 'history_screen.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  final ChatConversation? existingConversation;
+  
+  const ChatScreen({super.key, this.existingConversation});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -21,7 +26,8 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
-  final List<ChatMessage> _messages = [];
+  final ChatStateManager _stateManager = ChatStateManager();
+  late List<ChatMessage> _messages;
   late ModelProfile _selectedProfile;
   bool _isSending = false;
   late OpenRouterService _service;
@@ -29,16 +35,39 @@ class _ChatScreenState extends State<ChatScreen> {
   int? _streamingIndex;
   Timer? _scrollTimer;
   bool _shouldScroll = false;
-  bool _useReasoning = false; // Nueva variable para controlar el razonamiento
+  bool _useReasoning = false;
   bool _showFirstTimeWarning = false;
-  UserPreferences? _userPreferences; // Almacenar las preferencias del usuario
+  UserPreferences? _userPreferences;
+  
+  // Variables para el historial
+  ChatConversation? _currentConversation;
+  bool _hasFirstMessage = false;
+  String? _conversationId; // ID único para esta sesión de chat
 
   @override
   void initState() {
     super.initState();
     _service = OpenRouterService();
     _selectedProfile = ModelProfile.defaultProfile;
-    _addInitialAssistantMessage();
+    
+    // Inicializar con conversación existente o nueva
+    if (widget.existingConversation != null) {
+      // Obtener la conversación más actualizada del state manager
+      final updatedConversation = _stateManager.getConversationById(widget.existingConversation!.id) 
+          ?? widget.existingConversation!;
+      
+      _currentConversation = updatedConversation;
+      _conversationId = updatedConversation.id;
+      _messages = List.from(updatedConversation.messages);
+      _hasFirstMessage = _messages.any((m) => m.role == ChatRole.user);
+      _showDisclaimer = _messages.isEmpty;
+    } else {
+      // Nueva conversación
+      _messages = [];
+      _conversationId = null; // Se asignará cuando se cree la conversación
+      _addInitialAssistantMessage();
+    }
+    
     _checkFirstTimeUser();
     _loadUserPreferences();
   }
@@ -48,7 +77,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final isFirstTime = await SupabaseService.isFirstTimeUser();
       if (mounted) {
         setState(() {
-          _showFirstTimeWarning = isFirstTime;
+          _showFirstTimeWarning = isFirstTime && _messages.length <= 1;
         });
       }
     } catch (e) {
@@ -137,11 +166,11 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollTimer?.cancel();
     _scrollController.dispose();
     _service.dispose();
+    // Note: No need to dispose _stateManager as it's a singleton
     super.dispose();
   }
 
   String _assistantLabel() {
-    // Mostrar solo Docai • Razonamiento" sin subcategoría "Fast"
     final baseName = brandDisplayName(_selectedProfile.brand);
     return _useReasoning ? '$baseName • Razonamiento' : baseName;
   }
@@ -149,6 +178,149 @@ class _ChatScreenState extends State<ChatScreen> {
   void _addInitialAssistantMessage() {
     _messages.add(ChatMessage.assistant(
         'Hola, soy Docai. ¿En qué puedo ayudarte hoy?'));
+  }
+
+  Future<void> _createOrUpdateConversation(String firstUserMessage) async {
+    if (_currentConversation == null) {
+      // Crear nueva conversación usando el state manager
+      _currentConversation = await _stateManager.createConversation(firstUserMessage);
+      _conversationId = _currentConversation!.id;
+      
+      // Actualizar el título en el AppBar inmediatamente
+      if (mounted) {
+        setState(() {
+          // Forzar reconstrucción del AppBar con el nuevo título
+        });
+      }
+    }
+    
+    // Solo actualizar y guardar la conversación si tenemos mensajes
+    if (_messages.isNotEmpty && _currentConversation != null) {
+      // Actualizar la conversación con los mensajes actuales
+      final updatedConversation = _currentConversation!.copyWith(
+        messages: List.from(_messages), // Crear nueva lista para evitar referencias
+        updatedAt: DateTime.now(),
+      );
+      
+      await _stateManager.saveConversation(updatedConversation);
+      _currentConversation = updatedConversation;
+    }
+  }
+
+  Future<void> _startNewConversation() async {
+    // Confirmar si el usuario quiere iniciar una nueva conversación
+    if (_messages.length > 1) { // Solo preguntar si hay mensajes más allá del saludo inicial
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Nueva conversación'),
+          content: const Text('¿Estás seguro de que quieres iniciar una nueva conversación?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Nueva conversación'),
+            ),
+          ],
+        ),
+      );
+      
+      if (confirmed != true) return;
+    }
+    
+    // Limpiar el estado actual
+    setState(() {
+      _messages.clear();
+      _currentConversation = null;
+      _conversationId = null; // Reset conversation ID
+      _hasFirstMessage = false;
+      _showDisclaimer = true;
+      _showFirstTimeWarning = false;
+    });
+    
+    // Agregar mensaje inicial
+    _addInitialAssistantMessage();
+    await _scrollToBottom(force: true);
+  }
+
+  Future<void> _clearAllHistory() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar historial'),
+        content: const Text(
+          '¿Estás seguro de que quieres eliminar todo el historial de chats? '
+          'Esta acción no se puede deshacer y eliminará todas las conversaciones '
+          'tanto localmente como en la nube.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Eliminar todo'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirmed != true) return;
+    
+    try {
+      // Mostrar indicador de carga
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Eliminando historial...'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      
+      // Eliminar todo el historial usando el state manager
+      await _stateManager.clearAllHistory();
+      
+      // Limpiar el estado actual y empezar nueva conversación
+      setState(() {
+        _messages.clear();
+        _currentConversation = null;
+        _conversationId = null; // Reset conversation ID
+        _hasFirstMessage = false;
+        _showDisclaimer = true;
+        _showFirstTimeWarning = false;
+      });
+      
+      // Agregar mensaje inicial
+      _addInitialAssistantMessage();
+      await _scrollToBottom(force: true);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Historial eliminado correctamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al eliminar historial: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _sendMessage(
@@ -164,16 +336,19 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.add(userMessage);
       } else {
         // Regeneration: remove only messages AFTER the given user message, keeping the user message itself
-        // regenerateIndex points to the preceding user message index
         if (regenerateIndex >= 0 && regenerateIndex < _messages.length - 1) {
           _messages.removeRange(regenerateIndex + 1, _messages.length);
-        } else if (regenerateIndex == _messages.length - 1) {
-          // If the last message is the user message, nothing to remove
         }
       }
       _isSending = true;
       _showDisclaimer = false;
     });
+
+    // Crear o actualizar conversación si es el primer mensaje del usuario
+    if (!_hasFirstMessage && regenerateIndex == null) {
+      _hasFirstMessage = true;
+      await _createOrUpdateConversation(text);
+    }
     
     // Wait for the next frame to ensure the view has updated
     await Future.delayed(Duration.zero);
@@ -201,7 +376,7 @@ class _ChatScreenState extends State<ChatScreen> {
         messages: history,
         profile: overrideProfile ?? _selectedProfile,
         systemPromptOverride: _buildPersonalizedSystemPrompt(),
-        useReasoning: overrideReasoning ?? _useReasoning, // Usar el parámetro de razonamiento
+        useReasoning: overrideReasoning ?? _useReasoning,
       );
 
       // Initial scroll to bottom before starting the stream
@@ -225,10 +400,15 @@ class _ChatScreenState extends State<ChatScreen> {
         final maxScroll = _scrollController.position.maxScrollExtent;
         final currentScroll = _scrollController.offset;
         if (maxScroll - currentScroll < 300) {
-          // 300px from bottom
           _scrollToBottom();
         }
       }
+
+      // Guardar la conversación después de que se complete la respuesta del asistente
+      if (_currentConversation != null) {
+        await _createOrUpdateConversation(text);
+      }
+
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -281,7 +461,6 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // Simplificamos el modal ya que solo hay un modelo
   Future<bool?> _showReasoningPickerSheet() async {
     bool tempReasoning = _useReasoning;
     
@@ -310,7 +489,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                   ),
                   const SizedBox(height: 12),
-                  // Mostrar solo el modelo actual sin opciones de cambio
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -347,7 +525,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Control de razonamiento
                   Row(
                     children: [
                       Icon(Icons.psychology, size: 20, color: brandColor(_selectedProfile.brand)),
@@ -383,9 +560,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       const SizedBox(width: 8),
                       ElevatedButton(
                         onPressed: () => Navigator.of(context).pop(tempReasoning),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                          child: const Text('Regenerar'),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                          child: Text('Regenerar'),
                         ),
                       ),
                     ],
@@ -407,7 +584,6 @@ class _ChatScreenState extends State<ChatScreen> {
     final newReasoning = await _showReasoningPickerSheet();
     if (newReasoning == null) return;
     
-    // Actualizar el estado del razonamiento si cambió
     if (newReasoning != _useReasoning) {
       setState(() {
         _useReasoning = newReasoning;
@@ -422,13 +598,216 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  // Funciones de sincronización agregadas
+  Widget _buildSyncCard() {
+    final cloudSyncEnabled = _stateManager.cloudSyncEnabled;
+    final isSyncing = _stateManager.isSyncing;
+    final lastSyncTime = _stateManager.lastSyncTime;
+    final hasError = _stateManager.hasError;
+    
+    return Container(
+      margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: hasError ? Colors.red.shade50 : Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: hasError ? Colors.red.shade200 : Colors.blue.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                hasError ? Icons.cloud_off : Icons.cloud_outlined, 
+                color: hasError ? Colors.red.shade700 : Colors.blue.shade700,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Sincronización en la nube',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: hasError ? Colors.red.shade700 : Colors.blue.shade700,
+                ),
+              ),
+              const Spacer(),
+              Transform.scale(
+                scale: 0.8,
+                child: Switch(
+                  value: cloudSyncEnabled,
+                  onChanged: _toggleCloudSync,
+                  activeColor: Colors.blue.shade700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _getSyncStatusText(cloudSyncEnabled, isSyncing, lastSyncTime, hasError),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: hasError ? Colors.red.shade600 : Colors.blue.shade600,
+                  ),
+                ),
+              ),
+              if (isSyncing) ...[
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.blue.shade600,
+                  ),
+                ),
+              ],
+              if (cloudSyncEnabled && !isSyncing) ...[
+                const SizedBox(width: 4),
+                InkWell(
+                  onTap: _forceSyncNow,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.refresh, 
+                      size: 16, 
+                      color: Colors.blue.shade600
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (hasError) ...[
+            const SizedBox(height: 6),
+            Text(
+              _stateManager.error!,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.red.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _getSyncStatusText(bool cloudSyncEnabled, bool isSyncing, DateTime? lastSyncTime, bool hasError) {
+    if (hasError) {
+      return 'Error en la sincronización. Toca refrescar para intentar de nuevo.';
+    }
+    
+    if (!cloudSyncEnabled) {
+      return 'Conversaciones guardadas solo en este dispositivo';
+    }
+    
+    if (isSyncing) {
+      return 'Sincronizando...';
+    }
+    
+    if (lastSyncTime != null) {
+      final now = DateTime.now();
+      final difference = now.difference(lastSyncTime);
+      
+      if (difference.inMinutes < 1) {
+        return 'Sincronizado hace menos de un minuto';
+      } else if (difference.inMinutes < 60) {
+        return 'Sincronizado hace ${difference.inMinutes}m';
+      } else if (difference.inHours < 24) {
+        return 'Sincronizado hace ${difference.inHours}h';
+      } else {
+        return 'Sincronizado hace ${difference.inDays}d';
+      }
+    }
+    
+    return 'Sincronización automática habilitada';
+  }
+
+  Future<void> _toggleCloudSync(bool enabled) async {
+    try {
+      await _stateManager.toggleCloudSync(enabled);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(enabled 
+              ? 'Sincronización en la nube habilitada' 
+              : 'Sincronización en la nube deshabilitada'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _forceSyncNow() async {
+    if (!mounted) return;
+    
+    try {
+      await _stateManager.forceSyncNow();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sincronización completada'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error en sincronización: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final accent = brandColor(_selectedProfile.brand);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Docai'),
+        title: Text(_currentConversation?.title ?? 'Docai'),
         actions: [
+          // Botón para nueva conversación
+          if (_hasFirstMessage)
+            IconButton(
+              tooltip: 'Nueva conversación',
+              icon: const Icon(Icons.add_comment_outlined),
+              onPressed: _startNewConversation,
+            ),
+          // Botón para ver historial
+          if (_hasFirstMessage)
+            IconButton(
+              tooltip: 'Ver historial',
+              icon: const Icon(Icons.history),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HistoryScreen(),
+                  ),
+                );
+              },
+            ),
+
           IconButton(
             tooltip: 'Aviso',
             icon: const Icon(Icons.info_outline),
@@ -452,161 +831,191 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
-          if (_showDisclaimer)
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.fromLTRB(12, 12, 12, 6),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: accent.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: accent.withOpacity(0.25)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.local_hospital_outlined, color: accent),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      OpenRouterConfig.disclaimerText,
-                      style: const TextStyle(fontSize: 12, color: Colors.black87),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Cerrar',
-                    icon: const Icon(Icons.close, size: 18),
-                    onPressed: () => setState(() => _showDisclaimer = false),
-                  ),
-                ],
-              ),
-            ),
-          if (_showFirstTimeWarning)
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.fromLTRB(12, 6, 12, 6),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue.shade50, Colors.blue.shade100],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade300),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.tune, color: Colors.blue.shade700),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Personaliza tu experiencia',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade700,
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        tooltip: 'Cerrar',
-                        icon: const Icon(Icons.close, size: 18),
-                        onPressed: () async {
-                          await SupabaseService.markAsNotFirstTime();
-                          setState(() => _showFirstTimeWarning = false);
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Para ofrecerte recomendaciones más precisas, configura tus preferencias médicas, alergias y condiciones.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.blue.shade800,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () async {
-                          await SupabaseService.markAsNotFirstTime();
-                          setState(() => _showFirstTimeWarning = false);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(
-                            'Ahora no',
-                            style: TextStyle(color: Colors.blue.shade600),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () async {
-                          await SupabaseService.markAsNotFirstTime();
-                          setState(() => _showFirstTimeWarning = false);
-                          if (mounted) {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const PersonalizationScreen(),
-                              ),
-                            );
-                            // Recargar preferencias cuando regrese de personalización
-                            await _loadUserPreferences();
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade700,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: const Text('Personalizar'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
-              itemCount: _messages.length,
+              itemCount: _messages.length + 
+                (_showDisclaimer ? 1 : 0) + 
+                (_showFirstTimeWarning ? 1 : 0) + 
+                (_hasFirstMessage ? 1 : 0), // Card de sincronización
               itemBuilder: (context, index) {
-                final m = _messages[index];
-                Widget _buildMessageBubble(ChatMessage message, int index) {
-                  final isAssistant = message.role == ChatRole.assistant;
-                  // Determina si es el mensaje de bienvenida (primer mensaje del asistente)
-                  final isWelcomeMessage = index == 0 && isAssistant;
+                int cardOffset = 0;
+                
+                // Card de sincronización (aparece primero cuando hay primer mensaje)
+                if (_hasFirstMessage) {
+                  if (index == 0) {
+                    return _buildSyncCard();
+                  }
+                  cardOffset++;
+                }
+                
+                // Card de disclaimer
+                if (_showDisclaimer) {
+                  if (index == cardOffset) {
+                    return Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: accent.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: accent.withOpacity(0.25)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.local_hospital_outlined, color: accent, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              OpenRouterConfig.disclaimerText,
+                              style: const TextStyle(fontSize: 12, color: Colors.black87),
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () => setState(() => _showDisclaimer = false),
+                            borderRadius: BorderRadius.circular(16),
+                            child: const Padding(
+                              padding: EdgeInsets.all(4),
+                              child: Icon(Icons.close, size: 16),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  cardOffset++;
+                }
+                
+                // Card de primera vez
+                if (_showFirstTimeWarning) {
+                  if (index == cardOffset) {
+                    return Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.blue.shade50, Colors.blue.shade100],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.blue.shade300),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.tune, color: Colors.blue.shade700, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Personaliza tu experiencia',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue.shade700,
+                                ),
+                              ),
+                              const Spacer(),
+                              InkWell(
+                                onTap: () async {
+                                  await SupabaseService.markAsNotFirstTime();
+                                  setState(() => _showFirstTimeWarning = false);
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(4),
+                                  child: Icon(Icons.close, size: 16),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Para ofrecerte recomendaciones más precisas, configura tus preferencias médicas, alergias y condiciones.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.blue.shade800,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () async {
+                                  await SupabaseService.markAsNotFirstTime();
+                                  setState(() => _showFirstTimeWarning = false);
+                                },
+                                child: Text(
+                                  'Ahora no',
+                                  style: TextStyle(
+                                    color: Colors.blue.shade600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await SupabaseService.markAsNotFirstTime();
+                                  setState(() => _showFirstTimeWarning = false);
+                                  if (mounted) {
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const PersonalizationScreen(),
+                                      ),
+                                    );
+                                    await _loadUserPreferences();
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue.shade700,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                ),
+                                child: const Text(
+                                  'Personalizar',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  cardOffset++;
+                }
+                
+                // Mensajes del chat
+                final messageIndex = index - cardOffset;
+                if (messageIndex >= 0 && messageIndex < _messages.length) {
+                  final m = _messages[messageIndex];
+                  final isAssistant = m.role == ChatRole.assistant;
+                  final isWelcomeMessage = messageIndex == 0 && isAssistant && _messages.length == 1;
 
                   return MessageBubble(
-                    message: message.content,
+                    message: m.content,
                     isAssistant: isAssistant,
                     assistantLabel: _assistantLabel(),
                     accentColor: brandColor(_selectedProfile.brand),
                     isStreaming:
                         isAssistant &&
                         _streamingIndex != null &&
-                        index == _streamingIndex,
+                        messageIndex == _streamingIndex,
                     showRegenerateButton: isAssistant && !isWelcomeMessage,
                     onRegenerate: isAssistant && !isWelcomeMessage
-                        ? () {
-                            _regenerateResponse(index);
-                          }
+                        ? () => _regenerateResponse(messageIndex)
                         : null,
                   );
                 }
-
-                return _buildMessageBubble(m, index);
+                
+                return const SizedBox.shrink();
               },
             ),
           ),
@@ -615,18 +1024,18 @@ class _ChatScreenState extends State<ChatScreen> {
             isSending: _isSending,
             selectedProfile: _selectedProfile,
             allProfiles: ModelProfile.defaults(),
-            useReasoning: _useReasoning, // Pasar el estado del razonamiento
+            useReasoning: _useReasoning,
             onProfileChanged: (p) {
               setState(() {
                 _selectedProfile = p;
               });
             },
-            onReasoningChanged: (enabled) { // Nuevo callback para el razonamiento
+            onReasoningChanged: (enabled) {
               setState(() {
                 _useReasoning = enabled;
               });
             },
-            onRequestPro: () {}, // Ya no necesario con un solo modelo
+            onRequestPro: () {},
           ),
         ],
       ),

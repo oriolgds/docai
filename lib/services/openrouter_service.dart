@@ -31,11 +31,11 @@ class OpenRouterService {
     };
 
     // Solo agregar el parámetro de razonamiento si está habilitado
-    // usar el formato correcto para la API de OpenRouter
+    // usar el formato correcto para la API de OpenRouter (objeto, no boolean)
     if (useReasoning) {
-      payload['reasoning'] = true;
-      // Opcional: configurar el effort level para el reasoning
-      payload['effort'] = 'high';
+      payload['reasoning'] = {
+        'effort': 'high',
+      };
     }
 
     final uri = Uri.parse('${OpenRouterConfig.baseUrl}/chat/completions');
@@ -92,11 +92,11 @@ class OpenRouterService {
     };
 
     // Solo agregar el parámetro de razonamiento si está habilitado
-    // usar el formato correcto para la API de OpenRouter
+    // usar el formato correcto para la API de OpenRouter (objeto, no boolean)
     if (useReasoning) {
-      payload['reasoning'] = true;
-      // Opcional: configurar el effort level para el reasoning
-      payload['effort'] = 'high';
+      payload['reasoning'] = {
+        'effort': 'high',
+      };
     }
 
     final uri = Uri.parse('${OpenRouterConfig.baseUrl}/chat/completions');
@@ -165,6 +165,98 @@ class OpenRouterService {
 
     yield* controller.stream;
     await completer.future;
+  }
+
+  // Generar título para una conversación basado en el primer mensaje del usuario
+  Future<String> generateConversationTitle(String firstUserMessage) async {
+    try {
+      final headers = OpenRouterConfig.defaultHeaders();
+      
+      final payload = <String, dynamic>{
+        'model': 'openai/gpt-3.5-turbo', // Usar un modelo rápido y económico para títulos
+        'messages': [
+          {
+            'role': 'system',
+            'content': 'Eres un asistente que genera títulos concisos para conversaciones médicas. '
+                      'Genera un título de máximo 6 palabras que resuma el tema principal del mensaje del usuario. '
+                      'El título debe ser claro, específico y en español. '
+                      'No uses comillas ni puntos al final. '
+                      'Ejemplos: "Dolor de cabeza persistente", "Consulta sobre diabetes", "Síntomas de gripe".',
+          },
+          {
+            'role': 'user',
+            'content': 'Genera un título para esta consulta médica: "$firstUserMessage"',
+          },
+        ],
+        'temperature': 0.3,
+        'max_tokens': 20, // Limitar tokens para títulos cortos
+      };
+
+      final uri = Uri.parse('${OpenRouterConfig.baseUrl}/chat/completions');
+      final resp = await _client.post(
+        uri,
+        headers: headers,
+        body: jsonEncode(payload),
+      );
+
+      if (resp.statusCode != 200) {
+        // Si falla la generación de título, usar un título por defecto
+        return _generateFallbackTitle(firstUserMessage);
+      }
+
+      final data = jsonDecode(resp.body) as Map<String, dynamic>;
+      final choices = data['choices'] as List?;
+      if (choices == null || choices.isEmpty) {
+        return _generateFallbackTitle(firstUserMessage);
+      }
+      
+      final message = choices.first['message'] as Map<String, dynamic>;
+      final content = message['content']?.toString().trim() ?? '';
+      
+      if (content.isEmpty) {
+        return _generateFallbackTitle(firstUserMessage);
+      }
+      
+      // Limpiar el título (remover comillas si las hay)
+      String title = content;
+      if (title.startsWith('"') && title.endsWith('"')) {
+        title = title.substring(1, title.length - 1);
+      }
+      if (title.startsWith("'") && title.endsWith("'")) {
+        title = title.substring(1, title.length - 1);
+      }
+      
+      // Limitar longitud del título
+      if (title.length > 50) {
+        title = title.substring(0, 47) + '...';
+      }
+      
+      return title;
+    } catch (e) {
+      // En caso de error, usar título por defecto
+      return _generateFallbackTitle(firstUserMessage);
+    }
+  }
+
+  // Generar título por defecto basado en las primeras palabras del mensaje
+  String _generateFallbackTitle(String message) {
+    // Limpiar el mensaje
+    String cleanMessage = message.trim();
+    
+    // Tomar las primeras palabras (máximo 6)
+    List<String> words = cleanMessage.split(' ');
+    if (words.length > 6) {
+      words = words.take(6).toList();
+      return '${words.join(' ')}...';
+    }
+    
+    // Si es muy corto, usar tal como está
+    if (cleanMessage.length <= 50) {
+      return cleanMessage;
+    }
+    
+    // Si es muy largo, truncar
+    return '${cleanMessage.substring(0, 47)}...';
   }
 
   void dispose() => _client.close();
