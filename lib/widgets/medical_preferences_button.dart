@@ -4,16 +4,14 @@ import '../screens/medical_preferences_screen.dart';
 class MedicalPreferencesButton extends StatelessWidget {
   final VoidCallback? onPreferencesUpdated;
 
-  const MedicalPreferencesButton({
-    Key? key,
-    this.onPreferencesUpdated,
-  }) : super(key: key);
+  const MedicalPreferencesButton({Key? key, this.onPreferencesUpdated})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Card(
       color: Colors.grey[900],
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(8),
@@ -37,10 +35,7 @@ class MedicalPreferencesButton extends StatelessWidget {
         ),
         subtitle: const Text(
           'Configura alergias, preferencias de tratamiento y más',
-          style: TextStyle(
-            color: Colors.grey,
-            fontSize: 14,
-          ),
+          style: TextStyle(color: Colors.grey, fontSize: 14),
         ),
         trailing: const Icon(
           Icons.arrow_forward_ios,
@@ -53,7 +48,7 @@ class MedicalPreferencesButton extends StatelessWidget {
               builder: (context) => const MedicalPreferencesScreen(),
             ),
           );
-          
+
           // Si se guardaron cambios, ejecutar callback
           if (result == true && onPreferencesUpdated != null) {
             onPreferencesUpdated!();
