@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
-// Import condicional para web
-import 'dart:html' as html show window if (dart.library.html) 'dart:html';
+
+// Importación condicional basada en la plataforma
+import 'platform_service_web.dart'
+    if (dart.library.io) 'platform_service_mobile.dart' as platform_impl;
 
 class PlatformService {
   /// Detecta si el usuario está accediendo desde un dispositivo Android
@@ -8,12 +10,10 @@ class PlatformService {
   static bool isAndroidOnWeb() {
     if (!kIsWeb) return false;
     
-    try {
-      final userAgent = html.window.navigator.userAgent.toLowerCase();
-      return userAgent.contains('android');
-    } catch (e) {
-      // Si falla la detección (por ejemplo, en desarrollo), retorna false
-      return false;
+    if (kIsWeb) {
+      return platform_impl.PlatformServiceWeb.isAndroidOnWeb();
+    } else {
+      return platform_impl.PlatformServiceMobile.isAndroidOnWeb();
     }
   }
   
@@ -22,28 +22,19 @@ class PlatformService {
   static bool isMobileOnWeb() {
     if (!kIsWeb) return false;
     
-    try {
-      final userAgent = html.window.navigator.userAgent.toLowerCase();
-      return userAgent.contains('android') || 
-             userAgent.contains('iphone') || 
-             userAgent.contains('ipad') ||
-             userAgent.contains('mobile');
-    } catch (e) {
-      // Si falla la detección, retorna false
-      return false;
+    if (kIsWeb) {
+      return platform_impl.PlatformServiceWeb.isMobileOnWeb();
+    } else {
+      return platform_impl.PlatformServiceMobile.isMobileOnWeb();
     }
   }
   
   /// Abre una URL en una nueva ventana/pestaña
   static void openUrl(String url) {
     if (kIsWeb) {
-      try {
-        html.window.open(url, '_self');
-      } catch (e) {
-        // Si falla la apertura de URL, no hace nada
-        // En un entorno de producción, podrías manejar esto de otra manera
-        debugPrint('Error opening URL: $e');
-      }
+      platform_impl.PlatformServiceWeb.openUrl(url);
+    } else {
+      platform_impl.PlatformServiceMobile.openUrl(url);
     }
   }
 }
