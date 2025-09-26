@@ -10,6 +10,7 @@ import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/dashboard_screen.dart';
 import 'screens/auth/email_verified_screen.dart';
+import 'screens/splash/splash_screen.dart';
 import 'services/supabase_service.dart';
 import 'services/localization_service.dart';
 import 'l10n/generated/app_localizations.dart';
@@ -44,13 +45,26 @@ class DocAIApp extends StatefulWidget {
 class _DocAIAppState extends State<DocAIApp> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   Locale? _currentLocale;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeLocale();
+    _initializeApp();
+  }
+  
+  Future<void> _initializeApp() async {
+    // Initialize locale
+    await _initializeLocale();
+    
+    // Setup listeners
     _setupAuthListener();
     _setupDeepLinks();
+    
+    // Mark as initialized
+    setState(() {
+      _isInitialized = true;
+    });
   }
   
   Future<void> _initializeLocale() async {
@@ -88,7 +102,7 @@ class _DocAIAppState extends State<DocAIApp> {
       final event = data.event;
       if (event == AuthChangeEvent.signedOut || event == AuthChangeEvent.tokenRefreshed) {
         final user = SupabaseService.currentUser;
-        if (user == null) {
+        if (user == null && _isInitialized) {
           _navigatorKey.currentState?.pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const LoginScreen()),
             (route) => false,
@@ -105,7 +119,7 @@ class _DocAIAppState extends State<DocAIApp> {
       theme: AppTheme.theme,
       navigatorKey: _navigatorKey,
       home: AndroidDownloadWrapper(
-        child: _getInitialScreen(),
+        child: _isInitialized ? const SplashScreen() : const _InitializingScreen(),
       ),
       debugShowCheckedModeBanner: false,
       // Localization configuration
@@ -146,13 +160,23 @@ class _DocAIAppState extends State<DocAIApp> {
       },
     );
   }
-  
-  Widget _getInitialScreen() {
-    final user = SupabaseService.currentUser;
-    if (user != null && user.emailConfirmedAt != null) {
-      return const DashboardScreen();
-    }
-    return const LoginScreen();
+}
+
+// Simple initialization screen shown during initial setup
+class _InitializingScreen extends StatelessWidget {
+  const _InitializingScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: CircularProgressIndicator(
+          color: Colors.black,
+          strokeWidth: 2,
+        ),
+      ),
+    );
   }
 }
 
