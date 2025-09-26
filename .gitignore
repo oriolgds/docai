@@ -56,3 +56,6 @@ android/app/google-services.json
 
 web-release*.zip
 web-debug*.zip
+
+.venv
+upload-keystore.jks
