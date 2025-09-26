@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../widgets/auth_button.dart';
 import '../../widgets/responsive_layout.dart';
+import '../../widgets/android_download_modal.dart';
 import '../home/dashboard_screen.dart';
 import 'signup_screen.dart';
 import '../../services/supabase_service.dart';
@@ -17,6 +18,15 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Mostrar modal de descarga para Android si es necesario
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AndroidDownloadHelper.showModalIfNeeded(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
