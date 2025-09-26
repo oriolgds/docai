@@ -7,6 +7,7 @@ import '../auth/login_screen.dart';
 import 'personalization_screen.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../main.dart';
+import 'privacy_security_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -28,20 +29,16 @@ class _ProfileScreenState extends State<ProfileScreen>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _fadeInAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutQuart,
-    ));
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutQuart,
-    ));
+    _fadeInAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutQuart),
+    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutQuart,
+          ),
+        );
     _animationController.forward();
   }
 
@@ -55,7 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final localeProvider = LocaleProvider.of(context);
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -109,24 +106,24 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: Column(
                   children: [
                     const SizedBox(height: 8),
-                    
+
                     // Enhanced Profile Header
                     _buildProfileHeader(l10n),
                     const SizedBox(height: 32),
-                    
+
                     // Medical Preferences Section
                     _buildMedicalSection(l10n),
                     const SizedBox(height: 24),
-                    
+
                     // Enhanced Subscription Card
                     _buildSubscriptionCard(l10n),
                     const SizedBox(height: 32),
-                    
+
                     // Responsive Menu Items
                     _buildResponsiveMenuItems(l10n, localeProvider),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Enhanced Logout Button
                     _buildLogoutButton(l10n),
                     const SizedBox(height: 32),
@@ -176,16 +173,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 48,
-              ),
+              child: const Icon(Icons.person, color: Colors.white, size: 48),
             ),
           ),
           const SizedBox(height: 20),
           Text(
-            SupabaseService.currentUser?.userMetadata?['full_name'] ?? l10n.user,
+            SupabaseService.currentUser?.userMetadata?['full_name'] ??
+                l10n.user,
             style: const TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w700,
@@ -311,11 +305,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.star,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                child: const Icon(Icons.star, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -371,7 +361,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildResponsiveMenuItems(AppLocalizations l10n, LocaleProvider? localeProvider) {
+  Widget _buildResponsiveMenuItems(
+    AppLocalizations l10n,
+    LocaleProvider? localeProvider,
+  ) {
     final menuItems = [
       _MenuItemData(
         icon: Icons.tune,
@@ -399,8 +392,13 @@ class _ProfileScreenState extends State<ProfileScreen>
         title: l10n.privacySecurity,
         subtitle: 'Privacy & security settings',
         color: const Color(0xFFE84393),
-        onTap: () {},
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const PrivacySecurityScreen()),
+          );
+        },
       ),
+
       _MenuItemData(
         icon: Icons.help_outline,
         title: l10n.helpSupport,
@@ -439,7 +437,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               onLocaleChanged: localeProvider.onLocaleChanged,
             ),
           ),
-        
+
         // Menu items grid/list
         LayoutBuilder(
           builder: (context, constraints) {
@@ -462,10 +460,12 @@ class _ProfileScreenState extends State<ProfileScreen>
             } else {
               return Column(
                 children: menuItems
-                    .map((item) => Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: _buildModernMenuItem(item),
-                        ))
+                    .map(
+                      (item) => Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: _buildModernMenuItem(item),
+                      ),
+                    )
                     .toList(),
               );
             }
@@ -488,10 +488,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.grey.withOpacity(0.1),
-              width: 1,
-            ),
+            border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.04),
@@ -508,11 +505,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   color: item.color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  item.icon,
-                  color: item.color,
-                  size: 22,
-                ),
+                child: Icon(item.icon, color: item.color, size: 22),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -527,8 +520,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         fontSize: 16,
                       ),
                     ),
-                    if (item.subtitle != null)
-                      const SizedBox(height: 4),
+                    if (item.subtitle != null) const SizedBox(height: 4),
                     if (item.subtitle != null)
                       Text(
                         item.subtitle!,
@@ -574,11 +566,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.logout,
-                  color: const Color(0xFFE74C3C),
-                  size: 22,
-                ),
+                Icon(Icons.logout, color: const Color(0xFFE74C3C), size: 22),
                 const SizedBox(width: 12),
                 Text(
                   l10n.logout,
@@ -605,9 +593,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
             position: animation.drive(
-              Tween(begin: const Offset(1.0, 0.0), end: Offset.zero).chain(
-                CurveTween(curve: Curves.easeOutQuart),
-              ),
+              Tween(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).chain(CurveTween(curve: Curves.easeOutQuart)),
             ),
             child: child,
           );
@@ -615,7 +604,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         transitionDuration: const Duration(milliseconds: 300),
       ),
     );
-    
+
     if (result == true) {
       setState(() {});
     }
@@ -626,22 +615,14 @@ class _ProfileScreenState extends State<ProfileScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           l10n.logoutConfirmTitle,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
         content: Text(
           l10n.logoutConfirmMessage,
-          style: const TextStyle(
-            color: Color(0xFF6C757D),
-            fontSize: 15,
-          ),
+          style: const TextStyle(color: Color(0xFF6C757D), fontSize: 15),
         ),
         actions: [
           TextButton(
@@ -677,9 +658,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
             child: Text(
               l10n.logout,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],

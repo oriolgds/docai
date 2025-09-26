@@ -39,7 +39,6 @@ flutter:
 
   assets:
     - assets/logo/
-    - assets/i18n/
     - ./.env
 
 flutter_launcher_icons:
