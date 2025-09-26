@@ -16,11 +16,45 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const ChatScreen(),
-    const HistoryScreen(),
-    const ProfileScreen(),
-  ];
+  // Callback para cambiar de tab
+  void _changeTab(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  // Método para ir a la tab de chat y iniciar nueva conversación
+  void _goToChatAndStartNew() {
+    setState(() {
+      _currentIndex = 0; // Índice de la tab de chat
+    });
+    // Enviar callback al ChatScreen para que inicie nueva conversación
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_screens[0] is ChatScreen) {
+        // El ChatScreen se encargará de detectar este cambio
+      }
+    });
+  }
+
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _validateSession();
+    
+    // Inicializar las pantallas con los callbacks de navegación
+    _screens = [
+      ChatScreen(
+        onNavigateToHistory: () => _changeTab(1),
+      ),
+      HistoryScreen(
+        onNavigateToChat: () => _changeTab(0),
+        onStartNewChat: _goToChatAndStartNew,
+      ),
+      const ProfileScreen(),
+    ];
+  }
 
   final List<NavigationDestination> _navigationDestinations = [
     const NavigationDestination(
@@ -39,12 +73,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       label: 'Profile',
     ),
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _validateSession();
-  }
 
   void _validateSession() {
     final user = SupabaseService.currentUser;
