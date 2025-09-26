@@ -40,7 +40,7 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen>
 
   @override
   void dispose() {
-    _animationController.dispose()
+    _animationController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
