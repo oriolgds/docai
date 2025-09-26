@@ -69,11 +69,17 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
     }
   }
 
-  Future<void> _toggleCloudSync(bool enabled) async {
+  Future<void> _toggleCloudSync(bool enabled, [StateSetter? modalSetState]) async {
     try {
       await _stateManager.toggleCloudSync(enabled);
       
+      // Actualizar tanto el modal como la pantalla principal
+      if (modalSetState != null) {
+        modalSetState(() {}); // Actualizar el modal
+      }
+      
       if (mounted) {
+        setState(() {}); // Actualizar la pantalla principal
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(enabled 
@@ -91,13 +97,19 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
     }
   }
 
-  Future<void> _forceSyncNow() async {
+  Future<void> _forceSyncNow([StateSetter? modalSetState]) async {
     if (!mounted) return;
     
     try {
       await _stateManager.forceSyncNow();
       
+      // Actualizar tanto el modal como la pantalla principal
+      if (modalSetState != null) {
+        modalSetState(() {}); // Actualizar el modal
+      }
+      
       if (mounted) {
+        setState(() {}); // Actualizar la pantalla principal
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Sincronización completada'),
@@ -250,99 +262,101 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Handle bar
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            
-            const Text(
-              'Opciones avanzadas',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            
-            _buildSyncSettings(),
-            
-            const SizedBox(height: 20),
-            
-            // Botones de acción
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _forceRefresh();
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Actualizar'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, modalSetState) => Container(
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton.icon(
+              ),
+              const SizedBox(height: 20),
+              
+              const Text(
+                'Opciones avanzadas',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              _buildSyncSettings(modalSetState),
+              
+              const SizedBox(height: 20),
+              
+              // Botones de acción
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _forceRefresh();
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Actualizar'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _startNewConversation();
+                      },
+                      icon: const Icon(Icons.chat),
+                      label: const Text('Nueva'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              
+              if (_stateManager.conversations.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
-                      _startNewConversation();
+                      _clearAllHistory();
                     },
-                    icon: const Icon(Icons.chat),
-                    label: const Text('Nueva'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
+                    icon: const Icon(Icons.delete_sweep, color: Colors.red),
+                    label: const Text(
+                      'Eliminar todo el historial',
+                      style: TextStyle(color: Colors.red),
                     ),
                   ),
                 ),
               ],
-            ),
-            
-            if (_stateManager.conversations.isNotEmpty) ...[
+              
               const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _clearAllHistory();
-                  },
-                  icon: const Icon(Icons.delete_sweep, color: Colors.red),
-                  label: const Text(
-                    'Eliminar todo el historial',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                ),
-              ),
             ],
-            
-            const SizedBox(height: 10),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSyncSettings() {
+  Widget _buildSyncSettings([StateSetter? modalSetState]) {
     final cloudSyncEnabled = _stateManager.cloudSyncEnabled;
     final isSyncing = _stateManager.isSyncing;
     final lastSyncTime = _stateManager.lastSyncTime;
@@ -394,7 +408,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
               ),
               Switch(
                 value: cloudSyncEnabled,
-                onChanged: _toggleCloudSync,
+                onChanged: (value) => _toggleCloudSync(value, modalSetState),
                 activeColor: Colors.blue.shade700,
               ),
             ],
@@ -426,7 +440,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                 const SizedBox(width: 8),
                 IconButton(
                   icon: Icon(Icons.refresh, size: 20, color: Colors.blue.shade600),
-                  onPressed: _forceSyncNow,
+                  onPressed: () => _forceSyncNow(modalSetState),
                   tooltip: 'Sincronizar ahora',
                 ),
               ],
