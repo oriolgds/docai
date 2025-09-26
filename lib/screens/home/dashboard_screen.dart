@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/supabase_service.dart';
 import '../../widgets/responsive_layout.dart';
+import '../../widgets/android_download_modal.dart';
 import '../auth/login_screen.dart';
 import 'chat_screen.dart';
 import 'history_screen.dart';
@@ -54,6 +55,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       const ProfileScreen(),
     ];
+    
+    // Mostrar modal de descarga para Android si es necesario
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AndroidDownloadHelper.showModalIfNeeded(context);
+    });
   }
 
   final List<NavigationDestination> _navigationDestinations = [
