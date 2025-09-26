@@ -128,10 +128,16 @@ class AndroidDownloadModal extends StatelessWidget {
 }
 
 /// Widget wrapper que muestra el modal automáticamente si es Android en web
+/// Modificado para no interferir con la splash screen
 class AndroidDownloadWrapper extends StatefulWidget {
   final Widget child;
+  final bool showModal;
 
-  const AndroidDownloadWrapper({super.key, required this.child});
+  const AndroidDownloadWrapper({
+    super.key, 
+    required this.child,
+    this.showModal = false, // Solo muestra el modal cuando se indica explícitamente
+  });
 
   @override
   State<AndroidDownloadWrapper> createState() => _AndroidDownloadWrapperState();
@@ -146,14 +152,26 @@ class _AndroidDownloadWrapperState extends State<AndroidDownloadWrapper> {
     _checkPlatform();
   }
 
+  @override
+  void didUpdateWidget(AndroidDownloadWrapper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.showModal != oldWidget.showModal) {
+      _checkPlatform();
+    }
+  }
+
   void _checkPlatform() {
-    // Verificar si es Android en web
-    if (PlatformService.isAndroidOnWeb()) {
+    // Solo verificar y mostrar el modal si showModal es true y es Android en web
+    if (widget.showModal && PlatformService.isAndroidOnWeb()) {
       // Mostrar el modal después de que el widget se haya construido
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
           _shouldShowModal = true;
         });
+      });
+    } else {
+      setState(() {
+        _shouldShowModal = false;
       });
     }
   }
@@ -170,5 +188,34 @@ class _AndroidDownloadWrapperState extends State<AndroidDownloadWrapper> {
           ),
       ],
     );
+  }
+}
+
+/// Función helper para mostrar el modal cuando sea necesario
+class AndroidDownloadHelper {
+  static bool _hasShownModal = false;
+  
+  /// Verifica si debe mostrar el modal de descarga para Android
+  static bool shouldShowModal() {
+    return PlatformService.isAndroidOnWeb() && !_hasShownModal;
+  }
+  
+  /// Marca que el modal ya se ha mostrado
+  static void markModalShown() {
+    _hasShownModal = true;
+  }
+  
+  /// Muestra el modal de descarga si es necesario
+  static void showModalIfNeeded(BuildContext context) {
+    if (shouldShowModal()) {
+      markModalShown();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const AndroidDownloadModal(),
+        );
+      });
+    }
   }
 }
