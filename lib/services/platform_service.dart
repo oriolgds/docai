@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:js_interop' as js;
 
 class PlatformService {
   /// Detecta si el usuario está accediendo desde un dispositivo Android
@@ -6,11 +7,13 @@ class PlatformService {
   static bool isAndroidOnWeb() {
     if (!kIsWeb) return false;
     
-    // Solo en web, usar detección por user agent
-    if (kIsWeb) {
-      return _isAndroidUserAgent();
+    try {
+      // Usar JavaScript interop para obtener user agent
+      final userAgent = js.globalContext['navigator']['userAgent'].toString().toLowerCase();
+      return userAgent.contains('android');
+    } catch (e) {
+      return false;
     }
-    return false;
   }
   
   /// Detecta si el usuario está accediendo desde un dispositivo móvil
@@ -18,48 +21,27 @@ class PlatformService {
   static bool isMobileOnWeb() {
     if (!kIsWeb) return false;
     
-    // Solo en web, usar detección por user agent
-    if (kIsWeb) {
-      return _isMobileUserAgent();
+    try {
+      // Usar JavaScript interop para obtener user agent
+      final userAgent = js.globalContext['navigator']['userAgent'].toString().toLowerCase();
+      return userAgent.contains('android') || 
+             userAgent.contains('iphone') || 
+             userAgent.contains('ipad') ||
+             userAgent.contains('mobile');
+    } catch (e) {
+      return false;
     }
-    return false;
   }
   
   /// Abre una URL en una nueva ventana/pestaña
   static void openUrl(String url) {
     if (kIsWeb) {
-      _openUrlWeb(url);
+      try {
+        // Usar JavaScript interop para abrir URL
+        js.globalContext['window'].callMethod('open', [url, '_self']);
+      } catch (e) {
+        debugPrint('Error opening URL: $e');
+      }
     }
-  }
-}
-
-// Implementaciones específicas para web - solo se compilan en web
-bool _isAndroidUserAgent() {
-  // Esta función solo se llama cuando kIsWeb es true
-  try {
-    // Usar evaluateJavaScript para acceder al user agent
-    return false; // Placeholder - se implementará con JS
-  } catch (e) {
-    return false;
-  }
-}
-
-bool _isMobileUserAgent() {
-  // Esta función solo se llama cuando kIsWeb es true
-  try {
-    // Usar evaluateJavaScript para acceder al user agent
-    return false; // Placeholder - se implementará con JS
-  } catch (e) {
-    return false;
-  }
-}
-
-void _openUrlWeb(String url) {
-  // Esta función solo se llama cuando kIsWeb es true
-  try {
-    // Usar JS para abrir URL
-    // Se implementará con JS
-  } catch (e) {
-    debugPrint('Error opening URL: $e');
   }
 }
