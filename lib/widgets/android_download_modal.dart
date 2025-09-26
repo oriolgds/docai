@@ -96,18 +96,24 @@ class AndroidDownloadModal extends StatelessWidget {
                         },
                       ),
                       const SizedBox(width: 12),
-                      Text(
-                        'Descargar desde Play Store',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
+                      Flexible(
+                        child: Text(
+                          'Descargar desde Play Store',
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          softWrap: true,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
+
               const SizedBox(height: 12),
 
               // Texto informativo adicional
@@ -134,9 +140,10 @@ class AndroidDownloadWrapper extends StatefulWidget {
   final bool showModal;
 
   const AndroidDownloadWrapper({
-    super.key, 
+    super.key,
     required this.child,
-    this.showModal = false, // Solo muestra el modal cuando se indica explícitamente
+    this.showModal =
+        false, // Solo muestra el modal cuando se indica explícitamente
   });
 
   @override
@@ -194,17 +201,17 @@ class _AndroidDownloadWrapperState extends State<AndroidDownloadWrapper> {
 /// Función helper para mostrar el modal cuando sea necesario
 class AndroidDownloadHelper {
   static bool _hasShownModal = false;
-  
+
   /// Verifica si debe mostrar el modal de descarga para Android
   static bool shouldShowModal() {
     return PlatformService.isAndroidOnWeb() && !_hasShownModal;
   }
-  
+
   /// Marca que el modal ya se ha mostrado
   static void markModalShown() {
     _hasShownModal = true;
   }
-  
+
   /// Muestra el modal de descarga si es necesario
   static void showModalIfNeeded(BuildContext context) {
     if (shouldShowModal()) {
