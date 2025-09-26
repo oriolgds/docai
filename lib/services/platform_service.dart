@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'dart:html' as html;
+// Import condicional para web
+import 'dart:html' as html show window if (dart.library.html) 'dart:html';
 
 class PlatformService {
   /// Detecta si el usuario está accediendo desde un dispositivo Android
@@ -7,8 +8,13 @@ class PlatformService {
   static bool isAndroidOnWeb() {
     if (!kIsWeb) return false;
     
-    final userAgent = html.window.navigator.userAgent.toLowerCase();
-    return userAgent.contains('android');
+    try {
+      final userAgent = html.window.navigator.userAgent.toLowerCase();
+      return userAgent.contains('android');
+    } catch (e) {
+      // Si falla la detección (por ejemplo, en desarrollo), retorna false
+      return false;
+    }
   }
   
   /// Detecta si el usuario está accediendo desde un dispositivo móvil
@@ -16,17 +22,28 @@ class PlatformService {
   static bool isMobileOnWeb() {
     if (!kIsWeb) return false;
     
-    final userAgent = html.window.navigator.userAgent.toLowerCase();
-    return userAgent.contains('android') || 
-           userAgent.contains('iphone') || 
-           userAgent.contains('ipad') ||
-           userAgent.contains('mobile');
+    try {
+      final userAgent = html.window.navigator.userAgent.toLowerCase();
+      return userAgent.contains('android') || 
+             userAgent.contains('iphone') || 
+             userAgent.contains('ipad') ||
+             userAgent.contains('mobile');
+    } catch (e) {
+      // Si falla la detección, retorna false
+      return false;
+    }
   }
   
   /// Abre una URL en una nueva ventana/pestaña
   static void openUrl(String url) {
     if (kIsWeb) {
-      html.window.open(url, '_self');
+      try {
+        html.window.open(url, '_self');
+      } catch (e) {
+        // Si falla la apertura de URL, no hace nada
+        // En un entorno de producción, podrías manejar esto de otra manera
+        debugPrint('Error opening URL: $e');
+      }
     }
   }
 }
