@@ -34,11 +34,48 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
     
+    # Cache para Flutter SDK
+    - name: Cache Flutter SDK
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ runner.tool_cache }}/flutter
+        key: flutter-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}-3.35.4
+        restore-keys: |
+          flutter-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}-
+          flutter-${{ runner.os }}-
+    
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.35.4'  # Usa la versión estable más reciente
         channel: 'stable'
+        cache: true  # Habilita cache interno de la acción
+    
+    # Cache para dependencias de pub
+    - name: Cache pub dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.pub-cache
+          ${{ github.workspace }}/.packages
+          ${{ github.workspace }}/.flutter-plugins
+          ${{ github.workspace }}/.flutter-plugin-dependencies
+          ${{ github.workspace }}/.dart_tool/package_config.json
+        key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          pub-${{ runner.os }}-
+    
+    # Cache para build outputs
+    - name: Cache Flutter build
+      uses: actions/cache@v4
+      with:
+        path: |
+          build/
+          .dart_tool/
+        key: flutter-build-${{ runner.os }}-${{ hashFiles('**/*.dart', 'pubspec.yaml', 'pubspec.lock') }}
+        restore-keys: |
+          flutter-build-${{ runner.os }}-
     
     - name: Create firebase_options.dart from secret
       run: |
@@ -91,11 +128,10 @@ jobs:
     
     - name: Get dependencies
       run: flutter pub get
-
     
     - name: Build web app
       run: |
-        flutter build web --release --base-href "/docai/"
+        flutter build web --release --base-href "/docai/" --dart-define=FLUTTER_WEB_AUTO_DETECT=true
     
     - name: Upload build artifacts
       uses: actions/upload-pages-artifact@v3
