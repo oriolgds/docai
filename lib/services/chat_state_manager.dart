@@ -21,6 +21,10 @@ class ChatStateManager extends ChangeNotifier {
   String? _error;
   DateTime? _lastSyncTime;
   
+  // Estado de navegación
+  ChatConversation? _currentConversation;
+  bool _shouldClearCurrentConversation = false;
+  
   // Cache y estado de sincronización
   Timer? _syncTimer;
   Timer? _retryTimer;
@@ -37,6 +41,10 @@ class ChatStateManager extends ChangeNotifier {
   String? get error => _error;
   DateTime? get lastSyncTime => _lastSyncTime;
   bool get hasError => _error != null;
+  
+  // Getters para navegación
+  ChatConversation? get currentConversation => _currentConversation;
+  bool get shouldClearCurrentConversation => _shouldClearCurrentConversation;
   
   // Stream para escuchar cambios en tiempo real
   final StreamController<List<ChatConversation>> _conversationsStreamController = 
@@ -206,6 +214,25 @@ class ChatStateManager extends ChangeNotifier {
     } catch (e) {
       return null;
     }
+  }
+  
+  /// Establecer conversación actual para navegación
+  void setCurrentConversation(ChatConversation conversation) {
+    _currentConversation = conversation;
+    _shouldClearCurrentConversation = false;
+    notifyListeners();
+  }
+  
+  /// Limpiar conversación actual para empezar una nueva
+  void clearCurrentConversation() {
+    _currentConversation = null;
+    _shouldClearCurrentConversation = true;
+    notifyListeners();
+  }
+  
+  /// Limpiar bandera de limpiar conversación
+  void clearShouldClearFlag() {
+    _shouldClearCurrentConversation = false;
   }
 
   /// Sincronización en background (silenciosa)
