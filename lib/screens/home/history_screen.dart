@@ -5,7 +5,14 @@ import '../../services/chat_state_manager.dart';
 import 'chat_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
-  const HistoryScreen({super.key});
+  final VoidCallback? onNavigateToChat;
+  final VoidCallback? onStartNewChat;
+  
+  const HistoryScreen({
+    super.key,
+    this.onNavigateToChat,
+    this.onStartNewChat,
+  });
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
@@ -235,25 +242,43 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
     // Obtener la conversación más actualizada del state manager
     final updatedConversation = _stateManager.getConversationById(conversation.id) ?? conversation;
     
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChatScreen(
-          existingConversation: updatedConversation,
+    // Si tenemos callback de navegación, cambiar a la tab de chat
+    // Si no, usar navegación tradicional (fallback)
+    if (widget.onNavigateToChat != null) {
+      // Establecer la conversación en el state manager
+      _stateManager.setCurrentConversation(updatedConversation);
+      // Cambiar a la tab de chat
+      widget.onNavigateToChat!();
+    } else {
+      // Fallback: navegación tradicional
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatScreen(
+            existingConversation: updatedConversation,
+          ),
         ),
-      ),
-    );
-    // El state manager se encarga automáticamente de la sincronización
+      );
+    }
   }
 
   void _startNewConversation() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const ChatScreen(),
-      ),
-    );
-    // El state manager se encarga automáticamente de mantener los datos actualizados
+    // Si tenemos callback de navegación, cambiar a la tab de chat
+    // Si no, usar navegación tradicional (fallback)
+    if (widget.onStartNewChat != null) {
+      // Limpiar la conversación actual para empezar una nueva
+      _stateManager.clearCurrentConversation();
+      // Cambiar a la tab de chat
+      widget.onStartNewChat!();
+    } else {
+      // Fallback: navegación tradicional
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ChatScreen(),
+        ),
+      );
+    }
   }
 
   // Modal para opciones avanzadas
