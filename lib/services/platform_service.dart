@@ -1,20 +1,16 @@
 import 'package:flutter/foundation.dart';
 
-// Importación condicional basada en la plataforma
-import 'platform_service_web.dart'
-    if (dart.library.io) 'platform_service_mobile.dart' as platform_impl;
-
 class PlatformService {
   /// Detecta si el usuario está accediendo desde un dispositivo Android
   /// cuando la app se ejecuta en web
   static bool isAndroidOnWeb() {
     if (!kIsWeb) return false;
     
+    // Solo en web, usar detección por user agent
     if (kIsWeb) {
-      return platform_impl.PlatformServiceWeb.isAndroidOnWeb();
-    } else {
-      return platform_impl.PlatformServiceMobile.isAndroidOnWeb();
+      return _isAndroidUserAgent();
     }
+    return false;
   }
   
   /// Detecta si el usuario está accediendo desde un dispositivo móvil
@@ -22,19 +18,48 @@ class PlatformService {
   static bool isMobileOnWeb() {
     if (!kIsWeb) return false;
     
+    // Solo en web, usar detección por user agent
     if (kIsWeb) {
-      return platform_impl.PlatformServiceWeb.isMobileOnWeb();
-    } else {
-      return platform_impl.PlatformServiceMobile.isMobileOnWeb();
+      return _isMobileUserAgent();
     }
+    return false;
   }
   
   /// Abre una URL en una nueva ventana/pestaña
   static void openUrl(String url) {
     if (kIsWeb) {
-      platform_impl.PlatformServiceWeb.openUrl(url);
-    } else {
-      platform_impl.PlatformServiceMobile.openUrl(url);
+      _openUrlWeb(url);
     }
+  }
+}
+
+// Implementaciones específicas para web - solo se compilan en web
+bool _isAndroidUserAgent() {
+  // Esta función solo se llama cuando kIsWeb es true
+  try {
+    // Usar evaluateJavaScript para acceder al user agent
+    return false; // Placeholder - se implementará con JS
+  } catch (e) {
+    return false;
+  }
+}
+
+bool _isMobileUserAgent() {
+  // Esta función solo se llama cuando kIsWeb es true
+  try {
+    // Usar evaluateJavaScript para acceder al user agent
+    return false; // Placeholder - se implementará con JS
+  } catch (e) {
+    return false;
+  }
+}
+
+void _openUrlWeb(String url) {
+  // Esta función solo se llama cuando kIsWeb es true
+  try {
+    // Usar JS para abrir URL
+    // Se implementará con JS
+  } catch (e) {
+    debugPrint('Error opening URL: $e');
   }
 }
