@@ -17,8 +17,13 @@ import 'history_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatConversation? existingConversation;
+  final VoidCallback? onNavigateToHistory;
   
-  const ChatScreen({super.key, this.existingConversation});
+  const ChatScreen({
+    super.key, 
+    this.existingConversation,
+    this.onNavigateToHistory,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -70,6 +75,39 @@ class _ChatScreenState extends State<ChatScreen> {
     
     _checkFirstTimeUser();
     _loadUserPreferences();
+    
+    // Escuchar cambios en el state manager para manejar conversaciones externas
+    _stateManager.addListener(_onStateManagerChanged);
+  }
+  
+  void _onStateManagerChanged() {
+    // Verificar si hay una conversación pendiente o si se debe limpiar
+    final currentConversation = _stateManager.currentConversation;
+    final shouldClearConversation = _stateManager.shouldClearCurrentConversation;
+    
+    if (shouldClearConversation) {
+      // Limpiar la conversación actual
+      _startNewConversation();
+      _stateManager.clearShouldClearFlag(); // Limpiar la bandera
+    } else if (currentConversation != null && 
+               currentConversation.id != _conversationId) {
+      // Cargar la nueva conversación
+      setState(() {
+        _currentConversation = currentConversation;
+        _conversationId = currentConversation.id;
+        _messages = List.from(currentConversation.messages);
+        _hasFirstMessage = _messages.any((m) => m.role == ChatRole.user);
+        _showDisclaimer = _messages.isEmpty;
+        if (_messages.isEmpty) {
+          _addInitialAssistantMessage();
+        }
+      });
+      
+      // Scroll al final después de cargar los mensajes
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToBottom(force: true);
+      });
+    }
   }
 
   Future<void> _checkFirstTimeUser() async {
@@ -166,7 +204,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollTimer?.cancel();
     _scrollController.dispose();
     _service.dispose();
-    // Note: No need to dispose _stateManager as it's a singleton
+    _stateManager.removeListener(_onStateManagerChanged);
     super.dispose();
   }
 
@@ -677,6 +715,22 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  void _navigateToHistory() {
+    // Si tenemos callback de navegación, cambiar a la tab de historial
+    // Si no, usar navegación tradicional (fallback)
+    if (widget.onNavigateToHistory != null) {
+      widget.onNavigateToHistory!();
+    } else {
+      // Fallback: navegación tradicional
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HistoryScreen(),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final accent = brandColor(_selectedProfile.brand);
@@ -697,14 +751,7 @@ class _ChatScreenState extends State<ChatScreen> {
             IconButton(
               tooltip: 'Ver historial',
               icon: const Icon(Icons.history),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const HistoryScreen(),
-                  ),
-                );
-              },
+              onPressed: _navigateToHistory,
             ),
 
           IconButton(
