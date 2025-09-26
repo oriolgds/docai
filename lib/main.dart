@@ -14,7 +14,6 @@ import 'screens/splash/splash_screen.dart';
 import 'services/supabase_service.dart';
 import 'services/localization_service.dart';
 import 'l10n/generated/app_localizations.dart';
-import 'widgets/android_download_modal.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -118,9 +117,8 @@ class _DocAIAppState extends State<DocAIApp> {
       title: 'DocAI',
       theme: AppTheme.theme,
       navigatorKey: _navigatorKey,
-      home: AndroidDownloadWrapper(
-        child: _isInitialized ? const SplashScreen() : const _InitializingScreen(),
-      ),
+      // Removido AndroidDownloadWrapper desde aquí - ahora se maneja individualmente
+      home: _isInitialized ? const SplashScreen() : const _InitializingScreen(),
       debugShowCheckedModeBanner: false,
       // Localization configuration
       locale: _currentLocale,
