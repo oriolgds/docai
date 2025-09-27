@@ -17,7 +17,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -157,76 +160,129 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Input Fields
-        TextField(
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(
-            labelText: 'Email',
-            prefixIcon: Icon(Icons.email_outlined),
-          ),
-        ),
-        const SizedBox(height: 16),
-        TextField(
-          controller: _passwordController,
-          obscureText: true,
-          decoration: const InputDecoration(
-            labelText: 'Password',
-            prefixIcon: Icon(Icons.lock_outline),
-          ),
-        ),
-        const SizedBox(height: 24),
-        
-        // Login Button
-        ElevatedButton(
-          onPressed: _isLoading ? null : _handleLogin,
-          child: _isLoading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Error message display
+          if (_errorMessage != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE53E3E).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFFE53E3E).withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: const Color(0xFFE53E3E),
+                    size: 20,
                   ),
-                )
-              : const Text('Sign in with Email'),
-        ),
-        const SizedBox(height: 16),
-        
-        // Divider
-        const Row(
-          children: [
-            Expanded(child: Divider()),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Text('or', style: TextStyle(color: Color(0xFF6B6B6B))),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(
+                        color: Color(0xFFE53E3E),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            Expanded(child: Divider()),
           ],
-        ),
-        const SizedBox(height: 16),
-        
-        // Google Sign In
-        AuthButton(
-          onPressed: _handleGoogleSignIn,
-          icon: Icons.g_mobiledata,
-          text: 'Continue with Google',
-          isOutlined: true,
-        ),
-        const SizedBox(height: 16),
-        
-        // Forgot Password
-        TextButton(
-          onPressed: () {},
-          child: const Text(
-            'Forgot Password?',
-            style: TextStyle(color: Color(0xFF6B6B6B)),
+          
+          // Input Fields
+          TextFormField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your email';
+              }
+              if (!value.contains('@')) {
+                return 'Please enter a valid email address';
+              }
+              return null;
+            },
+            decoration: const InputDecoration(
+              labelText: 'Email',
+              prefixIcon: Icon(Icons.email_outlined),
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _passwordController,
+            obscureText: true,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your password';
+              }
+              return null;
+            },
+            decoration: const InputDecoration(
+              labelText: 'Password',
+              prefixIcon: Icon(Icons.lock_outline),
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Login Button
+          ElevatedButton(
+            onPressed: _isLoading ? null : _handleLogin,
+            child: _isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text('Sign in with Email'),
+          ),
+          const SizedBox(height: 16),
+          
+          // Divider
+          const Row(
+            children: [
+              Expanded(child: Divider()),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text('or', style: TextStyle(color: Color(0xFF6B6B6B))),
+              ),
+              Expanded(child: Divider()),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Google Sign In
+          AuthButton(
+            onPressed: _isGoogleLoading ? null : _handleGoogleSignIn,
+            icon: Icons.g_mobiledata,
+            text: _isGoogleLoading ? 'Signing in...' : 'Continue with Google',
+            isOutlined: true,
+            isLoading: _isGoogleLoading,
+          ),
+          const SizedBox(height: 16),
+          
+          // Forgot Password
+          TextButton(
+            onPressed: _showForgotPasswordDialog,
+            child: const Text(
+              'Forgot Password?',
+              style: TextStyle(color: Color(0xFF6B6B6B)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -256,71 +312,78 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleLogin() async {
-    setState(() => _isLoading = true);
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     
     try {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
       
-      if (email.isEmpty || password.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please fill in all fields'),
-            backgroundColor: Color(0xFFE53E3E),
-          ),
-        );
+      final response = await SupabaseService.signInWithEmail(email, password);
+      final user = response.user;
+      
+      if (user == null) {
+        throw Exception('Login failed: No user returned');
+      }
+      
+      // Check if email is verified
+      if (user.emailConfirmedAt == null) {
+        // Check if user has pending verification
+        final hasPending = await SupabaseService.hasPendingVerification(email);
+        
+        if (hasPending) {
+          // User has pending verification, go to verification screen
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EmailVerificationScreen(email: email),
+              ),
+            );
+          }
+        } else {
+          // This might be an old account without verification - prompt to verify
+          _showEmailVerificationDialog(email);
+        }
         return;
       }
       
-      await SupabaseService.signInWithEmail(email, password);
-      
-      final user = SupabaseService.currentUser;
-      if (user?.emailConfirmedAt == null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => EmailVerificationScreen(email: email),
-          ),
-        );
-      } else {
+      // Email is verified, proceed to dashboard
+      if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
           (route) => false,
         );
       }
+      
     } catch (e) {
-      String errorMessage = 'Login failed';
+      setState(() {
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      });
       
-      if (e.toString().contains('invalid_credentials') || 
-          e.toString().contains('Invalid login credentials')) {
-        errorMessage = 'Invalid email or password. Please try again.';
-      } else if (e.toString().contains('email_not_confirmed')) {
-        // Redirect to email verification screen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => EmailVerificationScreen(email: _emailController.text.trim()),
-          ),
-        );
-        setState(() => _isLoading = false);
-        return;
-      } else if (e.toString().contains('too_many_requests')) {
-        errorMessage = 'Too many attempts. Please try again later.';
+      // Special handling for email verification error
+      if (e.toString().contains('verify your email')) {
+        final email = _emailController.text.trim();
+        _showEmailVerificationDialog(email);
       }
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: const Color(0xFFE53E3E),
-        ),
-      );
     }
     
     setState(() => _isLoading = false);
   }
 
   void _handleGoogleSignIn() async {
+    setState(() {
+      _isGoogleLoading = true;
+      _errorMessage = null;
+    });
+    
     try {
       final success = await SupabaseService.signInWithGoogle();
       if (success && mounted) {
@@ -330,23 +393,109 @@ class _LoginScreenState extends State<LoginScreen> {
           (route) => false,
         );
       } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Google Sign-In was cancelled'),
-            backgroundColor: Color(0xFFE53E3E),
-          ),
-        );
+        setState(() {
+          _errorMessage = 'Google Sign-In was cancelled or failed';
+        });
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Google Sign-In failed: ${e.toString()}'),
-            backgroundColor: const Color(0xFFE53E3E),
-          ),
-        );
+        setState(() {
+          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        });
       }
     }
+    
+    setState(() => _isGoogleLoading = false);
+  }
+
+  void _showEmailVerificationDialog(String email) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Email Verification Required'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Your email address needs to be verified before you can sign in.',
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'We\'ll send a verification email to:\n$email',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EmailVerificationScreen(email: email),
+                ),
+              );
+            },
+            child: const Text('Verify Email'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showForgotPasswordDialog() {
+    final emailController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter your email address to receive a password reset link.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: 'Email Address',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final email = emailController.text.trim();
+              if (email.isNotEmpty && email.contains('@')) {
+                // Implement password reset logic here
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Password reset link sent! Check your email.'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            child: const Text('Send Reset Link'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

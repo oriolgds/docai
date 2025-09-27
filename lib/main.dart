@@ -45,6 +45,7 @@ class _DocAIAppState extends State<DocAIApp> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   Locale? _currentLocale;
   bool _isInitialized = false;
+  bool _isHandlingDeepLink = false;
 
   @override
   void initState() {
@@ -84,29 +85,211 @@ class _DocAIAppState extends State<DocAIApp> {
   void _setupDeepLinks() {
     final appLinks = AppLinks();
     appLinks.uriLinkStream.listen((uri) {
-      if (uri.host == 'email-verified') {
-        final user = SupabaseService.currentUser;
-        if (user?.emailConfirmedAt != null) {
-          _navigatorKey.currentState?.pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const EmailVerifiedScreen()),
-            (route) => false,
-          );
-        }
-      }
+      _handleDeepLink(uri);
     });
   }
 
-  void _setupAuthListener() {
-    SupabaseService.client.auth.onAuthStateChange.listen((data) {
-      final event = data.event;
-      if (event == AuthChangeEvent.signedOut || event == AuthChangeEvent.tokenRefreshed) {
+  Future<void> _handleDeepLink(Uri uri) async {
+    if (_isHandlingDeepLink) return;
+    _isHandlingDeepLink = true;
+
+    try {
+      debugPrint('Handling deep link: $uri');
+      
+      // Handle email verification deep links
+      if (uri.host == 'email-verified' || uri.path.contains('email-verified')) {
+        await _handleEmailVerificationLink(uri);
+      }
+      // Handle auth callback deep links from Supabase
+      else if (uri.fragment.contains('access_token') || uri.fragment.contains('refresh_token')) {
+        await _handleAuthCallback(uri);
+      }
+      // Handle generic auth deep links
+      else if (uri.host == 'auth' || uri.path.contains('auth')) {
+        await _handleAuthLink(uri);
+      }
+      // Handle login deep links
+      else if (uri.host == 'login' || uri.path.contains('login')) {
+        await _handleLoginLink();
+      }
+    } catch (e) {
+      debugPrint('Error handling deep link: $e');
+      // On error, just refresh current state
+      await _refreshAuthState();
+    } finally {
+      _isHandlingDeepLink = false;
+    }
+  }
+
+  Future<void> _handleEmailVerificationLink(Uri uri) async {
+    // For email verification, always redirect to login screen
+    // so users can log in with their now-verified account
+    try {
+      // Show a message that email is verified and redirect to login
+      _navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => const LoginScreen(),
+        ),
+        (route) => false,
+      );
+      
+      // Show a snackbar to inform the user
+      Future.delayed(const Duration(milliseconds: 500), () {
+        final scaffoldMessenger = ScaffoldMessenger.of(_navigatorKey.currentContext!);
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('Email verified successfully! Please log in to continue.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      });
+    } catch (e) {
+      debugPrint('Error handling email verification link: $e');
+      // Fallback to login screen
+      _navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
+
+  Future<void> _handleAuthCallback(Uri uri) async {
+    // Handle Supabase auth callback with tokens
+    try {
+      // Extract tokens from fragment
+      final fragment = uri.fragment;
+      final params = Uri.splitQueryString(fragment);
+      
+      if (params.containsKey('access_token') && params.containsKey('refresh_token')) {
+        // Let Supabase handle the session
+        await SupabaseService.client.auth.getSessionFromUrl(uri);
+        
+        // Check if user is now authenticated and verified  
         final user = SupabaseService.currentUser;
-        if (user == null && _isInitialized) {
+        if (user != null) {
+          if (user.emailConfirmedAt != null) {
+            // User is verified, go to dashboard
+            _navigatorKey.currentState?.pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const DashboardScreen()),
+              (route) => false,
+            );
+          } else {
+            // User exists but email not verified, redirect to login
+            _navigatorKey.currentState?.pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+              (route) => false,
+            );
+          }
+        } else {
+          // No user found, redirect to login
           _navigatorKey.currentState?.pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const LoginScreen()),
             (route) => false,
           );
         }
+      }
+    } catch (e) {
+      debugPrint('Error handling auth callback: $e');
+      // On error, redirect to login
+      _navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
+
+  Future<void> _handleAuthLink(Uri uri) async {
+    // Handle generic auth deep links
+    try {
+      // Refresh session to get latest auth state
+      await SupabaseService.client.auth.refreshSession();
+      final user = SupabaseService.currentUser;
+      
+      if (user != null && user.emailConfirmedAt != null) {
+        // User is authenticated and verified
+        _navigatorKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          (route) => false,
+        );
+      } else {
+        // No authenticated user or email not verified, go to login
+        _navigatorKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error handling auth link: $e');
+      // On error, redirect to login
+      _navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
+
+  Future<void> _handleLoginLink() async {
+    // Handle login deep links
+    _navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
+  Future<void> _refreshAuthState() async {
+    try {
+      await SupabaseService.client.auth.refreshSession();
+      final user = SupabaseService.currentUser;
+      
+      Widget destination;
+      if (user != null && user.emailConfirmedAt != null) {
+        destination = const DashboardScreen();
+      } else {
+        destination = const LoginScreen();
+      }
+      
+      _navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => destination),
+        (route) => false,
+      );
+    } catch (e) {
+      debugPrint('Error refreshing auth state: $e');
+      // On error, default to login
+      _navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
+
+  void _setupAuthListener() {
+    SupabaseService.client.auth.onAuthStateChange.listen((data) {
+      final event = data.event;
+      final session = data.session;
+      final user = session?.user;
+      
+      debugPrint('Auth state changed: $event, user: ${user?.email}');
+      
+      if (event == AuthChangeEvent.signedOut && _isInitialized) {
+        _navigatorKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      } else if (event == AuthChangeEvent.signedIn && user != null && _isInitialized) {
+        // User signed in, check if email is verified
+        if (user.emailConfirmedAt != null) {
+          _navigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            (route) => false,
+          );
+        }
+      } else if (event == AuthChangeEvent.tokenRefreshed && user == null && _isInitialized) {
+        // Token refreshed but no user, redirect to login
+        _navigatorKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
       }
     });
   }
@@ -117,7 +300,6 @@ class _DocAIAppState extends State<DocAIApp> {
       title: 'DocAI',
       theme: AppTheme.theme,
       navigatorKey: _navigatorKey,
-      // Removido AndroidDownloadWrapper desde aquí - ahora se maneja individualmente
       home: _isInitialized ? const SplashScreen() : const _InitializingScreen(),
       debugShowCheckedModeBanner: false,
       // Localization configuration
