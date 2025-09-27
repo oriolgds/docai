@@ -11,6 +11,7 @@ class SupabaseService {
   
   // Constants for better configuration
   static const String _emailRedirectUrl = 'docai://email-verified';
+  static const String _authRedirectUrl = 'docai://auth';
   static const int _maxRetryAttempts = 3;
   static const Duration _retryDelay = Duration(seconds: 2);
   
@@ -66,7 +67,7 @@ class SupabaseService {
     }
   }
 
-  /// Enhanced sign-up with retry mechanism
+  /// Enhanced sign-up with retry mechanism and proper redirect URLs
   static Future<AuthResponse> signUpWithEmail(String email, String password) async {
     AuthException? lastError;
     
@@ -103,7 +104,7 @@ class SupabaseService {
     throw _handleAuthError(lastError ?? AuthException('Unknown error'));
   }
 
-  /// Enhanced email resend with retry mechanism
+  /// Enhanced email resend with retry mechanism and consistent URLs
   static Future<void> resendVerificationEmail(String email) async {
     AuthException? lastError;
     
@@ -112,7 +113,7 @@ class SupabaseService {
         await client.auth.resend(
           type: OtpType.signup,
           email: email,
-          emailRedirectTo: _emailRedirectUrl, // Fixed: consistent URL scheme
+          emailRedirectTo: _emailRedirectUrl,
         );
         
         // Update last sent timestamp
@@ -137,6 +138,25 @@ class SupabaseService {
     throw _handleAuthError(lastError ?? AuthException('Failed to resend verification email'));
   }
 
+  /// Force refresh user session and return updated user
+  static Future<User?> refreshUserSession() async {
+    try {
+      final response = await client.auth.refreshSession();
+      return response.user;
+    } on AuthException catch (e) {
+      // If refresh fails, the session might be invalid
+      if (e.message.toLowerCase().contains('session_not_found') ||
+          e.message.toLowerCase().contains('invalid_token') ||
+          e.message.toLowerCase().contains('refresh_token_not_found')) {
+        // Session is invalid, user needs to log in again
+        return null;
+      }
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   /// Check if user has pending email verification
   static Future<bool> hasPendingVerification(String email) async {
     final prefs = await SharedPreferences.getInstance();
@@ -152,7 +172,7 @@ class SupabaseService {
     return DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(timestamp));
   }
 
-  /// Enhanced Google Sign-In with better error handling
+  /// Enhanced Google Sign-In with better error handling and redirect URL
   static Future<bool> signInWithGoogle() async {
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn();
@@ -202,6 +222,10 @@ class SupabaseService {
     return user?.emailConfirmedAt != null;
   }
 
+  /// Get auth redirect URLs for configuration
+  static String get emailRedirectUrl => _emailRedirectUrl;
+  static String get authRedirectUrl => _authRedirectUrl;
+
   // Private helper methods
   static Future<void> _storePendingVerification(String email) async {
     final prefs = await SharedPreferences.getInstance();
@@ -226,7 +250,9 @@ class SupabaseService {
     return !message.contains('invalid') && 
            !message.contains('already') &&
            !message.contains('weak_password') &&
-           !message.contains('email_address_invalid');
+           !message.contains('email_address_invalid') &&
+           !message.contains('user_not_found') &&
+           !message.contains('invalid_credentials');
   }
 
   static Exception _handleAuthError(AuthException error) {
@@ -244,6 +270,10 @@ class SupabaseService {
       return Exception('Please enter a valid email address.');
     } else if (message.contains('user_already_exists') || message.contains('already')) {
       return Exception('An account with this email already exists. Please try signing in instead.');
+    } else if (message.contains('user_not_found')) {
+      return Exception('No account found with this email address.');
+    } else if (message.contains('session_not_found') || message.contains('invalid_token')) {
+      return Exception('Session expired. Please sign in again.');
     } else if (message.contains('network') || message.contains('timeout')) {
       return Exception('Network error. Please check your connection and try again.');
     } else {
