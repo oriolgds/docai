@@ -122,7 +122,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Success Message
-          if (_successMessage != null) ..[
+          if (_successMessage != null) ...[
             Container(
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 16),
@@ -156,7 +156,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ],
 
           // Error Message
-          if (_errorMessage != null) ..[
+          if (_errorMessage != null) ...[
             Container(
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 16),
