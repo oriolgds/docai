@@ -169,9 +169,9 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.grey[850], // Cambio de Colors.black a un gris más suave
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.grey[850], // Mantener consistencia con el fondo
         foregroundColor: Colors.white,
         title: const Text('Personalización Médica'),
         actions: [
@@ -214,7 +214,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
 
   Widget _buildDisclaimerCard() {
     return Card(
-      color: Colors.grey[900],
+      color: Colors.grey[800], // Cambio de Colors.grey[900] a Colors.grey[800] para mejor contraste
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -470,7 +470,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
 
   Widget _buildSection(String title, IconData icon, List<Widget> children) {
     return Card(
-      color: Colors.grey[900],
+      color: Colors.grey[800], // Cambio de Colors.grey[900] a Colors.grey[800] para mejor contraste
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -509,10 +509,15 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
           builder: (context, child) {
             return Theme(
               data: Theme.of(context).copyWith(
-                colorScheme: const ColorScheme.dark(
+                colorScheme: ColorScheme.dark( // Mejora del tema para mejor visibilidad
                   primary: Colors.white,
-                  surface: Colors.grey,
+                  onPrimary: Colors.black,
+                  surface: Colors.grey[800]!,
+                  onSurface: Colors.white,
+                  background: Colors.grey[850]!,
+                  onBackground: Colors.white,
                 ),
+                dialogBackgroundColor: Colors.grey[800],
               ),
               child: child!,
             );
@@ -525,6 +530,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey[600]!),
           borderRadius: BorderRadius.circular(8),
+          color: Colors.grey[800], // Añadir color de fondo para consistencia
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -553,14 +559,20 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
       items = options.map<DropdownMenuItem<String>>((String option) {
         return DropdownMenuItem<String>(
           value: option,
-          child: Text(option.isEmpty ? label : option, style: const TextStyle(color: Colors.white)),
+          child: Text(
+            option.isEmpty ? label : option, 
+            style: const TextStyle(color: Colors.white), // Asegurar texto blanco
+          ),
         );
       }).toList();
     } else if (options is List<Map<String, String>>) {
       items = options.map<DropdownMenuItem<String>>((Map<String, String> option) {
         return DropdownMenuItem<String>(
           value: option['value'],
-          child: Text(option['label']!, style: const TextStyle(color: Colors.white)),
+          child: Text(
+            option['label']!, 
+            style: const TextStyle(color: Colors.white), // Asegurar texto blanco
+          ),
         );
       }).toList();
     } else {
@@ -572,6 +584,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey[600]!),
         borderRadius: BorderRadius.circular(8),
+        color: Colors.grey[800], // Añadir color de fondo consistente
       ),
       child: DropdownButtonFormField<String>(
         value: value.isEmpty ? null : value,
@@ -580,10 +593,12 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
           labelStyle: const TextStyle(color: Colors.grey),
           border: InputBorder.none,
         ),
-        dropdownColor: Colors.grey[800],
+        dropdownColor: Colors.grey[750], // Cambio de Colors.grey[800] a Colors.grey[750] para mejor contraste
         items: items,
         onChanged: onChanged,
         style: const TextStyle(color: Colors.white),
+        iconEnabledColor: Colors.white, // Hacer el icono del dropdown blanco
+        iconDisabledColor: Colors.grey,
       ),
     );
   }
