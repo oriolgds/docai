@@ -579,26 +579,43 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
       items = [];
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[600]!),
-        borderRadius: BorderRadius.circular(8),
-        color: Colors.grey[800], // Añadir color de fondo consistente
-      ),
-      child: DropdownButtonFormField<String>(
-        value: value.isEmpty ? null : value,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(color: Colors.grey),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        // Forzar el tema oscuro para el dropdown
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey[800], // Fondo gris oscuro
           border: InputBorder.none,
+          labelStyle: const TextStyle(color: Colors.grey),
+          hintStyle: const TextStyle(color: Colors.grey),
         ),
-        dropdownColor: Colors.grey[750], // Cambio de Colors.grey[800] a Colors.grey[750] para mejor contraste
-        items: items,
-        onChanged: onChanged,
-        style: const TextStyle(color: Colors.white),
-        iconEnabledColor: Colors.white, // Hacer el icono del dropdown blanco
-        iconDisabledColor: Colors.grey,
+        textTheme: const TextTheme(
+          bodyMedium: TextStyle(color: Colors.white), // Texto blanco
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[600]!),
+          borderRadius: BorderRadius.circular(8),
+          color: Colors.grey[800], // Fondo gris oscuro del contenedor
+        ),
+        child: DropdownButtonFormField<String>(
+          value: value.isEmpty ? null : value,
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: const TextStyle(color: Colors.grey),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            filled: true,
+            fillColor: Colors.grey[800], // Fondo gris oscuro del campo
+          ),
+          dropdownColor: Colors.grey[700], // Color del menú desplegable
+          items: items,
+          onChanged: onChanged,
+          style: const TextStyle(color: Colors.white), // Texto blanco para el valor seleccionado
+          iconEnabledColor: Colors.white, // Icono blanco
+          iconDisabledColor: Colors.grey,
+        ),
       ),
     );
   }
