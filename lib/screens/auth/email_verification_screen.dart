@@ -23,6 +23,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   int _resendCooldown = 0;
+  Timer? _periodicCheckTimer;
 
   @override
   void initState() {
@@ -47,11 +48,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
   }
 
   void _startPeriodicCheck() {
-    // Check verification status every 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
+    // Check verification status every 5 seconds
+    _periodicCheckTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (mounted && !_isSuccess && !_isChecking) {
         _checkVerificationSilently();
-        _startPeriodicCheck();
       }
     });
   }
@@ -331,17 +331,19 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
   }
 
   Future<void> _checkVerification() async {
+    if (_isChecking) return;
+    
     setState(() {
       _isChecking = true;
       _message = null;
     });
     
     try {
-      // Refresh user session first
-      await SupabaseService.client.auth.refreshSession();
+      // First attempt to refresh the session
+      final refreshResult = await SupabaseService.client.auth.refreshSession();
       
-      final user = SupabaseService.currentUser;
-      if (user?.emailConfirmedAt != null) {
+      if (refreshResult.user?.emailConfirmedAt != null) {
+        // Email is verified
         setState(() {
           _isSuccess = true;
           _message = 'Email successfully verified!';
@@ -353,26 +355,42 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
           if (mounted) _continueToApp();
         });
       } else {
+        // Email not verified yet
         setState(() {
           _message = 'Email not verified yet. Please check your email and click the verification link.';
         });
       }
-    } catch (e) {
+    } on AuthException catch (e) {
+      // Handle Supabase auth exceptions
       setState(() {
-        _message = 'Error checking verification status. Please try again.';
+        if (e.message.toLowerCase().contains('session_not_found') ||
+            e.message.toLowerCase().contains('invalid_token')) {
+          _message = 'Session expired. Please try logging in again.';
+        } else if (e.message.toLowerCase().contains('email_not_confirmed')) {
+          _message = 'Email not verified yet. Please check your email and click the verification link.';
+        } else {
+          _message = 'Error checking verification status: ${e.message}';
+        }
       });
+    } catch (e) {
+      // Handle general exceptions
+      setState(() {
+        _message = 'Network error. Please check your connection and try again.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isChecking = false);
+      }
     }
-    
-    setState(() => _isChecking = false);
   }
 
   Future<void> _checkVerificationSilently() async {
     if (_isSuccess || _isChecking) return;
     
     try {
-      await SupabaseService.client.auth.refreshSession();
-      final user = SupabaseService.currentUser;
-      if (user?.emailConfirmedAt != null) {
+      final refreshResult = await SupabaseService.client.auth.refreshSession();
+      
+      if (refreshResult.user?.emailConfirmedAt != null && mounted) {
         setState(() {
           _isSuccess = true;
           _message = 'Email successfully verified!';
@@ -381,6 +399,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
       }
     } catch (e) {
       // Silently fail for background checks
+      // Don't show error messages for periodic background checks
     }
   }
 
@@ -407,6 +426,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
   }
 
   void _continueToApp() {
+    _periodicCheckTimer?.cancel();
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const DashboardScreen()),
@@ -441,6 +461,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
 
   @override
   void dispose() {
+    _periodicCheckTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
