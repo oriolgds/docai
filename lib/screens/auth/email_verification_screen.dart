@@ -282,21 +282,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
                     ),
                   ],
                   
-                  const SizedBox(height: 32), // Space before bottom action
-                  
-                  // Alternative action
-                  if (!_isSuccess)
-                    TextButton(
-                      onPressed: _proceedWithoutVerification,
-                      child: const Text(
-                        'Continue without verification (limited features)',
-                        style: TextStyle(
-                          color: Color(0xFF6B6B6B),
-                          fontSize: 14,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
                   
                   const SizedBox(height: 20), // Bottom spacing
                 ],
@@ -434,30 +419,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
     );
   }
 
-  void _proceedWithoutVerification() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Continue Without Verification?'),
-        content: const Text(
-          'You can use DocAI without email verification, but some features may be limited. You can verify your email later from your profile settings.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _continueToApp();
-            },
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   void dispose() {
