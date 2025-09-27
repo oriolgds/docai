@@ -137,7 +137,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
               const SizedBox(height: 40),
               
               // Status Message
-              if (_message != null) ..[
+              if (_message != null) ...[
                 Container(
                   padding: const EdgeInsets.all(16),
                   margin: const EdgeInsets.only(bottom: 24),
@@ -176,7 +176,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
               ],
               
               // Action Buttons
-              if (!_isSuccess) ..[
+              if (!_isSuccess) ...[
                 // Check verification button
                 ElevatedButton(
                   onPressed: _isChecking ? null : _checkVerification,
@@ -260,7 +260,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
                     ],
                   ),
                 ),
-              ] else ..[
+              ] else ...[
                 // Continue button when verified
                 ElevatedButton(
                   onPressed: _continueToApp,
