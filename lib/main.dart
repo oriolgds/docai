@@ -250,7 +250,8 @@ class _DocAIAppState extends State<DocAIApp> {
   void _setupAuthListener() {
     SupabaseService.client.auth.onAuthStateChange.listen((data) {
       final event = data.event;
-      final user = data.user;
+      final session = data.session;
+      final user = session?.user;
       
       debugPrint('Auth state changed: $event, user: ${user?.email}');
       
