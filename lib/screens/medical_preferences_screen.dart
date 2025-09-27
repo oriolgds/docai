@@ -169,9 +169,9 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.grey[850], // Cambio de Colors.black a un gris más suave
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.grey[850], // Mantener consistencia con el fondo
         foregroundColor: Colors.white,
         title: const Text('Personalización Médica'),
         actions: [
@@ -214,7 +214,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
 
   Widget _buildDisclaimerCard() {
     return Card(
-      color: Colors.grey[900],
+      color: Colors.grey[800], // Cambio de Colors.grey[900] a Colors.grey[800] para mejor contraste
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -470,7 +470,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
 
   Widget _buildSection(String title, IconData icon, List<Widget> children) {
     return Card(
-      color: Colors.grey[900],
+      color: Colors.grey[800], // Cambio de Colors.grey[900] a Colors.grey[800] para mejor contraste
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -509,10 +509,15 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
           builder: (context, child) {
             return Theme(
               data: Theme.of(context).copyWith(
-                colorScheme: const ColorScheme.dark(
+                colorScheme: ColorScheme.dark( // Mejora del tema para mejor visibilidad
                   primary: Colors.white,
-                  surface: Colors.grey,
+                  onPrimary: Colors.black,
+                  surface: Colors.grey[800]!,
+                  onSurface: Colors.white,
+                  background: Colors.grey[850]!,
+                  onBackground: Colors.white,
                 ),
+                dialogBackgroundColor: Colors.grey[800],
               ),
               child: child!,
             );
@@ -525,6 +530,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey[600]!),
           borderRadius: BorderRadius.circular(8),
+          color: Colors.grey[800], // Añadir color de fondo para consistencia
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -553,37 +559,63 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
       items = options.map<DropdownMenuItem<String>>((String option) {
         return DropdownMenuItem<String>(
           value: option,
-          child: Text(option.isEmpty ? label : option, style: const TextStyle(color: Colors.white)),
+          child: Text(
+            option.isEmpty ? label : option, 
+            style: const TextStyle(color: Colors.white), // Asegurar texto blanco
+          ),
         );
       }).toList();
     } else if (options is List<Map<String, String>>) {
       items = options.map<DropdownMenuItem<String>>((Map<String, String> option) {
         return DropdownMenuItem<String>(
           value: option['value'],
-          child: Text(option['label']!, style: const TextStyle(color: Colors.white)),
+          child: Text(
+            option['label']!, 
+            style: const TextStyle(color: Colors.white), // Asegurar texto blanco
+          ),
         );
       }).toList();
     } else {
       items = [];
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[600]!),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: DropdownButtonFormField<String>(
-        value: value.isEmpty ? null : value,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(color: Colors.grey),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        // Forzar el tema oscuro para el dropdown
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey[800], // Fondo gris oscuro
           border: InputBorder.none,
+          labelStyle: const TextStyle(color: Colors.grey),
+          hintStyle: const TextStyle(color: Colors.grey),
         ),
-        dropdownColor: Colors.grey[800],
-        items: items,
-        onChanged: onChanged,
-        style: const TextStyle(color: Colors.white),
+        textTheme: const TextTheme(
+          bodyMedium: TextStyle(color: Colors.white), // Texto blanco
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[600]!),
+          borderRadius: BorderRadius.circular(8),
+          color: Colors.grey[800], // Fondo gris oscuro del contenedor
+        ),
+        child: DropdownButtonFormField<String>(
+          value: value.isEmpty ? null : value,
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: const TextStyle(color: Colors.grey),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            filled: true,
+            fillColor: Colors.grey[800], // Fondo gris oscuro del campo
+          ),
+          dropdownColor: Colors.grey[700], // Color del menú desplegable
+          items: items,
+          onChanged: onChanged,
+          style: const TextStyle(color: Colors.white), // Texto blanco para el valor seleccionado
+          iconEnabledColor: Colors.white, // Icono blanco
+          iconDisabledColor: Colors.grey,
+        ),
       ),
     );
   }
