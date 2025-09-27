@@ -122,32 +122,35 @@ class _DocAIAppState extends State<DocAIApp> {
   }
 
   Future<void> _handleEmailVerificationLink(Uri uri) async {
-    // Try to refresh the session to get updated user info
+    // For email verification, always redirect to login screen
+    // so users can log in with their now-verified account
     try {
-      await SupabaseService.client.auth.refreshSession();
-      final user = SupabaseService.currentUser;
+      // Show a message that email is verified and redirect to login
+      _navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => const LoginScreen(),
+        ),
+        (route) => false,
+      );
       
-      if (user?.emailConfirmedAt != null) {
-        // Email is verified, navigate to dashboard or email verified screen
-        _navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const EmailVerifiedScreen()),
-          (route) => false,
+      // Show a snackbar to inform the user
+      Future.delayed(const Duration(milliseconds: 500), () {
+        final scaffoldMessenger = ScaffoldMessenger.of(_navigatorKey.currentContext!);
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('Email verified successfully! Please log in to continue.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 4),
+          ),
         );
-      } else {
-        // Email not verified yet, might need to wait or refresh
-        await Future.delayed(const Duration(seconds: 2));
-        await SupabaseService.client.auth.refreshSession();
-        final updatedUser = SupabaseService.currentUser;
-        
-        if (updatedUser?.emailConfirmedAt != null) {
-          _navigatorKey.currentState?.pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const EmailVerifiedScreen()),
-            (route) => false,
-          );
-        }
-      }
+      });
     } catch (e) {
       debugPrint('Error handling email verification link: $e');
+      // Fallback to login screen
+      _navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
     }
   }
 
@@ -162,7 +165,7 @@ class _DocAIAppState extends State<DocAIApp> {
         // Let Supabase handle the session
         await SupabaseService.client.auth.getSessionFromUrl(uri);
         
-        // Check if user is now authenticated and verified
+        // Check if user is now authenticated and verified  
         final user = SupabaseService.currentUser;
         if (user != null) {
           if (user.emailConfirmedAt != null) {
@@ -172,18 +175,27 @@ class _DocAIAppState extends State<DocAIApp> {
               (route) => false,
             );
           } else {
-            // User exists but email not verified
+            // User exists but email not verified, redirect to login
             _navigatorKey.currentState?.pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const EmailVerifiedScreen()),
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
               (route) => false,
             );
           }
+        } else {
+          // No user found, redirect to login
+          _navigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+          );
         }
       }
     } catch (e) {
       debugPrint('Error handling auth callback: $e');
-      // On error, refresh auth state
-      await _refreshAuthState();
+      // On error, redirect to login
+      _navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
     }
   }
 
@@ -200,14 +212,8 @@ class _DocAIAppState extends State<DocAIApp> {
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
           (route) => false,
         );
-      } else if (user != null) {
-        // User exists but email not verified
-        _navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const EmailVerifiedScreen()),
-          (route) => false,
-        );
       } else {
-        // No authenticated user, go to login
+        // No authenticated user or email not verified, go to login
         _navigatorKey.currentState?.pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoginScreen()),
           (route) => false,
@@ -215,6 +221,11 @@ class _DocAIAppState extends State<DocAIApp> {
       }
     } catch (e) {
       debugPrint('Error handling auth link: $e');
+      // On error, redirect to login
+      _navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
     }
   }
 
@@ -244,6 +255,11 @@ class _DocAIAppState extends State<DocAIApp> {
       );
     } catch (e) {
       debugPrint('Error refreshing auth state: $e');
+      // On error, default to login
+      _navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
     }
   }
 
