@@ -132,7 +132,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
                   // Subtitle
                   Text(
                     _isSuccess 
-                        ? 'Your email has been successfully verified. You can now access all features.'
+                        ? 'Your email has been successfully verified. Please login to continue.'
                         : 'We sent a verification link to\n${widget.email}\n\nClick the link in your email to verify your account.',
                     style: const TextStyle(
                       fontSize: 16,
@@ -268,15 +268,15 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
                       ),
                     ),
                   ] else ...[
-                    // Continue button when verified
+                    // Go to Login button when verified
                     ElevatedButton(
-                      onPressed: _continueToApp,
+                      onPressed: _goToLogin,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         backgroundColor: Colors.green,
                       ),
                       child: const Text(
-                        'Continue to DocAI',
+                        'Go to Login',
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -324,7 +324,18 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
     });
     
     try {
-      // First attempt to refresh the session
+      // Check if there's a current user session first
+      final currentUser = SupabaseService.currentUser;
+      
+      if (currentUser == null) {
+        // No session, just check if verification happened by trying to sign in
+        setState(() {
+          _message = 'Please check your email and click the verification link. Then try logging in again.';
+        });
+        return;
+      }
+      
+      // If we have a session, try to refresh it to get updated info
       final refreshResult = await SupabaseService.client.auth.refreshSession();
       
       if (refreshResult.user?.emailConfirmedAt != null) {
@@ -335,9 +346,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
         });
         _pulseController.stop();
         
-        // Auto-continue after 2 seconds
+        // Auto-redirect to login after 2 seconds
         Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) _continueToApp();
+          if (mounted) _goToLogin();
         });
       } else {
         // Email not verified yet
@@ -349,18 +360,19 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
       // Handle Supabase auth exceptions
       setState(() {
         if (e.message.toLowerCase().contains('session_not_found') ||
-            e.message.toLowerCase().contains('invalid_token')) {
-          _message = 'Session expired. Please try logging in again.';
+            e.message.toLowerCase().contains('invalid_token') ||
+            e.message.toLowerCase().contains('auth session missing')) {
+          _message = 'Please check your email and click the verification link. Then try logging in again.';
         } else if (e.message.toLowerCase().contains('email_not_confirmed')) {
           _message = 'Email not verified yet. Please check your email and click the verification link.';
         } else {
-          _message = 'Error checking verification status: ${e.message}';
+          _message = 'Please check your email and click the verification link. Then try logging in again.';
         }
       });
     } catch (e) {
       // Handle general exceptions
       setState(() {
-        _message = 'Network error. Please check your connection and try again.';
+        _message = 'Please check your email and click the verification link. Then try logging in again.';
       });
     } finally {
       if (mounted) {
@@ -373,6 +385,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
     if (_isSuccess || _isChecking) return;
     
     try {
+      final currentUser = SupabaseService.currentUser;
+      if (currentUser == null) return; // No session, skip silent check
+      
       final refreshResult = await SupabaseService.client.auth.refreshSession();
       
       if (refreshResult.user?.emailConfirmedAt != null && mounted) {
@@ -408,6 +423,15 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> with 
     }
     
     setState(() => _isResending = false);
+  }
+
+  void _goToLogin() {
+    _periodicCheckTimer?.cancel();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   void _continueToApp() {
