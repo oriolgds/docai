@@ -5,9 +5,8 @@ on:
     branches: [ '*' ]  # Ejecuta en todas las ramas
   pull_request:
     branches: [ main ]
-
-# Permite ejecutar este workflow manualmente desde la pestaña Actions
-workflow_dispatch:
+  # Permite ejecutar este workflow manualmente desde la pestaña Actions
+  workflow_dispatch:
 
 # Configura permisos para GitHub Pages
 permissions:
@@ -135,14 +134,16 @@ jobs:
           if [[ "$BRANCH_NAME" == "main" ]]; then
             echo "base_href=/docai/" >> $GITHUB_OUTPUT
             echo "deploy_path=." >> $GITHUB_OUTPUT
+            echo "is_main=true" >> $GITHUB_OUTPUT
           else
             # Sanitizar el nombre de la rama para URL
             SANITIZED_BRANCH=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
             echo "base_href=/docai/preview/$SANITIZED_BRANCH/" >> $GITHUB_OUTPUT
             echo "deploy_path=preview/$SANITIZED_BRANCH" >> $GITHUB_OUTPUT
+            echo "is_main=false" >> $GITHUB_OUTPUT
           fi
           echo "Branch: $BRANCH_NAME"
-          echo "Sanitized: $SANITIZED_BRANCH"
+          echo "Sanitized branch: $SANITIZED_BRANCH"
 
       - name: Build web app
         run: |
@@ -155,31 +156,42 @@ jobs:
           cp -r build/web/* deploy/${{ steps.base-href.outputs.deploy_path }}/
           
           # Crear index.html de navegación para la rama main
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          if [[ "${{ steps.base-href.outputs.is_main }}" == "true" ]]; then
+            mkdir -p deploy/preview
             cat > deploy/preview/index.html << 'EOF'
           <!DOCTYPE html>
           <html>
           <head>
             <title>DocAI - Branch Previews</title>
             <style>
-              body { font-family: Arial, sans-serif; margin: 40px; }
-              .branch { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-              .main-app { background-color: #e7f5e7; }
-              .preview { background-color: #f0f8ff; }
+              body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+              .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+              .branch { margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+              .main-app { background-color: #e7f5e7; border-color: #4caf50; }
+              .preview { background-color: #f0f8ff; border-color: #2196f3; }
+              a { color: #1976d2; text-decoration: none; font-weight: bold; }
+              a:hover { text-decoration: underline; }
+              h1 { color: #333; text-align: center; }
+              h3 { margin: 0 0 10px 0; color: #555; }
             </style>
           </head>
           <body>
-            <h1>DocAI - Previews Disponibles</h1>
-            <div class="branch main-app">
-              <h3>🚀 Aplicación Principal</h3>
-              <a href="/docai/">Ver DocAI (Rama Main)</a>
-            </div>
-            <div class="branch preview">
-              <h3>🔍 Branch Previews</h3>
-              <p>Las previews de otras ramas aparecerán aquí automáticamente:</p>
-              <ul id="branch-list">
-                <li>Esperando deploys de otras ramas...</li>
-              </ul>
+            <div class="container">
+              <h1>🏥 DocAI - Previews Disponibles</h1>
+              <div class="branch main-app">
+                <h3>🚀 Aplicación Principal</h3>
+                <p><a href="/docai/">Ver DocAI (Rama Main)</a></p>
+                <small>Versión de producción estable</small>
+              </div>
+              <div class="branch preview">
+                <h3>🔍 Branch Previews</h3>
+                <p>Las previews de otras ramas aparecen aquí automáticamente cuando se hace push:</p>
+                <ul>
+                  <li><strong>theme-translations</strong>: <a href="/docai/preview/theme-translations/">Ver Preview</a></li>
+                  <li><strong>login-fix</strong>: <a href="/docai/preview/login-fix/">Ver Preview</a> (si existe)</li>
+                </ul>
+                <small>Cada rama tiene su propia URL de preview independiente</small>
+              </div>
             </div>
           </body>
           </html>
@@ -192,7 +204,7 @@ jobs:
           path: deploy
 
   deploy:
-    # Ejecuta deploy para todas las ramas push, no solo main
+    # Ejecuta deploy para push en cualquier rama, no solo main
     if: github.event_name == 'push'
     environment:
       name: github-pages
