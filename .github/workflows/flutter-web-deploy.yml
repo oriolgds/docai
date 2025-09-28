@@ -2,154 +2,204 @@ name: Flutter Web Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [ '*' ]  # Ejecuta en todas las ramas
   pull_request:
     branches: [ main ]
 
 # Permite ejecutar este workflow manualmente desde la pestaña Actions
-  workflow_dispatch:
+workflow_dispatch:
 
-# Configura permisos para GitHub Pages  
+# Configura permisos para GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
-  actions: write  # Necesario para cancelar workflows
+  actions: write # Necesario para cancelar workflows
 
 # Cancela workflows anteriores del mismo tipo cuando hay nuevos commits
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true  # Cambiado a true para cancelar workflows anteriores
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Cancel Previous Workflow Runs
-      uses: styfle/cancel-workflow-action@0.12.0
-      with:
-        access_token: ${{ github.token }}
-    
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    
-    # Cache para Flutter SDK
-    - name: Cache Flutter SDK
-      uses: actions/cache@v4
-      with:
-        path: |
-          ${{ runner.tool_cache }}/flutter
-        key: flutter-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}-3.35.4
-        restore-keys: |
-          flutter-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}-
-          flutter-${{ runner.os }}-
-    
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.35.4'  # Usa la versión estable más reciente
-        channel: 'stable'
-        cache: true  # Habilita cache interno de la acción
-    
-    # Cache para dependencias de pub
-    - name: Cache pub dependencies
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.pub-cache
-          ${{ github.workspace }}/.packages
-          ${{ github.workspace }}/.flutter-plugins
-          ${{ github.workspace }}/.flutter-plugin-dependencies
-          ${{ github.workspace }}/.dart_tool/package_config.json
-        key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
-        restore-keys: |
-          pub-${{ runner.os }}-
-    
-    # Cache para build outputs
-    - name: Cache Flutter build
-      uses: actions/cache@v4
-      with:
-        path: |
-          build/
-          .dart_tool/
-        key: flutter-build-${{ runner.os }}-${{ hashFiles('**/*.dart', 'pubspec.yaml', 'pubspec.lock') }}
-        restore-keys: |
-          flutter-build-${{ runner.os }}-
-    
-    - name: Create firebase_options.dart from secret
-      run: |
-        mkdir -p lib
-        cat > lib/firebase_options.dart << 'EOF'
-        ${{ secrets.FIREBASE_OPTIONS_DART }}
-        EOF
-        
-        # Verify file was created and has content
-        if [ ! -s lib/firebase_options.dart ]; then
-          echo "Error: firebase_options.dart file is empty"
-          exit 1
-        fi
-        
-        echo "Firebase options file created successfully"
-        echo "File size: $(wc -c < lib/firebase_options.dart) bytes"
-        echo "Lines: $(wc -l < lib/firebase_options.dart)"
-    
-    - name: Create .env file from secret
-      run: |
-        cat > .env << 'EOF'
-        ${{ secrets.DOT_ENV }}
-        EOF
-        
-        echo ".env file created successfully"
-        echo "File size: $(wc -c < .env) bytes"
-    
-    - name: Verify critical files
-      run: |
-        echo "Checking generated files..."
-        ls -la lib/firebase_options.dart .env
-        
-        # Check if firebase_options.dart has the expected structure
-        if grep -q "DefaultFirebaseOptions" lib/firebase_options.dart; then
-          echo "✓ firebase_options.dart contains DefaultFirebaseOptions class"
-        else
-          echo "✗ firebase_options.dart does not contain DefaultFirebaseOptions class"
-          echo "Content preview (first 10 lines):"
-          head -n 10 lib/firebase_options.dart
-          exit 1
-        fi
-        
-        # Check for common syntax issues
-        if grep -q "import.*firebase_core" lib/firebase_options.dart; then
-          echo "✓ firebase_options.dart contains Firebase Core import"
-        else
-          echo "✗ firebase_options.dart missing Firebase Core import"
-          exit 1
-        fi
-    
-    - name: Get dependencies
-      run: flutter pub get
-    
-    - name: Build web app
-      run: |
-        flutter build web --release --base-href "/docai/" --dart-define=FLUTTER_WEB_AUTO_DETECT=true
-    
-    - name: Upload build artifacts
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: build/web
+      - name: Cancel Previous Workflow Runs
+        uses: styfle/cancel-workflow-action@0.12.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Cache para Flutter SDK
+      - name: Cache Flutter SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ runner.tool_cache }}/flutter
+          key: flutter-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}-3.35.4
+          restore-keys: |
+            flutter-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}-
+            flutter-${{ runner.os }}-
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.4'
+          channel: 'stable'
+          cache: true
+
+      # Cache para dependencias de pub
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ${{ github.workspace }}/.packages
+            ${{ github.workspace }}/.flutter-plugins
+            ${{ github.workspace }}/.flutter-plugin-dependencies
+            ${{ github.workspace }}/.dart_tool/package_config.json
+          key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-
+
+      # Cache para build outputs
+      - name: Cache Flutter build
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/
+            .dart_tool/
+          key: flutter-build-${{ runner.os }}-${{ hashFiles('**/*.dart', 'pubspec.yaml', 'pubspec.lock') }}
+          restore-keys: |
+            flutter-build-${{ runner.os }}-
+
+      - name: Create firebase_options.dart from secret
+        run: |
+          mkdir -p lib
+          cat > lib/firebase_options.dart << 'EOF'
+          ${{ secrets.FIREBASE_OPTIONS_DART }}
+          EOF
+          
+          # Verify file was created and has content
+          if [ ! -s lib/firebase_options.dart ]; then
+            echo "Error: firebase_options.dart file is empty"
+            exit 1
+          fi
+          
+          echo "Firebase options file created successfully"
+          echo "File size: $(wc -c < lib/firebase_options.dart) bytes"
+          echo "Lines: $(wc -l < lib/firebase_options.dart)"
+
+      - name: Create .env file from secret
+        run: |
+          cat > .env << 'EOF'
+          ${{ secrets.DOT_ENV }}
+          EOF
+          echo ".env file created successfully"
+          echo "File size: $(wc -c < .env) bytes"
+
+      - name: Verify critical files
+        run: |
+          echo "Checking generated files..."
+          ls -la lib/firebase_options.dart .env
+          
+          # Check if firebase_options.dart has the expected structure
+          if grep -q "DefaultFirebaseOptions" lib/firebase_options.dart; then
+            echo "✓ firebase_options.dart contains DefaultFirebaseOptions class"
+          else
+            echo "✗ firebase_options.dart does not contain DefaultFirebaseOptions class"
+            echo "Content preview (first 10 lines):"
+            head -n 10 lib/firebase_options.dart
+            exit 1
+          fi
+          
+          # Check for common syntax issues
+          if grep -q "import.*firebase_core" lib/firebase_options.dart; then
+            echo "✓ firebase_options.dart contains Firebase Core import"
+          else
+            echo "✗ firebase_options.dart missing Firebase Core import"
+            exit 1
+          fi
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      # Determinar la ruta base según la rama
+      - name: Set base href for branch
+        id: base-href
+        run: |
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          if [[ "$BRANCH_NAME" == "main" ]]; then
+            echo "base_href=/docai/" >> $GITHUB_OUTPUT
+            echo "deploy_path=." >> $GITHUB_OUTPUT
+          else
+            # Sanitizar el nombre de la rama para URL
+            SANITIZED_BRANCH=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
+            echo "base_href=/docai/preview/$SANITIZED_BRANCH/" >> $GITHUB_OUTPUT
+            echo "deploy_path=preview/$SANITIZED_BRANCH" >> $GITHUB_OUTPUT
+          fi
+          echo "Branch: $BRANCH_NAME"
+          echo "Sanitized: $SANITIZED_BRANCH"
+
+      - name: Build web app
+        run: |
+          flutter build web --release --base-href "${{ steps.base-href.outputs.base_href }}" --dart-define=FLUTTER_WEB_AUTO_DETECT=true
+
+      # Preparar el directorio de deploy
+      - name: Prepare deploy directory
+        run: |
+          mkdir -p deploy/${{ steps.base-href.outputs.deploy_path }}
+          cp -r build/web/* deploy/${{ steps.base-href.outputs.deploy_path }}/
+          
+          # Crear index.html de navegación para la rama main
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            cat > deploy/preview/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>DocAI - Branch Previews</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 40px; }
+              .branch { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+              .main-app { background-color: #e7f5e7; }
+              .preview { background-color: #f0f8ff; }
+            </style>
+          </head>
+          <body>
+            <h1>DocAI - Previews Disponibles</h1>
+            <div class="branch main-app">
+              <h3>🚀 Aplicación Principal</h3>
+              <a href="/docai/">Ver DocAI (Rama Main)</a>
+            </div>
+            <div class="branch preview">
+              <h3>🔍 Branch Previews</h3>
+              <p>Las previews de otras ramas aparecerán aquí automáticamente:</p>
+              <ul id="branch-list">
+                <li>Esperando deploys de otras ramas...</li>
+              </ul>
+            </div>
+          </body>
+          </html>
+          EOF
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: deploy
 
   deploy:
-    # Solo ejecuta el deploy en push a main, no en pull requests
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
+    # Ejecuta deploy para todas las ramas push, no solo main
+    if: github.event_name == 'push'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    
     runs-on: ubuntu-latest
     needs: build
-    
     steps:
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
