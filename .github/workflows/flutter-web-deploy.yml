@@ -1,155 +1,308 @@
-name: Flutter Web Deploy to GitHub Pages
+name: Flutter Web Deploy and Preview
 
 on:
   push:
-    branches: [ main ]
+    branches: [ '*' ]  # Se ejecuta en todas las ramas
   pull_request:
-    branches: [ main ]
+    branches: [ '*' ]  # Se ejecuta en PRs hacia cualquier rama
 
-# Permite ejecutar este workflow manualmente desde la pestaña Actions
+  # Permite ejecutar este workflow manualmente desde la pestaña Actions
   workflow_dispatch:
 
-# Configura permisos para GitHub Pages  
+# Configura permisos para GitHub Pages y deployments
 permissions:
   contents: read
   pages: write
   id-token: write
-  actions: write  # Necesario para cancelar workflows
+  actions: write # Necesario para cancelar workflows
+  deployments: write # Necesario para crear deployments de preview
 
 # Cancela workflows anteriores del mismo tipo cuando hay nuevos commits
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true  # Cambiado a true para cancelar workflows anteriores
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      branch-name: ${{ steps.branch-info.outputs.branch-name }}
+      is-main: ${{ steps.branch-info.outputs.is-main }}
     
     steps:
-    - name: Cancel Previous Workflow Runs
-      uses: styfle/cancel-workflow-action@0.12.0
-      with:
-        access_token: ${{ github.token }}
-    
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    
-    # Cache para Flutter SDK
-    - name: Cache Flutter SDK
-      uses: actions/cache@v4
-      with:
-        path: |
-          ${{ runner.tool_cache }}/flutter
-        key: flutter-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}-3.35.4
-        restore-keys: |
-          flutter-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}-
-          flutter-${{ runner.os }}-
-    
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.35.4'  # Usa la versión estable más reciente
-        channel: 'stable'
-        cache: true  # Habilita cache interno de la acción
-    
-    # Cache para dependencias de pub
-    - name: Cache pub dependencies
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.pub-cache
-          ${{ github.workspace }}/.packages
-          ${{ github.workspace }}/.flutter-plugins
-          ${{ github.workspace }}/.flutter-plugin-dependencies
-          ${{ github.workspace }}/.dart_tool/package_config.json
-        key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
-        restore-keys: |
-          pub-${{ runner.os }}-
-    
-    # Cache para build outputs
-    - name: Cache Flutter build
-      uses: actions/cache@v4
-      with:
-        path: |
-          build/
-          .dart_tool/
-        key: flutter-build-${{ runner.os }}-${{ hashFiles('**/*.dart', 'pubspec.yaml', 'pubspec.lock') }}
-        restore-keys: |
-          flutter-build-${{ runner.os }}-
-    
-    - name: Create firebase_options.dart from secret
-      run: |
-        mkdir -p lib
-        cat > lib/firebase_options.dart << 'EOF'
-        ${{ secrets.FIREBASE_OPTIONS_DART }}
-        EOF
-        
-        # Verify file was created and has content
-        if [ ! -s lib/firebase_options.dart ]; then
-          echo "Error: firebase_options.dart file is empty"
-          exit 1
-        fi
-        
-        echo "Firebase options file created successfully"
-        echo "File size: $(wc -c < lib/firebase_options.dart) bytes"
-        echo "Lines: $(wc -l < lib/firebase_options.dart)"
-    
-    - name: Create .env file from secret
-      run: |
-        cat > .env << 'EOF'
-        ${{ secrets.DOT_ENV }}
-        EOF
-        
-        echo ".env file created successfully"
-        echo "File size: $(wc -c < .env) bytes"
-    
-    - name: Verify critical files
-      run: |
-        echo "Checking generated files..."
-        ls -la lib/firebase_options.dart .env
-        
-        # Check if firebase_options.dart has the expected structure
-        if grep -q "DefaultFirebaseOptions" lib/firebase_options.dart; then
-          echo "✓ firebase_options.dart contains DefaultFirebaseOptions class"
-        else
-          echo "✗ firebase_options.dart does not contain DefaultFirebaseOptions class"
-          echo "Content preview (first 10 lines):"
-          head -n 10 lib/firebase_options.dart
-          exit 1
-        fi
-        
-        # Check for common syntax issues
-        if grep -q "import.*firebase_core" lib/firebase_options.dart; then
-          echo "✓ firebase_options.dart contains Firebase Core import"
-        else
-          echo "✗ firebase_options.dart missing Firebase Core import"
-          exit 1
-        fi
-    
-    - name: Get dependencies
-      run: flutter pub get
-    
-    - name: Build web app
-      run: |
-        flutter build web --release --base-href "/docai/" --dart-define=FLUTTER_WEB_AUTO_DETECT=true
-    
-    - name: Upload build artifacts
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: build/web
+      - name: Cancel Previous Workflow Runs
+        uses: styfle/cancel-workflow-action@0.12.0
+        with:
+          access_token: ${{ github.token }}
 
-  deploy:
-    # Solo ejecuta el deploy en push a main, no en pull requests
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get branch information
+        id: branch-info
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            BRANCH_NAME="${{ github.head_ref }}"
+          else
+            BRANCH_NAME="${{ github.ref_name }}"
+          fi
+          echo "branch-name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+          if [ "${BRANCH_NAME}" == "main" ]; then
+            echo "is-main=true" >> $GITHUB_OUTPUT
+          else
+            echo "is-main=false" >> $GITHUB_OUTPUT
+          fi
+          echo "Building branch: ${BRANCH_NAME}"
+
+      # Cache para Flutter SDK
+      - name: Cache Flutter SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ runner.tool_cache }}/flutter
+          key: flutter-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}-3.35.4
+          restore-keys: |
+            flutter-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}-
+            flutter-${{ runner.os }}-
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.4'
+          channel: 'stable'
+          cache: true
+
+      # Cache para dependencias de pub
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ${{ github.workspace }}/.packages
+            ${{ github.workspace }}/.flutter-plugins
+            ${{ github.workspace }}/.flutter-plugin-dependencies
+            ${{ github.workspace }}/.dart_tool/package_config.json
+          key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-
+
+      # Cache para build outputs
+      - name: Cache Flutter build
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/
+            .dart_tool/
+          key: flutter-build-${{ runner.os }}-${{ hashFiles('**/*.dart', 'pubspec.yaml', 'pubspec.lock') }}-${{ steps.branch-info.outputs.branch-name }}
+          restore-keys: |
+            flutter-build-${{ runner.os }}-
+
+      - name: Create firebase_options.dart from secret
+        run: |
+          mkdir -p lib
+          cat > lib/firebase_options.dart << 'EOF'
+          ${{ secrets.FIREBASE_OPTIONS_DART }}
+          EOF
+          
+          # Verify file was created and has content
+          if [ ! -s lib/firebase_options.dart ]; then
+            echo "Error: firebase_options.dart file is empty"
+            exit 1
+          fi
+          echo "Firebase options file created successfully"
+          echo "File size: $(wc -c < lib/firebase_options.dart) bytes"
+          echo "Lines: $(wc -l < lib/firebase_options.dart)"
+
+      - name: Create .env file from secret
+        run: |
+          cat > .env << 'EOF'
+          ${{ secrets.DOT_ENV }}
+          EOF
+          echo ".env file created successfully"
+          echo "File size: $(wc -c < .env) bytes"
+
+      - name: Verify critical files
+        run: |
+          echo "Checking generated files..."
+          ls -la lib/firebase_options.dart .env
+          
+          # Check if firebase_options.dart has the expected structure
+          if grep -q "DefaultFirebaseOptions" lib/firebase_options.dart; then
+            echo "✓ firebase_options.dart contains DefaultFirebaseOptions class"
+          else
+            echo "✗ firebase_options.dart does not contain DefaultFirebaseOptions class"
+            echo "Content preview (first 10 lines):"
+            head -n 10 lib/firebase_options.dart
+            exit 1
+          fi
+          
+          # Check for common syntax issues
+          if grep -q "import.*firebase_core" lib/firebase_options.dart; then
+            echo "✓ firebase_options.dart contains Firebase Core import"
+          else
+            echo "✗ firebase_options.dart missing Firebase Core import"
+            exit 1
+          fi
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build web app
+        run: |
+          if [ "${{ steps.branch-info.outputs.is-main }}" == "true" ]; then
+            # Build para main con base-href normal
+            flutter build web --release --base-href "/docai/" --dart-define=FLUTTER_WEB_AUTO_DETECT=true
+          else
+            # Build para otras ramas con base-href específico
+            BRANCH_SLUG=$(echo "${{ steps.branch-info.outputs.branch-name }}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
+            flutter build web --release --base-href "/docai/preview/${BRANCH_SLUG}/" --dart-define=FLUTTER_WEB_AUTO_DETECT=true
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build-${{ steps.branch-info.outputs.branch-name }}
+          path: build/web
+          retention-days: 7
+
+      # Solo para la rama main - sube para GitHub Pages
+      - name: Upload pages artifact (main only)
+        if: steps.branch-info.outputs.is-main == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  # Deploy a GitHub Pages (solo para main)
+  deploy-main:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    
     runs-on: ubuntu-latest
     needs: build
-    
     steps:
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # Preview para otras ramas
+  deploy-preview:
+    if: needs.build.outputs.is-main == 'false'
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: preview-${{ needs.build.outputs.branch-name }}
+      url: https://oriolgds.github.io/docai/preview/${{ needs.build.outputs.branch-name }}
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          token: ${{ github.token }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build-${{ needs.build.outputs.branch-name }}
+          path: temp-build
+
+      - name: Create preview directory
+        run: |
+          BRANCH_SLUG=$(echo "${{ needs.build.outputs.branch-name }}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
+          mkdir -p preview/${BRANCH_SLUG}
+          cp -r temp-build/* preview/${BRANCH_SLUG}/
+          
+          # Crear un índice de previews si no existe
+          if [ ! -f preview/index.html ]; then
+            cat > preview/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>DocAI - Branch Previews</title>
+              <style>
+                  body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+                  .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                  h1 { color: #333; border-bottom: 2px solid #4CAF50; padding-bottom: 10px; }
+                  .branch-list { list-style: none; padding: 0; }
+                  .branch-item { margin: 10px 0; padding: 15px; background: #f9f9f9; border-radius: 5px; border-left: 4px solid #4CAF50; }
+                  .branch-item a { text-decoration: none; color: #2196F3; font-weight: bold; }
+                  .branch-item a:hover { color: #1976D2; }
+                  .main-link { background: #e8f5e8; border-left-color: #2E7D32; }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>🏥 DocAI - Branch Previews</h1>
+                  <ul class="branch-list">
+                      <li class="branch-item main-link">
+                          <a href="../">🚀 Main (Production)</a>
+                          <div style="font-size: 0.9em; color: #666; margin-top: 5px;">Latest stable release</div>
+                      </li>
+                  </ul>
+                  <div id="preview-branches"></div>
+              </div>
+              
+              <script>
+                  // Auto-generar lista de branches basada en los directorios
+                  fetch('.')
+                  .then(response => response.text())
+                  .then(html => {
+                      const parser = new DOMParser();
+                      const doc = parser.parseFromString(html, 'text/html');
+                      const links = doc.querySelectorAll('a');
+                      const branches = [];
+                      
+                      links.forEach(link => {
+                          const href = link.getAttribute('href');
+                          if (href && href !== '../' && !href.includes('index.html')) {
+                              branches.push(href.replace('/', ''));
+                          }
+                      });
+                      
+                      if (branches.length > 0) {
+                          const branchList = document.querySelector('.branch-list');
+                          branches.forEach(branch => {
+                              const li = document.createElement('li');
+                              li.className = 'branch-item';
+                              li.innerHTML = `
+                                  <a href="${branch}/">🌿 ${branch}</a>
+                                  <div style="font-size: 0.9em; color: #666; margin-top: 5px;">Preview build</div>
+                              `;
+                              branchList.appendChild(li);
+                          });
+                      }
+                  })
+                  .catch(err => console.log('Could not auto-generate branch list:', err));
+              </script>
+          </body>
+          </html>
+          EOF
+          fi
+
+      - name: Commit and push preview
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add preview/
+          git commit -m "Deploy preview for ${{ needs.build.outputs.branch-name }}" || exit 0
+          git push
+
+  # Comentario en PR con link de preview
+  comment-preview:
+    if: github.event_name == 'pull_request' && needs.build.outputs.is-main == 'false'
+    runs-on: ubuntu-latest
+    needs: [build, deploy-preview]
+    steps:
+      - name: Comment PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branchSlug = '${{ needs.build.outputs.branch-name }}'.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+            const previewUrl = `https://oriolgds.github.io/docai/preview/${branchSlug}/`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🏥 DocAI Preview Ready!\n\n✨ **Preview URL**: ${previewUrl}\n\n📱 Esta preview se actualiza automáticamente con cada commit a esta rama.\n\n🔍 **Qué puedes probar:**\n- Funcionalidad de chat con IA\n- Interfaz de usuario actualizada\n- Autenticación y flujo de login\n- Responsive design\n\n> 💡 Los previews se mantienen por 7 días después del último commit.`
+            });
