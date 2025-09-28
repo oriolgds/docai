@@ -1,4 +1,4 @@
-# DocAI - Your Personal AI Doctor
+# DocAI - An app to heal the world
 
 DocAI is a mobile application built with Flutter that acts as a personal AI-powered doctor. It features a native chat interface powered by OpenRouter, chat history (mock for now), predefined health presets (e.g., medications, natural remedies), a profile page for subscription management, and a minimalist login screen. This README provides instructions to set up, install, and run the app on your local machine.
 
