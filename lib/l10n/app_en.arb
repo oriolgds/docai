@@ -178,5 +178,355 @@
   "userNotFound": "User not found",
   "@userNotFound": {
     "description": "Error message when user is not found"
+  },
+  "yourPersonalAIDoctor": "Your Personal AI Doctor",
+  "@yourPersonalAIDoctor": {
+    "description": "App subtitle/tagline"
+  },
+  "email": "Email",
+  "@email": {
+    "description": "Email field label"
+  },
+  "password": "Password",
+  "@password": {
+    "description": "Password field label"
+  },
+  "pleaseEnterEmail": "Please enter your email",
+  "@pleaseEnterEmail": {
+    "description": "Email validation error"
+  },
+  "pleaseEnterValidEmail": "Please enter a valid email address",
+  "@pleaseEnterValidEmail": {
+    "description": "Email format validation error"
+  },
+  "pleaseEnterPassword": "Please enter your password",
+  "@pleaseEnterPassword": {
+    "description": "Password validation error"
+  },
+  "signInWithEmail": "Sign in with Email",
+  "@signInWithEmail": {
+    "description": "Email sign in button text"
+  },
+  "or": "or",
+  "@or": {
+    "description": "Divider text between sign in options"
+  },
+  "signingIn": "Signing in...",
+  "@signingIn": {
+    "description": "Loading text for Google sign in"
+  },
+  "continueWithGoogle": "Continue with Google",
+  "@continueWithGoogle": {
+    "description": "Google sign in button text"
+  },
+  "forgotPassword": "Forgot Password?",
+  "@forgotPassword": {
+    "description": "Forgot password link text"
+  },
+  "dontHaveAccount": "Don't have an account? ",
+  "@dontHaveAccount": {
+    "description": "Sign up prompt text"
+  },
+  "signUp": "Sign up",
+  "@signUp": {
+    "description": "Sign up link text"
+  },
+  "emailVerificationRequired": "Email Verification Required",
+  "@emailVerificationRequired": {
+    "description": "Email verification dialog title"
+  },
+  "emailVerificationMessage": "Your email address needs to be verified before you can sign in.",
+  "@emailVerificationMessage": {
+    "description": "Email verification dialog message"
+  },
+  "verifyEmailButton": "Verify Email",
+  "@verifyEmailButton": {
+    "description": "Verify email button text"
+  },
+  "resetPassword": "Reset Password",
+  "@resetPassword": {
+    "description": "Reset password dialog title"
+  },
+  "resetPasswordMessage": "Enter your email address to receive a password reset link.",
+  "@resetPasswordMessage": {
+    "description": "Reset password dialog message"
+  },
+  "emailAddress": "Email Address",
+  "@emailAddress": {
+    "description": "Email address field label"
+  },
+  "sendResetLink": "Send Reset Link",
+  "@sendResetLink": {
+    "description": "Send reset link button text"
+  },
+  "passwordResetSent": "Password reset link sent! Check your email.",
+  "@passwordResetSent": {
+    "description": "Password reset success message"
+  },
+  "createAccount": "Create Account",
+  "@createAccount": {
+    "description": "Create account title and button text"
+  },
+  "joinDocAI": "Join DocAI today",
+  "@joinDocAI": {
+    "description": "Sign up screen subtitle"
+  },
+  "enterEmailAddress": "Enter your email address",
+  "@enterEmailAddress": {
+    "description": "Email field hint text"
+  },
+  "createStrongPassword": "Create a strong password",
+  "@createStrongPassword": {
+    "description": "Password field hint text"
+  },
+  "confirmPassword": "Confirm Password",
+  "@confirmPassword": {
+    "description": "Confirm password field label"
+  },
+  "confirmYourPassword": "Confirm your password",
+  "@confirmYourPassword": {
+    "description": "Confirm password field hint text"
+  },
+  "passwordRequirements": "Password requirements:",
+  "@passwordRequirements": {
+    "description": "Password requirements section title"
+  },
+  "atLeast8Characters": "At least 8 characters",
+  "@atLeast8Characters": {
+    "description": "Password requirement"
+  },
+  "containsUppercase": "Contains uppercase letter",
+  "@containsUppercase": {
+    "description": "Password requirement"
+  },
+  "containsLowercase": "Contains lowercase letter",
+  "@containsLowercase": {
+    "description": "Password requirement"
+  },
+  "containsNumber": "Contains number",
+  "@containsNumber": {
+    "description": "Password requirement"
+  },
+  "pleaseEnterEmailAddress": "Please enter your email address",
+  "@pleaseEnterEmailAddress": {
+    "description": "Email validation error message"
+  },
+  "passwordMinLength": "Password must be at least 8 characters long",
+  "@passwordMinLength": {
+    "description": "Password length validation error"
+  },
+  "passwordNeedsUppercase": "Password must contain at least one uppercase letter",
+  "@passwordNeedsUppercase": {
+    "description": "Password uppercase validation error"
+  },
+  "passwordNeedsLowercase": "Password must contain at least one lowercase letter",
+  "@passwordNeedsLowercase": {
+    "description": "Password lowercase validation error"
+  },
+  "passwordNeedsNumber": "Password must contain at least one number",
+  "@passwordNeedsNumber": {
+    "description": "Password number validation error"
+  },
+  "pleaseConfirmPassword": "Please confirm your password",
+  "@pleaseConfirmPassword": {
+    "description": "Confirm password validation error"
+  },
+  "passwordsDoNotMatch": "Passwords do not match",
+  "@passwordsDoNotMatch": {
+    "description": "Password confirmation error"
+  },
+  "accountCreatedSuccess": "Account created successfully! Please check your email for verification.",
+  "@accountCreatedSuccess": {
+    "description": "Account creation success message"
+  },
+  "accountAlreadyExists": "An account with this email already exists. Please try signing in instead.",
+  "@accountAlreadyExists": {
+    "description": "Account already exists error message"
+  },
+  "signingUp": "Signing up...",
+  "@signingUp": {
+    "description": "Loading text for Google sign up"
+  },
+  "signUpWithGoogle": "Sign up with Google",
+  "@signUpWithGoogle": {
+    "description": "Google sign up button text"
+  },
+  "alreadyHaveAccount": "Already have an account? ",
+  "@alreadyHaveAccount": {
+    "description": "Sign in prompt text"
+  },
+  "signIn": "Sign in",
+  "@signIn": {
+    "description": "Sign in link text"
+  },
+  "helloImDocai": "Hello, I'm Docai. How can I help you today?",
+  "@helloImDocai": {
+    "description": "Initial assistant message"
+  },
+  "newConversation": "New conversation",
+  "@newConversation": {
+    "description": "New conversation button tooltip and dialog title"
+  },
+  "viewHistory": "View history",
+  "@viewHistory": {
+    "description": "View history button tooltip"
+  },
+  "medicalNotice": "Medical notice",
+  "@medicalNotice": {
+    "description": "Medical notice dialog title"
+  },
+  "understood": "Understood",
+  "@understood": {
+    "description": "Understood button text"
+  },
+  "newConversationConfirm": "Are you sure you want to start a new conversation?",
+  "@newConversationConfirm": {
+    "description": "New conversation confirmation message"
+  },
+  "deleteHistory": "Delete history",
+  "@deleteHistory": {
+    "description": "Delete history dialog title"
+  },
+  "deleteHistoryConfirm": "Are you sure you want to delete all chat history? This action cannot be undone and will remove all conversations both locally and in the cloud.",
+  "@deleteHistoryConfirm": {
+    "description": "Delete history confirmation message"
+  },
+  "deleteAll": "Delete all",
+  "@deleteAll": {
+    "description": "Delete all button text"
+  },
+  "deletingHistory": "Deleting history...",
+  "@deletingHistory": {
+    "description": "Deleting history loading message"
+  },
+  "historyDeletedSuccess": "History deleted successfully",
+  "@historyDeletedSuccess": {
+    "description": "History deletion success message"
+  },
+  "errorDeletingHistory": "Error deleting history: {error}",
+  "@errorDeletingHistory": {
+    "description": "Error deleting history message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "personalizeYourExperience": "Personalize your experience",
+  "@personalizeYourExperience": {
+    "description": "Personalization card title"
+  },
+  "personalizeExperienceMessage": "For more accurate and personalized recommendations, configure your medical preferences, allergies and conditions.",
+  "@personalizeExperienceMessage": {
+    "description": "Personalization card message"
+  },
+  "notNow": "Not now",
+  "@notNow": {
+    "description": "Not now button text"
+  },
+  "personalize": "Personalize",
+  "@personalize": {
+    "description": "Personalize button text"
+  },
+  "configureRegeneration": "Configure regeneration",
+  "@configureRegeneration": {
+    "description": "Regeneration configuration sheet title"
+  },
+  "advancedReasoning": "Advanced reasoning",
+  "@advancedReasoning": {
+    "description": "Advanced reasoning toggle label"
+  },
+  "advancedReasoningDescription": "Docai will provide a more detailed step-by-step analysis.",
+  "@advancedReasoningDescription": {
+    "description": "Advanced reasoning description"
+  },
+  "regenerate": "Regenerate",
+  "@regenerate": {
+    "description": "Regenerate button text"
+  },
+  "syncError": "Sync error. Tap refresh to try again.",
+  "@syncError": {
+    "description": "Sync error status message"
+  },
+  "conversationsLocalOnly": "Conversations saved only on this device",
+  "@conversationsLocalOnly": {
+    "description": "Local storage status message"
+  },
+  "syncing": "Syncing...",
+  "@syncing": {
+    "description": "Syncing status message"
+  },
+  "syncedLessThanMinute": "Synced less than a minute ago",
+  "@syncedLessThanMinute": {
+    "description": "Recent sync status message"
+  },
+  "syncedMinutesAgo": "Synced {minutes}m ago",
+  "@syncedMinutesAgo": {
+    "description": "Sync status message for minutes",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "description": "Number of minutes"
+      }
+    }
+  },
+  "syncedHoursAgo": "Synced {hours}h ago",
+  "@syncedHoursAgo": {
+    "description": "Sync status message for hours",
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "description": "Number of hours"
+      }
+    }
+  },
+  "syncedDaysAgo": "Synced {days}d ago",
+  "@syncedDaysAgo": {
+    "description": "Sync status message for days",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "description": "Number of days"
+      }
+    }
+  },
+  "autoSyncEnabled": "Automatic sync enabled",
+  "@autoSyncEnabled": {
+    "description": "Auto sync enabled status message"
+  },
+  "cloudSyncEnabled": "Cloud sync enabled",
+  "@cloudSyncEnabled": {
+    "description": "Cloud sync enabled success message"
+  },
+  "cloudSyncDisabled": "Cloud sync disabled",
+  "@cloudSyncDisabled": {
+    "description": "Cloud sync disabled success message"
+  },
+  "syncCompleted": "Sync completed",
+  "@syncCompleted": {
+    "description": "Sync completed success message"
+  },
+  "syncErrorMessage": "Sync error: {error}",
+  "@syncErrorMessage": {
+    "description": "Sync error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  "history": "History",
+  "@history": {
+    "description": "History screen title"
+  },
+  "dashboard": "Dashboard",
+  "@dashboard": {
+    "description": "Dashboard screen title"
+  },
+  "chat": "Chat",
+  "@chat": {
+    "description": "Chat screen title"
   }
 }
