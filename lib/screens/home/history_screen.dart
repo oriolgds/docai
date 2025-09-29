@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../models/chat_conversation.dart';
 import '../../services/chat_state_manager.dart';
+import '../../theme/app_theme.dart';
 import 'chat_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -118,9 +119,9 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       if (mounted) {
         setState(() {}); // Actualizar la pantalla principal
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sincronización completada'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Sincronización completada'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
       }
@@ -220,9 +221,9 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Historial eliminado correctamente'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Historial eliminado correctamente'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
       }
@@ -346,10 +347,6 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                       },
                       icon: const Icon(Icons.chat),
                       label: const Text('Nueva'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                      ),
                     ),
                   ),
                 ],
@@ -382,6 +379,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
   }
 
   Widget _buildSyncSettings([StateSetter? modalSetState]) {
+    final theme = Theme.of(context);
     final cloudSyncEnabled = _stateManager.cloudSyncEnabled;
     final isSyncing = _stateManager.isSyncing;
     final lastSyncTime = _stateManager.lastSyncTime;
@@ -393,13 +391,13 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
         gradient: LinearGradient(
           colors: hasError 
             ? [Colors.red.shade50, Colors.red.shade100]
-            : [Colors.blue.shade50, Colors.blue.shade100],
+            : [theme.colorScheme.primary.withOpacity(0.1), theme.colorScheme.primary.withOpacity(0.2)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: hasError ? Colors.red.shade200 : Colors.blue.shade200,
+          color: hasError ? Colors.red.shade200 : theme.colorScheme.primary.withOpacity(0.3),
           width: 1,
         ),
       ),
@@ -411,12 +409,12 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: hasError ? Colors.red.shade100 : Colors.blue.shade100,
+                  color: hasError ? Colors.red.shade100 : theme.colorScheme.primary.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   hasError ? Icons.cloud_off : Icons.cloud_outlined, 
-                  color: hasError ? Colors.red.shade700 : Colors.blue.shade700,
+                  color: hasError ? Colors.red.shade700 : theme.colorScheme.primary,
                   size: 20,
                 ),
               ),
@@ -427,14 +425,13 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: hasError ? Colors.red.shade700 : Colors.blue.shade700,
+                    color: hasError ? Colors.red.shade700 : theme.colorScheme.primary,
                   ),
                 ),
               ),
               Switch(
                 value: cloudSyncEnabled,
                 onChanged: (value) => _toggleCloudSync(value, modalSetState),
-                activeColor: Colors.blue.shade700,
               ),
             ],
           ),
@@ -446,7 +443,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                   _getSyncStatusText(cloudSyncEnabled, isSyncing, lastSyncTime, hasError),
                   style: TextStyle(
                     fontSize: 13,
-                    color: hasError ? Colors.red.shade600 : Colors.blue.shade600,
+                    color: hasError ? Colors.red.shade600 : theme.colorScheme.primary.withOpacity(0.8),
                   ),
                 ),
               ),
@@ -457,14 +454,14 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                   height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.blue.shade600,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
               ],
               if (cloudSyncEnabled && !isSyncing) ...[
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(Icons.refresh, size: 20, color: Colors.blue.shade600),
+                  icon: Icon(Icons.refresh, size: 20, color: theme.colorScheme.primary),
                   onPressed: () => _forceSyncNow(modalSetState),
                   tooltip: 'Sincronizar ahora',
                 ),
@@ -493,14 +490,14 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.security, size: 16, color: Colors.blue.shade600),
+                Icon(Icons.security, size: 16, color: theme.colorScheme.primary),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     'Tus datos están protegidos con encriptación',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.blue.shade600,
+                      color: theme.colorScheme.primary.withOpacity(0.8),
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -545,6 +542,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
   }
 
   Widget _buildCompactConversationCard(ChatConversation conversation) {
+    final theme = Theme.of(context);
     final hasUserMessages = conversation.messages.any((m) => m.role.name == 'user');
     final lastUserMessage = hasUserMessages 
         ? conversation.messages.lastWhere((m) => m.role.name == 'user').content
@@ -579,7 +577,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                   height: 40,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Colors.blue.shade300, Colors.blue.shade500],
+                      colors: [theme.colorScheme.primary.withOpacity(0.7), theme.colorScheme.primary],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -659,7 +657,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                                 : Icons.offline_pin,
                             size: 14,
                             color: conversation.isCloudSynced
-                                ? Colors.green.shade400
+                                ? theme.colorScheme.primary
                                 : Colors.orange.shade400,
                           ),
                         ],
@@ -721,6 +719,8 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
   }
 
   Widget _buildEmptyState() {
+    final theme = Theme.of(context);
+    
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -761,7 +761,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
             icon: const Icon(Icons.chat),
             label: const Text('Iniciar nueva conversación'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
+              backgroundColor: theme.colorScheme.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
@@ -776,6 +776,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final conversations = _stateManager.conversations;
     final isLoading = _stateManager.isLoading;
     
@@ -789,7 +790,6 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
           ),
         ),
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
@@ -799,12 +799,12 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
             icon: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
+                color: theme.colorScheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 Icons.tune,
-                color: Colors.blue.shade700,
+                color: theme.colorScheme.primary,
                 size: 20,
               ),
             ),
@@ -815,12 +815,12 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
         ],
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: theme.colorScheme.primary))
           : conversations.isEmpty
               ? _buildEmptyState()
               : RefreshIndicator(
                   onRefresh: _forceRefresh,
-                  color: Colors.blue,
+                  color: theme.colorScheme.primary,
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: conversations.length,
@@ -831,8 +831,6 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: _startNewConversation,
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
         elevation: 4,
         child: const Icon(Icons.add),
       ),
