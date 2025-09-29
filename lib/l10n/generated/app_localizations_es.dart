@@ -144,4 +144,271 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get userNotFound => 'Usuario no encontrado';
+
+  @override
+  String get yourPersonalAIDoctor => 'Tu Doctor de IA Personal';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get password => 'Contraseña';
+
+  @override
+  String get pleaseEnterEmail => 'Por favor ingresa tu email';
+
+  @override
+  String get pleaseEnterValidEmail =>
+      'Por favor ingresa una dirección de email válida';
+
+  @override
+  String get pleaseEnterPassword => 'Por favor ingresa tu contraseña';
+
+  @override
+  String get signInWithEmail => 'Iniciar sesión con Email';
+
+  @override
+  String get or => 'o';
+
+  @override
+  String get signingIn => 'Iniciando sesión...';
+
+  @override
+  String get continueWithGoogle => 'Continuar con Google';
+
+  @override
+  String get forgotPassword => '¿Olvidaste tu contraseña?';
+
+  @override
+  String get dontHaveAccount => '¿No tienes una cuenta? ';
+
+  @override
+  String get signUp => 'Regístrate';
+
+  @override
+  String get emailVerificationRequired => 'Verificación de Email Requerida';
+
+  @override
+  String get emailVerificationMessage =>
+      'Tu dirección de email necesita ser verificada antes de poder iniciar sesión.';
+
+  @override
+  String get verifyEmailButton => 'Verificar Email';
+
+  @override
+  String get resetPassword => 'Restablecer Contraseña';
+
+  @override
+  String get resetPasswordMessage =>
+      'Ingresa tu dirección de email para recibir un enlace de restablecimiento de contraseña.';
+
+  @override
+  String get emailAddress => 'Dirección de Email';
+
+  @override
+  String get sendResetLink => 'Enviar Enlace de Restablecimiento';
+
+  @override
+  String get passwordResetSent =>
+      '¡Enlace de restablecimiento de contraseña enviado! Revisa tu email.';
+
+  @override
+  String get createAccount => 'Crear Cuenta';
+
+  @override
+  String get joinDocAI => 'Únete a DocAI hoy';
+
+  @override
+  String get enterEmailAddress => 'Ingresa tu dirección de email';
+
+  @override
+  String get createStrongPassword => 'Crea una contraseña segura';
+
+  @override
+  String get confirmPassword => 'Confirmar Contraseña';
+
+  @override
+  String get confirmYourPassword => 'Confirma tu contraseña';
+
+  @override
+  String get passwordRequirements => 'Requisitos de contraseña:';
+
+  @override
+  String get atLeast8Characters => 'Al menos 8 caracteres';
+
+  @override
+  String get containsUppercase => 'Contiene letra mayúscula';
+
+  @override
+  String get containsLowercase => 'Contiene letra minúscula';
+
+  @override
+  String get containsNumber => 'Contiene número';
+
+  @override
+  String get pleaseEnterEmailAddress =>
+      'Por favor ingresa tu dirección de email';
+
+  @override
+  String get passwordMinLength =>
+      'La contraseña debe tener al menos 8 caracteres';
+
+  @override
+  String get passwordNeedsUppercase =>
+      'La contraseña debe contener al menos una letra mayúscula';
+
+  @override
+  String get passwordNeedsLowercase =>
+      'La contraseña debe contener al menos una letra minúscula';
+
+  @override
+  String get passwordNeedsNumber =>
+      'La contraseña debe contener al menos un número';
+
+  @override
+  String get pleaseConfirmPassword => 'Por favor confirma tu contraseña';
+
+  @override
+  String get passwordsDoNotMatch => 'Las contraseñas no coinciden';
+
+  @override
+  String get accountCreatedSuccess =>
+      '¡Cuenta creada exitosamente! Por favor revisa tu email para la verificación.';
+
+  @override
+  String get accountAlreadyExists =>
+      'Ya existe una cuenta con este email. Por favor intenta iniciar sesión.';
+
+  @override
+  String get signingUp => 'Registrándose...';
+
+  @override
+  String get signUpWithGoogle => 'Registrarse con Google';
+
+  @override
+  String get alreadyHaveAccount => '¿Ya tienes una cuenta? ';
+
+  @override
+  String get signIn => 'Iniciar sesión';
+
+  @override
+  String get helloImDocai => 'Hola, soy Docai. ¿En qué puedo ayudarte hoy?';
+
+  @override
+  String get newConversation => 'Nueva conversación';
+
+  @override
+  String get viewHistory => 'Ver historial';
+
+  @override
+  String get medicalNotice => 'Aviso médico';
+
+  @override
+  String get understood => 'Entendido';
+
+  @override
+  String get newConversationConfirm =>
+      '¿Estás seguro de que quieres iniciar una nueva conversación?';
+
+  @override
+  String get deleteHistory => 'Eliminar historial';
+
+  @override
+  String get deleteHistoryConfirm =>
+      '¿Estás seguro de que quieres eliminar todo el historial de chats? Esta acción no se puede deshacer y eliminará todas las conversaciones tanto localmente como en la nube.';
+
+  @override
+  String get deleteAll => 'Eliminar todo';
+
+  @override
+  String get deletingHistory => 'Eliminando historial...';
+
+  @override
+  String get historyDeletedSuccess => 'Historial eliminado correctamente';
+
+  @override
+  String errorDeletingHistory(String error) {
+    return 'Error al eliminar historial: $error';
+  }
+
+  @override
+  String get personalizeYourExperience => 'Personaliza tu experiencia';
+
+  @override
+  String get personalizeExperienceMessage =>
+      'Para ofrecerte recomendaciones más precisas y personalizadas, configura tus preferencias médicas, alergias y condiciones.';
+
+  @override
+  String get notNow => 'Ahora no';
+
+  @override
+  String get personalize => 'Personalizar';
+
+  @override
+  String get configureRegeneration => 'Configurar regeneración';
+
+  @override
+  String get advancedReasoning => 'Razonamiento avanzado';
+
+  @override
+  String get advancedReasoningDescription =>
+      'Docai proporcionará un análisis paso a paso más detallado.';
+
+  @override
+  String get regenerate => 'Regenerar';
+
+  @override
+  String get syncError =>
+      'Error en la sincronización. Toca refrescar para intentar de nuevo.';
+
+  @override
+  String get conversationsLocalOnly =>
+      'Conversaciones guardadas solo en este dispositivo';
+
+  @override
+  String get syncing => 'Sincronizando...';
+
+  @override
+  String get syncedLessThanMinute => 'Sincronizado hace menos de un minuto';
+
+  @override
+  String syncedMinutesAgo(int minutes) {
+    return 'Sincronizado hace ${minutes}m';
+  }
+
+  @override
+  String syncedHoursAgo(int hours) {
+    return 'Sincronizado hace ${hours}h';
+  }
+
+  @override
+  String syncedDaysAgo(int days) {
+    return 'Sincronizado hace ${days}d';
+  }
+
+  @override
+  String get autoSyncEnabled => 'Sincronización automática habilitada';
+
+  @override
+  String get cloudSyncEnabled => 'Sincronización en la nube habilitada';
+
+  @override
+  String get cloudSyncDisabled => 'Sincronización en la nube deshabilitada';
+
+  @override
+  String get syncCompleted => 'Sincronización completada';
+
+  @override
+  String syncErrorMessage(String error) {
+    return 'Error en sincronización: $error';
+  }
+
+  @override
+  String get history => 'Historial';
+
+  @override
+  String get dashboard => 'Panel';
+
+  @override
+  String get chat => 'Chat';
 }
