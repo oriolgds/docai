@@ -123,19 +123,48 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildHeader({bool isLargeScreen = false}) {
+    final logoSize = isLargeScreen ? 100.0 : 80.0;
+    
     return Column(
       children: [
+        // Logo with transparent background
         Container(
-          width: isLargeScreen ? 100 : 80,
-          height: isLargeScreen ? 100 : 80,
+          width: logoSize,
+          height: logoSize,
           decoration: BoxDecoration(
-            color: Colors.black,
             borderRadius: BorderRadius.circular(isLargeScreen ? 24 : 20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          child: Icon(
-            Icons.medical_services_outlined,
-            color: Colors.white,
-            size: isLargeScreen ? 50 : 40,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(isLargeScreen ? 24 : 20),
+            child: Image.asset(
+              'assets/logo/logo.png',
+              width: logoSize,
+              height: logoSize,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback to icon if logo fails to load
+                return Container(
+                  width: logoSize,
+                  height: logoSize,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(isLargeScreen ? 24 : 20),
+                  ),
+                  child: Icon(
+                    Icons.medical_services_outlined,
+                    color: Colors.white,
+                    size: isLargeScreen ? 50 : 40,
+                  ),
+                );
+              },
+            ),
           ),
         ),
         SizedBox(height: isLargeScreen ? 32 : 24),
@@ -144,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
           style: TextStyle(
             fontSize: isLargeScreen ? 40 : 32,
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         SizedBox(height: isLargeScreen ? 12 : 8),
@@ -299,10 +328,10 @@ class _LoginScreenState extends State<LoginScreen> {
             context,
             MaterialPageRoute(builder: (context) => const SignUpScreen()),
           ),
-          child: const Text(
+          child: Text(
             'Sign up',
             style: TextStyle(
-              color: Colors.black,
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -484,9 +513,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Implement password reset logic here
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Password reset link sent! Check your email.'),
-                    backgroundColor: Colors.green,
+                  SnackBar(
+                    content: const Text('Password reset link sent! Check your email.'),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                   ),
                 );
               }
