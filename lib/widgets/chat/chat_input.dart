@@ -62,11 +62,7 @@ class _ChatInputState extends State<ChatInput> {
               padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
               child: Row(
                 children: [
-                  Expanded(
-                    child: _ModelDisplay(
-                      selected: current,
-                    ),
-                  ),
+                  Expanded(child: _ModelDisplay(selected: current)),
                   const SizedBox(width: 12),
                   // Botón de razonamiento
                   _ReasoningToggle(
@@ -77,7 +73,7 @@ class _ChatInputState extends State<ChatInput> {
                 ],
               ),
             ),
-            
+
             // Text input row
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -108,7 +104,9 @@ class _ChatInputState extends State<ChatInput> {
                 const SizedBox(width: 8),
                 // Send button
                 Container(
-                  margin: const EdgeInsets.only(bottom: 4), // Align with text field
+                  margin: const EdgeInsets.only(
+                    bottom: 4,
+                  ), // Align with text field
                   child: IconButton.filled(
                     onPressed: widget.isSending ? null : _submit,
                     style: IconButton.styleFrom(
@@ -124,7 +122,11 @@ class _ChatInputState extends State<ChatInput> {
                               color: Colors.white,
                             ),
                           )
-                        : const Icon(Icons.send_rounded, size: 20),
+                        : const Icon(
+                            Icons.send_rounded,
+                            size: 20,
+                            color: Colors.white,
+                          ),
                     tooltip: 'Enviar',
                   ),
                 ),
@@ -187,7 +189,9 @@ class _ReasoningToggle extends StatelessWidget {
               ),
               child: AnimatedAlign(
                 duration: const Duration(milliseconds: 200),
-                alignment: useReasoning ? Alignment.centerRight : Alignment.centerLeft,
+                alignment: useReasoning
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
                 child: Container(
                   width: 14,
                   height: 14,
@@ -210,9 +214,7 @@ class _ReasoningToggle extends StatelessWidget {
 class _ModelDisplay extends StatelessWidget {
   final ModelProfile selected;
 
-  const _ModelDisplay({
-    required this.selected,
-  });
+  const _ModelDisplay({required this.selected});
 
   @override
   Widget build(BuildContext context) {
@@ -230,10 +232,7 @@ class _ModelDisplay extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             selected.displayName, // Solo "Gaia", sin subcategoría
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -242,11 +241,8 @@ class _ModelDisplay extends StatelessWidget {
 
   Widget _buildGradientCircle(BrandName b, {double size = 20}) {
     final color = brandColor(b);
-    final colors = [
-      color,
-      Color.lerp(color, Colors.black, 0.2) ?? color,
-    ];
-    
+    final colors = [color, Color.lerp(color, Colors.black, 0.2) ?? color];
+
     return Container(
       width: size,
       height: size,
