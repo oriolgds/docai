@@ -32,7 +32,7 @@ class AppTheme {
         iconTheme: IconThemeData(color: primaryGreen),
         actionsIconTheme: IconThemeData(color: primaryGreen),
       ),
-      bottomAppBarTheme: const BottomAppBarTheme(
+      bottomAppBarTheme: const BottomAppBarThemeData(
         color: primaryGreen,
         elevation: 8,
       ),
@@ -109,7 +109,7 @@ class AppTheme {
         secondarySelectedColor: softGreen,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -156,7 +156,7 @@ class AppTheme {
         activeTrackColor: primaryGreen,
         inactiveTrackColor: paleGreen,
         thumbColor: primaryGreen,
-        overlayColor: softGreen.withOpacity(0.2),
+        overlayColor: softGreen.withValues(alpha: 0.2),
       ),
     );
   }
