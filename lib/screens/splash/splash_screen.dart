@@ -117,6 +117,8 @@ class _SplashScreenState extends State<SplashScreen>
   
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       backgroundColor: Colors.white,
       body: AnimatedBuilder(
@@ -144,30 +146,49 @@ class _SplashScreenState extends State<SplashScreen>
                                 width: 120,
                                 height: 120,
                                 decoration: BoxDecoration(
-                                  color: Colors.black,
                                   borderRadius: BorderRadius.circular(24),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
+                                      color: theme.colorScheme.primary.withOpacity(0.2),
                                       blurRadius: 20,
                                       offset: const Offset(0, 10),
                                     ),
                                   ],
                                 ),
-                                child: const Icon(
-                                  Icons.medical_services_rounded,
-                                  size: 60,
-                                  color: Colors.white,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(24),
+                                  child: Image.asset(
+                                    'assets/logo/logo.png',
+                                    width: 120,
+                                    height: 120,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      // Fallback to themed icon if logo fails to load
+                                      return Container(
+                                        width: 120,
+                                        height: 120,
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primary,
+                                          borderRadius: BorderRadius.circular(24),
+                                        ),
+                                        child: const Icon(
+                                          Icons.medical_services_rounded,
+                                          size: 60,
+                                          color: Colors.white,
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 24),
                               // App name
-                              const Text(
+                              Text(
                                 'DocAI',
                                 style: TextStyle(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                                  color: theme.colorScheme.onSurface,
                                   letterSpacing: 1.2,
                                 ),
                               ),
@@ -195,7 +216,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Animated loading indicator
+                      // Animated loading indicator with green theme
                       AnimatedBuilder(
                         animation: _loaderController,
                         builder: (context, child) {
@@ -215,9 +236,9 @@ class _SplashScreenState extends State<SplashScreen>
                                 margin: const EdgeInsets.all(3),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(17),
-                                  gradient: const LinearGradient(
-                                    colors: [Colors.black, Colors.transparent],
-                                    stops: [0.0, 0.7],
+                                  gradient: LinearGradient(
+                                    colors: [theme.colorScheme.primary, Colors.transparent],
+                                    stops: const [0.0, 0.7],
                                   ),
                                 ),
                               ),

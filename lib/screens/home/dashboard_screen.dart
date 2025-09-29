@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/supabase_service.dart';
 import '../../widgets/responsive_layout.dart';
 import '../../widgets/android_download_modal.dart';
+import '../../theme/app_theme.dart';
 import '../auth/login_screen.dart';
 import 'chat_screen.dart';
 import 'history_screen.dart';
@@ -103,6 +104,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildMobileLayout() {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -112,13 +115,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) => setState(() => _currentIndex = index),
         backgroundColor: Colors.white,
-        indicatorColor: Colors.black,
+        indicatorColor: theme.colorScheme.primary,
         destinations: _navigationDestinations,
       ),
     );
   }
 
   Widget _buildTabletLayout() {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       body: Row(
         children: [
@@ -138,10 +143,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onDestinationSelected: (index) => setState(() => _currentIndex = index),
               labelType: NavigationRailLabelType.all,
               backgroundColor: Colors.white,
-              indicatorColor: Colors.black,
+              indicatorColor: theme.colorScheme.primary,
               selectedIconTheme: const IconThemeData(color: Colors.white),
-              selectedLabelTextStyle: const TextStyle(
-                color: Colors.black,
+              selectedLabelTextStyle: TextStyle(
+                color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w600,
               ),
               destinations: [
@@ -176,6 +181,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildDesktopLayout() {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       body: Row(
         children: [
@@ -203,7 +210,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: Colors.black,
+                          color: theme.colorScheme.primary,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
@@ -278,6 +285,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Material(
@@ -289,7 +298,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? Colors.black : Colors.transparent,
+              color: isSelected ? theme.colorScheme.primary : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
