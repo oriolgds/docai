@@ -11,6 +11,7 @@ import '../../models/chat_conversation.dart';
 import '../../models/user_preferences.dart';
 import '../../config/openrouter_config.dart';
 import '../../services/supabase_service.dart';
+import '../../theme/app_theme.dart';
 
 import 'personalization_screen.dart';
 import 'history_screen.dart';
@@ -343,9 +344,9 @@ class _ChatScreenState extends State<ChatScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Historial eliminado correctamente'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Historial eliminado correctamente'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
       }
@@ -544,7 +545,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             gradient: LinearGradient(
                               colors: [
                                 brandColor(_selectedProfile.brand),
-                                Color.lerp(brandColor(_selectedProfile.brand), Colors.black, 0.2)!,
+                                Color.lerp(brandColor(_selectedProfile.brand), AppTheme.darkGreen, 0.2)!,
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -572,7 +573,6 @@ class _ChatScreenState extends State<ChatScreen> {
                       Switch(
                         value: tempReasoning,
                         onChanged: (value) => setState(() => tempReasoning = value),
-                        activeColor: brandColor(_selectedProfile.brand),
                       ),
                     ],
                   ),
@@ -697,9 +697,9 @@ class _ChatScreenState extends State<ChatScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sincronización completada'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Sincronización completada'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
       }
@@ -733,6 +733,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final accent = brandColor(_selectedProfile.brand);
     
     return Scaffold(
@@ -797,14 +798,14 @@ class _ChatScreenState extends State<ChatScreen> {
                       margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(0.08),
+                        color: theme.colorScheme.primary.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: accent.withOpacity(0.25)),
+                        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.25)),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.local_hospital_outlined, color: accent, size: 20),
+                          Icon(Icons.local_hospital_outlined, color: theme.colorScheme.primary, size: 20),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -836,26 +837,26 @@ class _ChatScreenState extends State<ChatScreen> {
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.blue.shade50, Colors.blue.shade100],
+                          colors: [theme.colorScheme.primary.withOpacity(0.1), theme.colorScheme.primary.withOpacity(0.2)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.blue.shade300),
+                        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.tune, color: Colors.blue.shade700, size: 20),
+                              Icon(Icons.tune, color: theme.colorScheme.primary, size: 20),
                               const SizedBox(width: 8),
                               Text(
                                 'Personaliza tu experiencia',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.blue.shade700,
+                                  color: theme.colorScheme.primary,
                                 ),
                               ),
                               const Spacer(),
@@ -877,7 +878,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             'Para ofrecerte recomendaciones más precisas, configura tus preferencias médicas, alergias y condiciones.',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.blue.shade800,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 10),
@@ -892,7 +893,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 child: Text(
                                   'Ahora no',
                                   style: TextStyle(
-                                    color: Colors.blue.shade600,
+                                    color: theme.colorScheme.primary,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -913,7 +914,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue.shade700,
+                                  backgroundColor: theme.colorScheme.primary,
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 ),
