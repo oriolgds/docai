@@ -528,5 +528,317 @@
   "chat": "Chat",
   "@chat": {
     "description": "Chat screen title"
+  },
+  "home": "Home",
+  "@home": {
+    "description": "Home navigation item"
+  },
+  "back": "Back",
+  "@back": {
+    "description": "Back navigation button"
+  },
+  "next": "Next",
+  "@next": {
+    "description": "Next navigation button"
+  },
+  "close": "Close",
+  "@close": {
+    "description": "Close button"
+  },
+  "done": "Done",
+  "@done": {
+    "description": "Done button"
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings menu item"
+  },
+  "search": "Search",
+  "@search": {
+    "description": "Search functionality"
+  },
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "Refresh button"
+  },
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Loading message"
+  },
+  "error": "Error",
+  "@error": {
+    "description": "Error message"
+  },
+  "success": "Success",
+  "@success": {
+    "description": "Success message"
+  },
+  "warning": "Warning",
+  "@warning": {
+    "description": "Warning message"
+  },
+  "info": "Information",
+  "@info": {
+    "description": "Information message"
+  },
+  "yes": "Yes",
+  "@yes": {
+    "description": "Affirmative response"
+  },
+  "no": "No",
+  "@no": {
+    "description": "Negative response"
+  },
+  "ok": "OK",
+  "@ok": {
+    "description": "OK button"
+  },
+  "confirm": "Confirm",
+  "@confirm": {
+    "description": "Confirm button"
+  },
+  "medications": "Medications",
+  "@medications": {
+    "description": "Medications preset"
+  },
+  "naturalRemedies": "Natural Remedies",
+  "@naturalRemedies": {
+    "description": "Natural remedies preset"
+  },
+  "symptoms": "Symptoms",
+  "@symptoms": {
+    "description": "Symptoms field"
+  },
+  "diagnosis": "Diagnosis",
+  "@diagnosis": {
+    "description": "Diagnosis information"
+  },
+  "treatment": "Treatment",
+  "@treatment": {
+    "description": "Treatment information"
+  },
+  "prescription": "Prescription",
+  "@prescription": {
+    "description": "Prescription information"
+  },
+  "dosage": "Dosage",
+  "@dosage": {
+    "description": "Dosage information"
+  },
+  "sideEffects": "Side Effects",
+  "@sideEffects": {
+    "description": "Side effects information"
+  },
+  "contraindications": "Contraindications",
+  "@contraindications": {
+    "description": "Contraindications information"
+  },
+  "medicalHistory": "Medical History",
+  "@medicalHistory": {
+    "description": "Medical history field"
+  },
+  "familyHistory": "Family History",
+  "@familyHistory": {
+    "description": "Family history field"
+  },
+  "allergicReactions": "Allergic Reactions",
+  "@allergicReactions": {
+    "description": "Allergic reactions field"
+  },
+  "typeYourMessage": "Type your message...",
+  "@typeYourMessage": {
+    "description": "Chat input placeholder"
+  },
+  "sendMessage": "Send message",
+  "@sendMessage": {
+    "description": "Send message button"
+  },
+  "askDocAI": "Ask DocAI",
+  "@askDocAI": {
+    "description": "Ask DocAI button"
+  },
+  "thinking": "Thinking...",
+  "@thinking": {
+    "description": "AI thinking message"
+  },
+  "processing": "Processing...",
+  "@processing": {
+    "description": "Processing message"
+  },
+  "generatingResponse": "Generating response...",
+  "@generatingResponse": {
+    "description": "Response generation message"
+  },
+  "noMessagesYet": "No messages yet",
+  "@noMessagesYet": {
+    "description": "Empty chat state"
+  },
+  "startConversation": "Start a conversation with DocAI",
+  "@startConversation": {
+    "description": "Empty chat call to action"
+  },
+  "conversationHistory": "Conversation History",
+  "@conversationHistory": {
+    "description": "Conversation history title"
+  },
+  "messageOptions": "Message Options",
+  "@messageOptions": {
+    "description": "Message options menu"
+  },
+  "copyMessage": "Copy Message",
+  "@copyMessage": {
+    "description": "Copy message option"
+  },
+  "reportMessage": "Report Message",
+  "@reportMessage": {
+    "description": "Report message option"
+  },
+  "deleteMessage": "Delete Message",
+  "@deleteMessage": {
+    "description": "Delete message option"
+  },
+  "noHistoryYet": "No history yet",
+  "@noHistoryYet": {
+    "description": "Empty history state"
+  },
+  "clearHistory": "Clear History",
+  "@clearHistory": {
+    "description": "Clear history button"
+  },
+  "exportHistory": "Export History",
+  "@exportHistory": {
+    "description": "Export history button"
+  },
+  "importHistory": "Import History",
+  "@importHistory": {
+    "description": "Import history button"
+  },
+  "deleteConversation": "Delete Conversation",
+  "@deleteConversation": {
+    "description": "Delete conversation button"
+  },
+  "conversationDeleted": "Conversation deleted",
+  "@conversationDeleted": {
+    "description": "Conversation deleted message"
+  },
+  "historyCleared": "History cleared",
+  "@historyCleared": {
+    "description": "History cleared message"
+  },
+  "lastActivity": "Last activity",
+  "@lastActivity": {
+    "description": "Last activity label"
+  },
+  "today": "Today",
+  "@today": {
+    "description": "Today date label"
+  },
+  "yesterday": "Yesterday",
+  "@yesterday": {
+    "description": "Yesterday date label"
+  },
+  "thisWeek": "This week",
+  "@thisWeek": {
+    "description": "This week date label"
+  },
+  "lastWeek": "Last week",
+  "@lastWeek": {
+    "description": "Last week date label"
+  },
+  "thisMonth": "This month",
+  "@thisMonth": {
+    "description": "This month date label"
+  },
+  "older": "Older",
+  "@older": {
+    "description": "Older date label"
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Language setting"
+  },
+  "changeLanguage": "Change Language",
+  "@changeLanguage": {
+    "description": "Change language option"
+  },
+  "languageChanged": "Language changed",
+  "@languageChanged": {
+    "description": "Language changed confirmation"
+  },
+  "selectLanguage": "Select Language",
+  "@selectLanguage": {
+    "description": "Select language prompt"
+  },
+  "systemLanguage": "System Language",
+  "@systemLanguage": {
+    "description": "System language option"
+  },
+  "somethingWentWrong": "Something went wrong",
+  "@somethingWentWrong": {
+    "description": "Generic error message"
+  },
+  "networkError": "Network error",
+  "@networkError": {
+    "description": "Network error message"
+  },
+  "connectionFailed": "Connection failed",
+  "@connectionFailed": {
+    "description": "Connection failed message"
+  },
+  "tryAgain": "Try again",
+  "@tryAgain": {
+    "description": "Try again button"
+  },
+  "requestTimeout": "Request timeout",
+  "@requestTimeout": {
+    "description": "Request timeout message"
+  },
+  "serverError": "Server error",
+  "@serverError": {
+    "description": "Server error message"
+  },
+  "notFound": "Not found",
+  "@notFound": {
+    "description": "Not found error message"
+  },
+  "unauthorized": "Unauthorized",
+  "@unauthorized": {
+    "description": "Unauthorized error message"
+  },
+  "forbidden": "Forbidden",
+  "@forbidden": {
+    "description": "Forbidden error message"
+  },
+  "badRequest": "Bad request",
+  "@badRequest": {
+    "description": "Bad request error message"
+  },
+  "medicalDisclaimer": "Medical Disclaimer",
+  "@medicalDisclaimer": {
+    "description": "Medical disclaimer title"
+  },
+  "medicalDisclaimerText": "DocAI provides general health information and should not replace professional medical advice, diagnosis, or treatment. Always consult with qualified healthcare providers for medical concerns.",
+  "@medicalDisclaimerText": {
+    "description": "Medical disclaimer text"
+  },
+  "emergencyWarning": "Emergency Warning",
+  "@emergencyWarning": {
+    "description": "Emergency warning title"
+  },
+  "emergencyWarningText": "If you are experiencing a medical emergency, please call emergency services immediately or go to the nearest emergency room.",
+  "@emergencyWarningText": {
+    "description": "Emergency warning text"
+  },
+  "notMedicalAdvice": "This is not medical advice",
+  "@notMedicalAdvice": {
+    "description": "Not medical advice disclaimer"
+  },
+  "consultDoctor": "Please consult a doctor",
+  "@consultDoctor": {
+    "description": "Consult doctor advice"
+  },
+  "seekImmediateHelp": "Seek immediate medical help",
+  "@seekImmediateHelp": {
+    "description": "Seek immediate help advice"
   }
 }
