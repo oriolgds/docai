@@ -107,8 +107,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                   children: [
                     const SizedBox(height: 8),
 
-                    // Enhanced Profile Header
-                    _buildProfileHeader(l10n),
+                    // Compact Profile Header
+                    _buildCompactProfileHeader(l10n),
                     const SizedBox(height: 32),
 
                     // Medical Preferences Section
@@ -137,27 +137,28 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildProfileHeader(AppLocalizations l10n) {
+  Widget _buildCompactProfileHeader(AppLocalizations l10n) {
     return Container(
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(20), // Reducido de 28 a 20
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20), // Reducido de 24 a 20
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: Colors.black.withOpacity(0.03), // Reducido de 0.04 a 0.03
+            blurRadius: 16, // Reducido de 20 a 16
+            offset: const Offset(0, 6), // Reducido de 8 a 6
           ),
         ],
       ),
-      child: Column(
+      child: Row( // Cambio de Column a Row para layout horizontal más compacto
         children: [
+          // Avatar más pequeño
           Hero(
             tag: 'profile-avatar',
             child: Container(
-              width: 96,
-              height: 96,
+              width: 72, // Reducido de 96 a 72
+              height: 72,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF2D3436), Color(0xFF636E72)],
@@ -167,40 +168,48 @@ class _ProfileScreenState extends State<ProfileScreen>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+                    color: Colors.black.withOpacity(0.12), // Reducido de 0.15
+                    blurRadius: 16, // Reducido de 20
+                    offset: const Offset(0, 6), // Reducido de 8
                   ),
                 ],
               ),
-              child: const Icon(Icons.person, color: Colors.white, size: 48),
+              child: const Icon(Icons.person, color: Colors.white, size: 36), // Reducido de 48
             ),
           ),
-          const SizedBox(height: 20),
-          Text(
-            SupabaseService.currentUser?.userMetadata?['full_name'] ??
-                l10n.user,
-            style: const TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.5,
-              color: Color(0xFF2D3436),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FA),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              SupabaseService.currentUser?.email ?? l10n.noEmail,
-              style: const TextStyle(
-                color: Color(0xFF6C757D),
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
+          const SizedBox(width: 16),
+          // Info del usuario
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  SupabaseService.currentUser?.userMetadata?['full_name'] ??
+                      l10n.user,
+                  style: const TextStyle(
+                    fontSize: 22, // Reducido de 26
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                    color: Color(0xFF2D3436),
+                  ),
+                ),
+                const SizedBox(height: 4), // Reducido de 6
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Reducido
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FA),
+                    borderRadius: BorderRadius.circular(16), // Reducido de 20
+                  ),
+                  child: Text(
+                    SupabaseService.currentUser?.email ?? l10n.noEmail,
+                    style: const TextStyle(
+                      color: Color(0xFF6C757D),
+                      fontSize: 13, // Reducido de 15
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
