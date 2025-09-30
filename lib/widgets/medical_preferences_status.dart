@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user_medical_preferences.dart';
 import '../services/medical_preferences_service.dart';
+import '../l10n/generated/app_localizations.dart';
 
 class MedicalPreferencesStatus extends StatefulWidget {
   const MedicalPreferencesStatus({Key? key}) : super(key: key);
@@ -33,6 +34,8 @@ class _MedicalPreferencesStatusState extends State<MedicalPreferencesStatus> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (_isLoading) {
       return const Card(
         color: Colors.black54,
@@ -66,8 +69,8 @@ class _MedicalPreferencesStatusState extends State<MedicalPreferencesStatus> {
                 Expanded(
                   child: Text(
                     _preferences != null
-                        ? 'Perfil Médico Configurado'
-                        : 'Perfil Médico Incompleto',
+                        ? l10n.medicalProfileConfigured
+                        : l10n.medicalProfileIncomplete,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -80,8 +83,8 @@ class _MedicalPreferencesStatusState extends State<MedicalPreferencesStatus> {
             const SizedBox(height: 8),
             Text(
               _preferences != null
-                  ? 'Tu perfil médico está configurado. DocAI puede proporcionar consejos más personalizados.'
-                  : 'Configura tu perfil médico para recibir consejos más precisos y personalizados.',
+                  ? l10n.medicalProfileConfiguredDescription
+                  : l10n.medicalProfileIncompleteDescription,
               style: TextStyle(
                 color: Colors.grey[200],
                 fontSize: 14,
@@ -99,36 +102,37 @@ class _MedicalPreferencesStatusState extends State<MedicalPreferencesStatus> {
 
   Widget _buildPreferencesSummary() {
     if (_preferences == null) return const SizedBox.shrink();
-
+    
+    final l10n = AppLocalizations.of(context)!;
     final summary = <String>[];
 
     // Información básica
     if (_preferences!.dateOfBirth != null) {
       final age = DateTime.now().difference(_preferences!.dateOfBirth!).inDays ~/ 365;
-      summary.add('$age años');
+      summary.add(l10n.yearsOld(age));
     }
 
     // Alergias
     if (_preferences!.allergies.isNotEmpty) {
-      summary.add('${_preferences!.allergies.length} alergias');
+      summary.add(l10n.allergiesCount(_preferences!.allergies.length));
     }
 
     // Preferencias de medicina
     switch (_preferences!.medicinePreference) {
       case 'natural':
-        summary.add('Medicina natural');
+        summary.add(l10n.naturalMedicine);
         break;
       case 'conventional':
-        summary.add('Medicina convencional');
+        summary.add(l10n.conventionalMedicine);
         break;
       case 'both':
-        summary.add('Medicina integral');
+        summary.add(l10n.integralMedicine);
         break;
     }
 
     // Condiciones crónicas
     if (_preferences!.chronicConditions.isNotEmpty) {
-      summary.add('${_preferences!.chronicConditions.length} condiciones');
+      summary.add(l10n.conditionsCount(_preferences!.chronicConditions.length));
     }
 
     return Wrap(

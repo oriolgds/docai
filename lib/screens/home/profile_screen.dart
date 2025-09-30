@@ -240,10 +240,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               ),
               const SizedBox(width: 16),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Medical Preferences',
-                  style: TextStyle(
+                  l10n.medicalPreferences,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF2D3436),

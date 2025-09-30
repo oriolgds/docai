@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import '../screens/medical_preferences_screen.dart';
+import '../l10n/generated/app_localizations.dart';
 
 class MedicalPreferencesButton extends StatelessWidget {
   final VoidCallback? onPreferencesUpdated;
 
   const MedicalPreferencesButton({Key? key, this.onPreferencesUpdated})
-    : super(key: key);
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Card(
       color: Colors.grey[900],
       margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
@@ -25,17 +28,17 @@ class MedicalPreferencesButton extends StatelessWidget {
             size: 24,
           ),
         ),
-        title: const Text(
-          'Personalización Médica',
-          style: TextStyle(
+        title: Text(
+          l10n.medicalPersonalization,
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 16,
             fontWeight: FontWeight.w500,
           ),
         ),
-        subtitle: const Text(
-          'Configura alergias, preferencias de tratamiento y más',
-          style: TextStyle(color: Colors.grey, fontSize: 14),
+        subtitle: Text(
+          l10n.configureMedicalPreferences,
+          style: const TextStyle(color: Colors.grey, fontSize: 14),
         ),
         trailing: const Icon(
           Icons.arrow_forward_ios,

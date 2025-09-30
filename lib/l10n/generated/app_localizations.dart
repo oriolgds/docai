@@ -829,6 +829,546 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Chat'**
   String get chat;
+
+  /// Home navigation item
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// Back navigation button
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// Next navigation button
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// Close button
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// Done button
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// Settings menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// Search functionality
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get search;
+
+  /// Refresh button
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// Loading message
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get loading;
+
+  /// Error message
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get error;
+
+  /// Success message
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get success;
+
+  /// Warning message
+  ///
+  /// In en, this message translates to:
+  /// **'Warning'**
+  String get warning;
+
+  /// Information message
+  ///
+  /// In en, this message translates to:
+  /// **'Information'**
+  String get info;
+
+  /// Affirmative response
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get yes;
+
+  /// Negative response
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get no;
+
+  /// OK button
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// Confirm button
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// Medications preset
+  ///
+  /// In en, this message translates to:
+  /// **'Medications'**
+  String get medications;
+
+  /// Natural remedies preset
+  ///
+  /// In en, this message translates to:
+  /// **'Natural Remedies'**
+  String get naturalRemedies;
+
+  /// Symptoms field
+  ///
+  /// In en, this message translates to:
+  /// **'Symptoms'**
+  String get symptoms;
+
+  /// Diagnosis information
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnosis'**
+  String get diagnosis;
+
+  /// Treatment information
+  ///
+  /// In en, this message translates to:
+  /// **'Treatment'**
+  String get treatment;
+
+  /// Prescription information
+  ///
+  /// In en, this message translates to:
+  /// **'Prescription'**
+  String get prescription;
+
+  /// Dosage information
+  ///
+  /// In en, this message translates to:
+  /// **'Dosage'**
+  String get dosage;
+
+  /// Side effects information
+  ///
+  /// In en, this message translates to:
+  /// **'Side Effects'**
+  String get sideEffects;
+
+  /// Contraindications information
+  ///
+  /// In en, this message translates to:
+  /// **'Contraindications'**
+  String get contraindications;
+
+  /// Medical history field
+  ///
+  /// In en, this message translates to:
+  /// **'Medical History'**
+  String get medicalHistory;
+
+  /// Family history field
+  ///
+  /// In en, this message translates to:
+  /// **'Family History'**
+  String get familyHistory;
+
+  /// Allergic reactions field
+  ///
+  /// In en, this message translates to:
+  /// **'Allergic Reactions'**
+  String get allergicReactions;
+
+  /// Chat input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Type your message...'**
+  String get typeYourMessage;
+
+  /// Send message button
+  ///
+  /// In en, this message translates to:
+  /// **'Send message'**
+  String get sendMessage;
+
+  /// Ask DocAI button
+  ///
+  /// In en, this message translates to:
+  /// **'Ask DocAI'**
+  String get askDocAI;
+
+  /// AI thinking message
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking...'**
+  String get thinking;
+
+  /// Processing message
+  ///
+  /// In en, this message translates to:
+  /// **'Processing...'**
+  String get processing;
+
+  /// Response generation message
+  ///
+  /// In en, this message translates to:
+  /// **'Generating response...'**
+  String get generatingResponse;
+
+  /// Empty chat state
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get noMessagesYet;
+
+  /// Empty chat call to action
+  ///
+  /// In en, this message translates to:
+  /// **'Start a conversation with DocAI'**
+  String get startConversation;
+
+  /// Conversation history title
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation History'**
+  String get conversationHistory;
+
+  /// Message options menu
+  ///
+  /// In en, this message translates to:
+  /// **'Message Options'**
+  String get messageOptions;
+
+  /// Copy message option
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Message'**
+  String get copyMessage;
+
+  /// Report message option
+  ///
+  /// In en, this message translates to:
+  /// **'Report Message'**
+  String get reportMessage;
+
+  /// Delete message option
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Message'**
+  String get deleteMessage;
+
+  /// Empty history state
+  ///
+  /// In en, this message translates to:
+  /// **'No history yet'**
+  String get noHistoryYet;
+
+  /// Clear history button
+  ///
+  /// In en, this message translates to:
+  /// **'Clear History'**
+  String get clearHistory;
+
+  /// Export history button
+  ///
+  /// In en, this message translates to:
+  /// **'Export History'**
+  String get exportHistory;
+
+  /// Import history button
+  ///
+  /// In en, this message translates to:
+  /// **'Import History'**
+  String get importHistory;
+
+  /// Delete conversation button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Conversation'**
+  String get deleteConversation;
+
+  /// Conversation deleted message
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation deleted'**
+  String get conversationDeleted;
+
+  /// History cleared message
+  ///
+  /// In en, this message translates to:
+  /// **'History cleared'**
+  String get historyCleared;
+
+  /// Last activity label
+  ///
+  /// In en, this message translates to:
+  /// **'Last activity'**
+  String get lastActivity;
+
+  /// Today date label
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// Yesterday date label
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
+
+  /// This week date label
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get thisWeek;
+
+  /// Last week date label
+  ///
+  /// In en, this message translates to:
+  /// **'Last week'**
+  String get lastWeek;
+
+  /// This month date label
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get thisMonth;
+
+  /// Older date label
+  ///
+  /// In en, this message translates to:
+  /// **'Older'**
+  String get older;
+
+  /// Language setting
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// Change language option
+  ///
+  /// In en, this message translates to:
+  /// **'Change Language'**
+  String get changeLanguage;
+
+  /// Language changed confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Language changed'**
+  String get languageChanged;
+
+  /// Select language prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language'**
+  String get selectLanguage;
+
+  /// System language option
+  ///
+  /// In en, this message translates to:
+  /// **'System Language'**
+  String get systemLanguage;
+
+  /// Generic error message
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get somethingWentWrong;
+
+  /// Network error message
+  ///
+  /// In en, this message translates to:
+  /// **'Network error'**
+  String get networkError;
+
+  /// Connection failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed'**
+  String get connectionFailed;
+
+  /// Try again button
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// Request timeout message
+  ///
+  /// In en, this message translates to:
+  /// **'Request timeout'**
+  String get requestTimeout;
+
+  /// Server error message
+  ///
+  /// In en, this message translates to:
+  /// **'Server error'**
+  String get serverError;
+
+  /// Not found error message
+  ///
+  /// In en, this message translates to:
+  /// **'Not found'**
+  String get notFound;
+
+  /// Unauthorized error message
+  ///
+  /// In en, this message translates to:
+  /// **'Unauthorized'**
+  String get unauthorized;
+
+  /// Forbidden error message
+  ///
+  /// In en, this message translates to:
+  /// **'Forbidden'**
+  String get forbidden;
+
+  /// Bad request error message
+  ///
+  /// In en, this message translates to:
+  /// **'Bad request'**
+  String get badRequest;
+
+  /// Medical disclaimer title
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Disclaimer'**
+  String get medicalDisclaimer;
+
+  /// Medical disclaimer text
+  ///
+  /// In en, this message translates to:
+  /// **'DocAI provides general health information and should not replace professional medical advice, diagnosis, or treatment. Always consult with qualified healthcare providers for medical concerns.'**
+  String get medicalDisclaimerText;
+
+  /// Emergency warning title
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Warning'**
+  String get emergencyWarning;
+
+  /// Emergency warning text
+  ///
+  /// In en, this message translates to:
+  /// **'If you are experiencing a medical emergency, please call emergency services immediately or go to the nearest emergency room.'**
+  String get emergencyWarningText;
+
+  /// Not medical advice disclaimer
+  ///
+  /// In en, this message translates to:
+  /// **'This is not medical advice'**
+  String get notMedicalAdvice;
+
+  /// Consult doctor advice
+  ///
+  /// In en, this message translates to:
+  /// **'Please consult a doctor'**
+  String get consultDoctor;
+
+  /// Seek immediate help advice
+  ///
+  /// In en, this message translates to:
+  /// **'Seek immediate medical help'**
+  String get seekImmediateHelp;
+
+  /// Medical profile configured status title
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Profile Configured'**
+  String get medicalProfileConfigured;
+
+  /// Medical profile incomplete status title
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Profile Incomplete'**
+  String get medicalProfileIncomplete;
+
+  /// Medical profile configured status description
+  ///
+  /// In en, this message translates to:
+  /// **'Your medical profile is configured. DocAI can provide more personalized advice.'**
+  String get medicalProfileConfiguredDescription;
+
+  /// Medical profile incomplete status description
+  ///
+  /// In en, this message translates to:
+  /// **'Configure your medical profile to receive more accurate and personalized advice.'**
+  String get medicalProfileIncompleteDescription;
+
+  /// Age display format
+  ///
+  /// In en, this message translates to:
+  /// **'{age} years old'**
+  String yearsOld(int age);
+
+  /// Allergies count format
+  ///
+  /// In en, this message translates to:
+  /// **'{count} allergies'**
+  String allergiesCount(int count);
+
+  /// Natural medicine preference
+  ///
+  /// In en, this message translates to:
+  /// **'Natural medicine'**
+  String get naturalMedicine;
+
+  /// Conventional medicine preference
+  ///
+  /// In en, this message translates to:
+  /// **'Conventional medicine'**
+  String get conventionalMedicine;
+
+  /// Both medicine types preference
+  ///
+  /// In en, this message translates to:
+  /// **'Integral medicine'**
+  String get integralMedicine;
+
+  /// Conditions count format
+  ///
+  /// In en, this message translates to:
+  /// **'{count} conditions'**
+  String conditionsCount(int count);
+
+  /// Medical personalization button title
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Personalization'**
+  String get medicalPersonalization;
+
+  /// Medical personalization button subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Configure allergies, treatment preferences and more'**
+  String get configureMedicalPreferences;
 }
 
 class _AppLocalizationsDelegate

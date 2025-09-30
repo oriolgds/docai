@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/chat_conversation.dart';
 import '../../services/chat_state_manager.dart';
 import '../../theme/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'chat_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -64,6 +65,8 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
   }
 
   Future<void> _forceRefresh() async {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (!mounted) return;
     
     try {
@@ -71,13 +74,15 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error refrescando: $e')),
+          SnackBar(content: Text('${l10n.error}: $e')),
         );
       }
     }
   }
 
   Future<void> _toggleCloudSync(bool enabled, [StateSetter? modalSetState]) async {
+    final l10n = AppLocalizations.of(context)!;
+    
     try {
       await _stateManager.toggleCloudSync(enabled);
       
@@ -91,21 +96,23 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(enabled 
-              ? 'Sincronización en la nube habilitada' 
-              : 'Sincronización en la nube deshabilitada'),
+              ? l10n.cloudSyncEnabled 
+              : l10n.cloudSyncDisabled),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('${l10n.error}: $e')),
         );
       }
     }
   }
 
   Future<void> _forceSyncNow([StateSetter? modalSetState]) async {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (!mounted) return;
     
     try {
@@ -120,7 +127,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
         setState(() {}); // Actualizar la pantalla principal
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Sincronización completada'),
+            content: Text(l10n.syncCompleted),
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
@@ -129,7 +136,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error en sincronización: $e'),
+            content: Text(l10n.syncErrorMessage(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -138,20 +145,22 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
   }
 
   Future<void> _deleteConversation(ChatConversation conversation) async {
+    final l10n = AppLocalizations.of(context)!;
+    
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar conversación'),
+        title: Text(l10n.deleteConversation),
         content: Text('¿Estás seguro de que quieres eliminar "${conversation.title}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Eliminar'),
+            child: Text(l10n.deleteMessage),
           ),
         ],
       ),
@@ -163,13 +172,13 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Conversación eliminada')),
+            SnackBar(content: Text(l10n.conversationDeleted)),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error eliminando conversación: $e')),
+            SnackBar(content: Text('${l10n.error}: $e')),
           );
         }
       }
@@ -177,19 +186,17 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
   }
 
   Future<void> _clearAllHistory() async {
+    final l10n = AppLocalizations.of(context)!;
+    
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar todo el historial'),
-        content: const Text(
-          '¿Estás seguro de que quieres eliminar todo el historial de chats? '
-          'Esta acción no se puede deshacer y eliminará todas las conversaciones '
-          'tanto localmente como en la nube.',
-        ),
+        title: Text(l10n.deleteHistory),
+        content: Text(l10n.deleteHistoryConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -197,7 +204,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Eliminar todo'),
+            child: Text(l10n.deleteAll),
           ),
         ],
       ),
@@ -209,9 +216,9 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       // Mostrar indicador de carga
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Eliminando historial...'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(l10n.deletingHistory),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -222,7 +229,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Historial eliminado correctamente'),
+            content: Text(l10n.historyDeletedSuccess),
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
@@ -231,7 +238,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al eliminar historial: ${e.toString()}'),
+            content: Text(l10n.errorDeletingHistory(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -284,6 +291,8 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
 
   // Modal para opciones avanzadas
   void _showAdvancedOptionsModal() {
+    final l10n = AppLocalizations.of(context)!;
+    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -312,9 +321,9 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
               ),
               const SizedBox(height: 20),
               
-              const Text(
-                'Opciones avanzadas',
-                style: TextStyle(
+              Text(
+                l10n.settings,
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
@@ -335,7 +344,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                         _forceRefresh();
                       },
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Actualizar'),
+                      label: Text(l10n.refresh),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -346,7 +355,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                         _startNewConversation();
                       },
                       icon: const Icon(Icons.chat),
-                      label: const Text('Nueva'),
+                      label: Text(l10n.newConversation),
                     ),
                   ),
                 ],
@@ -362,9 +371,9 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                       _clearAllHistory();
                     },
                     icon: const Icon(Icons.delete_sweep, color: Colors.red),
-                    label: const Text(
-                      'Eliminar todo el historial',
-                      style: TextStyle(color: Colors.red),
+                    label: Text(
+                      l10n.clearHistory,
+                      style: const TextStyle(color: Colors.red),
                     ),
                   ),
                 ),
@@ -379,6 +388,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
   }
 
   Widget _buildSyncSettings([StateSetter? modalSetState]) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final cloudSyncEnabled = _stateManager.cloudSyncEnabled;
     final isSyncing = _stateManager.isSyncing;
@@ -463,7 +473,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                 IconButton(
                   icon: Icon(Icons.refresh, size: 20, color: theme.colorScheme.primary),
                   onPressed: () => _forceSyncNow(modalSetState),
-                  tooltip: 'Sincronizar ahora',
+                  tooltip: l10n.refresh,
                 ),
               ],
             ],
@@ -511,16 +521,18 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
   }
 
   String _getSyncStatusText(bool cloudSyncEnabled, bool isSyncing, DateTime? lastSyncTime, bool hasError) {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (hasError) {
-      return 'Error en la sincronización. Toca refrescar para intentar de nuevo.';
+      return l10n.syncError;
     }
     
     if (!cloudSyncEnabled) {
-      return 'Tus conversaciones se guardan solo en este dispositivo';
+      return l10n.conversationsLocalOnly;
     }
     
     if (isSyncing) {
-      return 'Sincronizando con la nube...';
+      return l10n.syncing;
     }
     
     if (lastSyncTime != null) {
@@ -528,25 +540,26 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       final difference = now.difference(lastSyncTime);
       
       if (difference.inMinutes < 1) {
-        return 'Sincronizado hace menos de un minuto';
+        return l10n.syncedLessThanMinute;
       } else if (difference.inMinutes < 60) {
-        return 'Última sincronización: hace ${difference.inMinutes} minutos';
+        return l10n.syncedMinutesAgo(difference.inMinutes);
       } else if (difference.inHours < 24) {
-        return 'Última sincronización: hace ${difference.inHours} horas';
+        return l10n.syncedHoursAgo(difference.inHours);
       } else {
-        return 'Última sincronización: hace ${difference.inDays} días';
+        return l10n.syncedDaysAgo(difference.inDays);
       }
     }
     
-    return 'Tus conversaciones se sincronizan automáticamente en la nube';
+    return l10n.autoSyncEnabled;
   }
 
   Widget _buildCompactConversationCard(ChatConversation conversation) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final hasUserMessages = conversation.messages.any((m) => m.role.name == 'user');
     final lastUserMessage = hasUserMessages 
         ? conversation.messages.lastWhere((m) => m.role.name == 'user').content
-        : 'Sin mensajes';
+        : l10n.noMessagesYet;
     
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -681,14 +694,14 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                     }
                   },
                   itemBuilder: (context) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'delete',
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.delete_outline, color: Colors.red, size: 16),
-                          SizedBox(width: 8),
-                          Text('Eliminar', style: TextStyle(color: Colors.red, fontSize: 13)),
+                          const Icon(Icons.delete_outline, color: Colors.red, size: 16),
+                          const SizedBox(width: 8),
+                          Text(l10n.deleteMessage, style: const TextStyle(color: Colors.red, fontSize: 13)),
                         ],
                       ),
                     ),
@@ -703,13 +716,14 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
   }
 
   String _formatDate(DateTime date) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final difference = now.difference(date);
     
     if (difference.inDays == 0) {
       return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     } else if (difference.inDays == 1) {
-      return 'Ayer';
+      return l10n.yesterday;
     } else if (difference.inDays < 7) {
       const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
       return days[date.weekday - 1];
@@ -719,6 +733,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
   }
 
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     
     return Center(
@@ -739,7 +754,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
           ),
           const SizedBox(height: 24),
           Text(
-            'No hay conversaciones',
+            l10n.noHistoryYet,
             style: TextStyle(
               fontSize: 20,
               color: Colors.grey.shade700,
@@ -748,7 +763,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
           ),
           const SizedBox(height: 8),
           Text(
-            'Tus conversaciones con Docai aparecerán aquí',
+            l10n.startConversation,
             style: TextStyle(
               color: Colors.grey.shade500,
               fontSize: 14,
@@ -759,7 +774,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
           ElevatedButton.icon(
             onPressed: _startNewConversation,
             icon: const Icon(Icons.chat),
-            label: const Text('Iniciar nueva conversación'),
+            label: Text(l10n.startConversation),
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.primary,
               foregroundColor: Colors.white,
@@ -776,6 +791,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final conversations = _stateManager.conversations;
     final isLoading = _stateManager.isLoading;
@@ -783,9 +799,9 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text(
-          'Historial',
-          style: TextStyle(
+        title: Text(
+          l10n.history,
+          style: const TextStyle(
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -809,7 +825,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
               ),
             ),
             onPressed: _showAdvancedOptionsModal,
-            tooltip: 'Opciones avanzadas',
+            tooltip: l10n.settings,
           ),
           const SizedBox(width: 8),
         ],
@@ -832,6 +848,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       floatingActionButton: FloatingActionButton(
         onPressed: _startNewConversation,
         elevation: 4,
+        tooltip: l10n.newConversation,
         child: const Icon(Icons.add),
       ),
     );

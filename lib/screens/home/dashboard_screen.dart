@@ -7,6 +7,7 @@ import '../auth/login_screen.dart';
 import 'chat_screen.dart';
 import 'history_screen.dart';
 import 'profile_screen.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -63,23 +64,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  final List<NavigationDestination> _navigationDestinations = [
-    const NavigationDestination(
-      icon: Icon(Icons.chat_outlined),
-      selectedIcon: Icon(Icons.chat, color: Colors.white),
-      label: 'Chat',
-    ),
-    const NavigationDestination(
-      icon: Icon(Icons.history_outlined),
-      selectedIcon: Icon(Icons.history, color: Colors.white),
-      label: 'History',
-    ),
-    const NavigationDestination(
-      icon: Icon(Icons.person_outline),
-      selectedIcon: Icon(Icons.person, color: Colors.white),
-      label: 'Profile',
-    ),
-  ];
+  List<NavigationDestination> _getNavigationDestinations(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
+    return [
+      NavigationDestination(
+        icon: const Icon(Icons.chat_outlined),
+        selectedIcon: const Icon(Icons.chat, color: Colors.white),
+        label: l10n.chat,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.history_outlined),
+        selectedIcon: const Icon(Icons.history, color: Colors.white),
+        label: l10n.history,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.person_outline),
+        selectedIcon: const Icon(Icons.person, color: Colors.white),
+        label: l10n.profile,
+      ),
+    ];
+  }
 
   void _validateSession() {
     final user = SupabaseService.currentUser;
@@ -116,13 +121,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onDestinationSelected: (index) => setState(() => _currentIndex = index),
         backgroundColor: Colors.white,
         indicatorColor: theme.colorScheme.primary,
-        destinations: _navigationDestinations,
+        destinations: _getNavigationDestinations(context),
       ),
     );
   }
 
   Widget _buildTabletLayout() {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
       body: Row(
@@ -153,17 +159,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 NavigationRailDestination(
                   icon: const Icon(Icons.chat_outlined),
                   selectedIcon: const Icon(Icons.chat),
-                  label: const Text('Chat'),
+                  label: Text(l10n.chat),
                 ),
                 NavigationRailDestination(
                   icon: const Icon(Icons.history_outlined),
                   selectedIcon: const Icon(Icons.history),
-                  label: const Text('History'),
+                  label: Text(l10n.history),
                 ),
                 NavigationRailDestination(
                   icon: const Icon(Icons.person_outline),
                   selectedIcon: const Icon(Icons.person),
-                  label: const Text('Profile'),
+                  label: Text(l10n.profile),
                 ),
               ],
             ),
@@ -182,6 +188,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildDesktopLayout() {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
       body: Row(
@@ -220,9 +227,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Text(
-                        'DocAI',
-                        style: TextStyle(
+                      Text(
+                        l10n.appTitle,
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
@@ -241,21 +248,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         _buildDesktopNavItem(
                           icon: Icons.chat_outlined,
                           selectedIcon: Icons.chat,
-                          label: 'Chat',
+                          label: l10n.chat,
                           isSelected: _currentIndex == 0,
                           onTap: () => setState(() => _currentIndex = 0),
                         ),
                         _buildDesktopNavItem(
                           icon: Icons.history_outlined,
                           selectedIcon: Icons.history,
-                          label: 'Historial',
+                          label: l10n.history,
                           isSelected: _currentIndex == 1,
                           onTap: () => setState(() => _currentIndex = 1),
                         ),
                         _buildDesktopNavItem(
                           icon: Icons.person_outline,
                           selectedIcon: Icons.person,
-                          label: 'Perfil',
+                          label: l10n.profile,
                           isSelected: _currentIndex == 2,
                           onTap: () => setState(() => _currentIndex = 2),
                         ),

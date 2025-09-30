@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/chat_input.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 import '../../services/openrouter_service.dart';
 import '../../services/chat_state_manager.dart';
@@ -44,6 +45,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _useReasoning = false;
   bool _showFirstTimeWarning = false;
   UserPreferences? _userPreferences;
+  bool _isInitialized = false; // Flag to track initialization
   
   // Variables para el historial
   ChatConversation? _currentConversation;
@@ -68,10 +70,10 @@ class _ChatScreenState extends State<ChatScreen> {
       _hasFirstMessage = _messages.any((m) => m.role == ChatRole.user);
       _showDisclaimer = _messages.isEmpty;
     } else {
-      // Nueva conversación
+      // Nueva conversación - no agregar mensaje inicial aquí
       _messages = [];
       _conversationId = null; // Se asignará cuando se cree la conversación
-      _addInitialAssistantMessage();
+      // El mensaje inicial se agregará en didChangeDependencies cuando las localizaciones estén disponibles
     }
     
     _checkFirstTimeUser();
@@ -79,6 +81,17 @@ class _ChatScreenState extends State<ChatScreen> {
     
     // Escuchar cambios en el state manager para manejar conversaciones externas
     _stateManager.addListener(_onStateManagerChanged);
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Inicializar mensaje inicial cuando las localizaciones estén disponibles
+    if (!_isInitialized && widget.existingConversation == null && _messages.isEmpty) {
+      _addInitialAssistantMessage();
+      _isInitialized = true;
+    }
   }
   
   void _onStateManagerChanged() {
@@ -215,8 +228,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _addInitialAssistantMessage() {
-    _messages.add(ChatMessage.assistant(
-        'Hola, soy Docai. ¿En qué puedo ayudarte hoy?'));
+    // Solo agregar si tenemos acceso a las localizaciones y no hay mensajes
+    if (_messages.isEmpty && mounted) {
+      try {
+        final l10n = AppLocalizations.of(context)!;
+        _messages.add(ChatMessage.assistant(l10n.helloImDocai));
+      } catch (e) {
+        // Fallback si las localizaciones no están disponibles
+        _messages.add(ChatMessage.assistant('Hola, soy Docai. ¿Cómo puedo ayudarte hoy?'));
+      }
+    }
   }
 
   Future<void> _createOrUpdateConversation(String firstUserMessage) async {
@@ -247,21 +268,25 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _startNewConversation() async {
+    if (!mounted) return;
+    
+    final l10n = AppLocalizations.of(context)!;
+    
     // Confirmar si el usuario quiere iniciar una nueva conversación
     if (_messages.length > 1) { // Solo preguntar si hay mensajes más allá del saludo inicial
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Nueva conversación'),
-          content: const Text('¿Estás seguro de que quieres iniciar una nueva conversación?'),
+          title: Text(l10n.newConversation),
+          content: Text(l10n.newConversationConfirm),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancelar'),
+              child: Text(l10n.cancel),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Nueva conversación'),
+              child: Text(l10n.newConversation),
             ),
           ],
         ),
@@ -286,19 +311,19 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _clearAllHistory() async {
+    if (!mounted) return;
+    
+    final l10n = AppLocalizations.of(context)!;
+    
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar historial'),
-        content: const Text(
-          '¿Estás seguro de que quieres eliminar todo el historial de chats? '
-          'Esta acción no se puede deshacer y eliminará todas las conversaciones '
-          'tanto localmente como en la nube.',
-        ),
+        title: Text(l10n.deleteHistory),
+        content: Text(l10n.deleteHistoryConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -306,7 +331,7 @@ class _ChatScreenState extends State<ChatScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Eliminar todo'),
+            child: Text(l10n.deleteAll),
           ),
         ],
       ),
@@ -318,9 +343,9 @@ class _ChatScreenState extends State<ChatScreen> {
       // Mostrar indicador de carga
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Eliminando historial...'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(l10n.deletingHistory),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -345,7 +370,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Historial eliminado correctamente'),
+            content: Text(l10n.historyDeletedSuccess),
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
@@ -354,7 +379,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al eliminar historial: ${e.toString()}'),
+            content: Text(l10n.errorDeletingHistory(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -501,6 +526,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<bool?> _showReasoningPickerSheet() async {
+    if (!mounted) return null;
+    
+    final l10n = AppLocalizations.of(context)!;
     bool tempReasoning = _useReasoning;
     
     return await showModalBottomSheet<bool>(
@@ -523,9 +551,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Configurar regeneración',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  Text(
+                    l10n.configureRegeneration,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -568,7 +596,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     children: [
                       Icon(Icons.psychology, size: 20, color: brandColor(_selectedProfile.brand)),
                       const SizedBox(width: 8),
-                      const Text('Razonamiento avanzado'),
+                      Text(l10n.advancedReasoning),
                       const Spacer(),
                       Switch(
                         value: tempReasoning,
@@ -580,7 +608,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
-                        'Docai proporcionará un análisis paso a paso más detallado.',
+                        l10n.advancedReasoningDescription,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -593,14 +621,14 @@ class _ChatScreenState extends State<ChatScreen> {
                     children: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Cancelar'),
+                        child: Text(l10n.cancel),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
                         onPressed: () => Navigator.of(context).pop(tempReasoning),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                          child: Text('Regenerar'),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                          child: Text(l10n.regenerate),
                         ),
                       ),
                     ],
@@ -637,16 +665,20 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String _getSyncStatusText(bool cloudSyncEnabled, bool isSyncing, DateTime? lastSyncTime, bool hasError) {
+    if (!mounted) return '';
+    
+    final l10n = AppLocalizations.of(context)!;
+    
     if (hasError) {
-      return 'Error en la sincronización. Toca refrescar para intentar de nuevo.';
+      return l10n.syncError;
     }
     
     if (!cloudSyncEnabled) {
-      return 'Conversaciones guardadas solo en este dispositivo';
+      return l10n.conversationsLocalOnly;
     }
     
     if (isSyncing) {
-      return 'Sincronizando...';
+      return l10n.syncing;
     }
     
     if (lastSyncTime != null) {
@@ -654,20 +686,24 @@ class _ChatScreenState extends State<ChatScreen> {
       final difference = now.difference(lastSyncTime);
       
       if (difference.inMinutes < 1) {
-        return 'Sincronizado hace menos de un minuto';
+        return l10n.syncedLessThanMinute;
       } else if (difference.inMinutes < 60) {
-        return 'Sincronizado hace ${difference.inMinutes}m';
+        return l10n.syncedMinutesAgo(difference.inMinutes);
       } else if (difference.inHours < 24) {
-        return 'Sincronizado hace ${difference.inHours}h';
+        return l10n.syncedHoursAgo(difference.inHours);
       } else {
-        return 'Sincronizado hace ${difference.inDays}d';
+        return l10n.syncedDaysAgo(difference.inDays);
       }
     }
     
-    return 'Sincronización automática habilitada';
+    return l10n.autoSyncEnabled;
   }
 
   Future<void> _toggleCloudSync(bool enabled) async {
+    if (!mounted) return;
+    
+    final l10n = AppLocalizations.of(context)!;
+    
     try {
       await _stateManager.toggleCloudSync(enabled);
       
@@ -675,8 +711,8 @@ class _ChatScreenState extends State<ChatScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(enabled 
-              ? 'Sincronización en la nube habilitada' 
-              : 'Sincronización en la nube deshabilitada'),
+              ? l10n.cloudSyncEnabled 
+              : l10n.cloudSyncDisabled),
           ),
         );
       }
@@ -692,13 +728,15 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _forceSyncNow() async {
     if (!mounted) return;
     
+    final l10n = AppLocalizations.of(context)!;
+    
     try {
       await _stateManager.forceSyncNow();
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Sincronización completada'),
+            content: Text(l10n.syncCompleted),
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
@@ -707,7 +745,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error en sincronización: $e'),
+            content: Text(l10n.syncErrorMessage(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -733,41 +771,42 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final accent = brandColor(_selectedProfile.brand);
     
     return Scaffold(
       appBar: AppBar(
-        title: Text(_currentConversation?.title ?? 'Docai'),
+        title: Text(_currentConversation?.title ?? l10n.appTitle),
         actions: [
           // Botón para nueva conversación
           if (_hasFirstMessage)
             IconButton(
-              tooltip: 'Nueva conversación',
+              tooltip: l10n.newConversation,
               icon: const Icon(Icons.add_comment_outlined),
               onPressed: _startNewConversation,
             ),
           // Botón para ver historial
           if (_hasFirstMessage)
             IconButton(
-              tooltip: 'Ver historial',
+              tooltip: l10n.viewHistory,
               icon: const Icon(Icons.history),
               onPressed: _navigateToHistory,
             ),
 
           IconButton(
-            tooltip: 'Aviso',
+            tooltip: l10n.medicalNotice,
             icon: const Icon(Icons.info_outline),
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (_) => AlertDialog(
-                  title: const Text('Aviso médico'),
+                  title: Text(l10n.medicalNotice),
                   content: Text(OpenRouterConfig.disclaimerText),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Entendido'),
+                      child: Text(l10n.understood),
                     )
                   ],
                 ),
@@ -852,7 +891,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               Icon(Icons.tune, color: theme.colorScheme.primary, size: 20),
                               const SizedBox(width: 8),
                               Text(
-                                'Personaliza tu experiencia',
+                                l10n.personalizeYourExperience,
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
@@ -875,7 +914,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Para ofrecerte recomendaciones más precisas, configura tus preferencias médicas, alergias y condiciones.',
+                            l10n.personalizeExperienceMessage,
                             style: TextStyle(
                               fontSize: 12,
                               color: theme.colorScheme.onSurface,
@@ -891,7 +930,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                   setState(() => _showFirstTimeWarning = false);
                                 },
                                 child: Text(
-                                  'Ahora no',
+                                  l10n.notNow,
                                   style: TextStyle(
                                     color: theme.colorScheme.primary,
                                     fontSize: 12,
@@ -918,9 +957,9 @@ class _ChatScreenState extends State<ChatScreen> {
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 ),
-                                child: const Text(
-                                  'Personalizar',
-                                  style: TextStyle(fontSize: 12),
+                                child: Text(
+                                  l10n.personalize,
+                                  style: const TextStyle(fontSize: 12),
                                 ),
                               ),
                             ],

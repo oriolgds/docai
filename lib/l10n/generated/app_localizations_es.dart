@@ -411,4 +411,285 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chat => 'Chat';
+
+  @override
+  String get home => 'Inicio';
+
+  @override
+  String get back => 'Atrás';
+
+  @override
+  String get next => 'Siguiente';
+
+  @override
+  String get close => 'Cerrar';
+
+  @override
+  String get done => 'Listo';
+
+  @override
+  String get settings => 'Configuración';
+
+  @override
+  String get search => 'Buscar';
+
+  @override
+  String get refresh => 'Actualizar';
+
+  @override
+  String get loading => 'Cargando...';
+
+  @override
+  String get error => 'Error';
+
+  @override
+  String get success => 'Éxito';
+
+  @override
+  String get warning => 'Advertencia';
+
+  @override
+  String get info => 'Información';
+
+  @override
+  String get yes => 'Sí';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get confirm => 'Confirmar';
+
+  @override
+  String get medications => 'Medicamentos';
+
+  @override
+  String get naturalRemedies => 'Remedios Naturales';
+
+  @override
+  String get symptoms => 'Síntomas';
+
+  @override
+  String get diagnosis => 'Diagnóstico';
+
+  @override
+  String get treatment => 'Tratamiento';
+
+  @override
+  String get prescription => 'Receta';
+
+  @override
+  String get dosage => 'Dosis';
+
+  @override
+  String get sideEffects => 'Efectos Secundarios';
+
+  @override
+  String get contraindications => 'Contraindicaciones';
+
+  @override
+  String get medicalHistory => 'Historial Médico';
+
+  @override
+  String get familyHistory => 'Historial Familiar';
+
+  @override
+  String get allergicReactions => 'Reacciones Alérgicas';
+
+  @override
+  String get typeYourMessage => 'Escribe tu mensaje...';
+
+  @override
+  String get sendMessage => 'Enviar mensaje';
+
+  @override
+  String get askDocAI => 'Pregúntale a DocAI';
+
+  @override
+  String get thinking => 'Pensando...';
+
+  @override
+  String get processing => 'Procesando...';
+
+  @override
+  String get generatingResponse => 'Generando respuesta...';
+
+  @override
+  String get noMessagesYet => 'Aún no hay mensajes';
+
+  @override
+  String get startConversation => 'Inicia una conversación con DocAI';
+
+  @override
+  String get conversationHistory => 'Historial de Conversación';
+
+  @override
+  String get messageOptions => 'Opciones de Mensaje';
+
+  @override
+  String get copyMessage => 'Copiar Mensaje';
+
+  @override
+  String get reportMessage => 'Reportar Mensaje';
+
+  @override
+  String get deleteMessage => 'Eliminar Mensaje';
+
+  @override
+  String get noHistoryYet => 'Aún no hay historial';
+
+  @override
+  String get clearHistory => 'Limpiar Historial';
+
+  @override
+  String get exportHistory => 'Exportar Historial';
+
+  @override
+  String get importHistory => 'Importar Historial';
+
+  @override
+  String get deleteConversation => 'Eliminar Conversación';
+
+  @override
+  String get conversationDeleted => 'Conversación eliminada';
+
+  @override
+  String get historyCleared => 'Historial limpiado';
+
+  @override
+  String get lastActivity => 'Última actividad';
+
+  @override
+  String get today => 'Hoy';
+
+  @override
+  String get yesterday => 'Ayer';
+
+  @override
+  String get thisWeek => 'Esta semana';
+
+  @override
+  String get lastWeek => 'Semana pasada';
+
+  @override
+  String get thisMonth => 'Este mes';
+
+  @override
+  String get older => 'Más antiguo';
+
+  @override
+  String get language => 'Idioma';
+
+  @override
+  String get changeLanguage => 'Cambiar Idioma';
+
+  @override
+  String get languageChanged => 'Idioma cambiado';
+
+  @override
+  String get selectLanguage => 'Seleccionar Idioma';
+
+  @override
+  String get systemLanguage => 'Idioma del Sistema';
+
+  @override
+  String get somethingWentWrong => 'Algo salió mal';
+
+  @override
+  String get networkError => 'Error de red';
+
+  @override
+  String get connectionFailed => 'Conexión fallida';
+
+  @override
+  String get tryAgain => 'Intentar de nuevo';
+
+  @override
+  String get requestTimeout => 'Tiempo de espera agotado';
+
+  @override
+  String get serverError => 'Error del servidor';
+
+  @override
+  String get notFound => 'No encontrado';
+
+  @override
+  String get unauthorized => 'No autorizado';
+
+  @override
+  String get forbidden => 'Prohibido';
+
+  @override
+  String get badRequest => 'Solicitud incorrecta';
+
+  @override
+  String get medicalDisclaimer => 'Descargo Médico';
+
+  @override
+  String get medicalDisclaimerText =>
+      'DocAI proporciona información general de salud y no debe reemplazar el consejo, diagnóstico o tratamiento médico profesional. Siempre consulta con profesionales de la salud calificados para preocupaciones médicas.';
+
+  @override
+  String get emergencyWarning => 'Advertencia de Emergencia';
+
+  @override
+  String get emergencyWarningText =>
+      'Si estás experimentando una emergencia médica, por favor llama a los servicios de emergencia inmediatamente o ve a la sala de emergencias más cercana.';
+
+  @override
+  String get notMedicalAdvice => 'Esto no es consejo médico';
+
+  @override
+  String get consultDoctor => 'Por favor consulta a un médico';
+
+  @override
+  String get seekImmediateHelp => 'Busca ayuda médica inmediata';
+
+  @override
+  String get medicalProfileConfigured => 'Perfil Médico Configurado';
+
+  @override
+  String get medicalProfileIncomplete => 'Perfil Médico Incompleto';
+
+  @override
+  String get medicalProfileConfiguredDescription =>
+      'Tu perfil médico está configurado. DocAI puede proporcionar consejos más personalizados.';
+
+  @override
+  String get medicalProfileIncompleteDescription =>
+      'Configura tu perfil médico para recibir consejos más precisos y personalizados.';
+
+  @override
+  String yearsOld(int age) {
+    return '$age años';
+  }
+
+  @override
+  String allergiesCount(int count) {
+    return '$count alergias';
+  }
+
+  @override
+  String get naturalMedicine => 'Medicina natural';
+
+  @override
+  String get conventionalMedicine => 'Medicina convencional';
+
+  @override
+  String get integralMedicine => 'Medicina integral';
+
+  @override
+  String conditionsCount(int count) {
+    return '$count condiciones';
+  }
+
+  @override
+  String get medicalPersonalization => 'Personalización Médica';
+
+  @override
+  String get configureMedicalPreferences =>
+      'Configure allergies, treatment preferences and more';
 }
