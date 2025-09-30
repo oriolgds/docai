@@ -45,6 +45,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _useReasoning = false;
   bool _showFirstTimeWarning = false;
   UserPreferences? _userPreferences;
+  bool _isInitialized = false; // Flag to track initialization
   
   // Variables para el historial
   ChatConversation? _currentConversation;
@@ -69,10 +70,10 @@ class _ChatScreenState extends State<ChatScreen> {
       _hasFirstMessage = _messages.any((m) => m.role == ChatRole.user);
       _showDisclaimer = _messages.isEmpty;
     } else {
-      // Nueva conversación
+      // Nueva conversación - no agregar mensaje inicial aquí
       _messages = [];
       _conversationId = null; // Se asignará cuando se cree la conversación
-      _addInitialAssistantMessage();
+      // El mensaje inicial se agregará en didChangeDependencies cuando las localizaciones estén disponibles
     }
     
     _checkFirstTimeUser();
@@ -80,6 +81,17 @@ class _ChatScreenState extends State<ChatScreen> {
     
     // Escuchar cambios en el state manager para manejar conversaciones externas
     _stateManager.addListener(_onStateManagerChanged);
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Inicializar mensaje inicial cuando las localizaciones estén disponibles
+    if (!_isInitialized && widget.existingConversation == null && _messages.isEmpty) {
+      _addInitialAssistantMessage();
+      _isInitialized = true;
+    }
   }
   
   void _onStateManagerChanged() {
@@ -216,8 +228,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _addInitialAssistantMessage() {
-    final l10n = AppLocalizations.of(context)!;
-    _messages.add(ChatMessage.assistant(l10n.helloImDocai));
+    // Solo agregar si tenemos acceso a las localizaciones y no hay mensajes
+    if (_messages.isEmpty && mounted) {
+      try {
+        final l10n = AppLocalizations.of(context)!;
+        _messages.add(ChatMessage.assistant(l10n.helloImDocai));
+      } catch (e) {
+        // Fallback si las localizaciones no están disponibles
+        _messages.add(ChatMessage.assistant('Hola, soy Docai. ¿Cómo puedo ayudarte hoy?'));
+      }
+    }
   }
 
   Future<void> _createOrUpdateConversation(String firstUserMessage) async {
@@ -248,6 +268,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _startNewConversation() async {
+    if (!mounted) return;
+    
     final l10n = AppLocalizations.of(context)!;
     
     // Confirmar si el usuario quiere iniciar una nueva conversación
@@ -289,6 +311,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _clearAllHistory() async {
+    if (!mounted) return;
+    
     final l10n = AppLocalizations.of(context)!;
     
     final confirmed = await showDialog<bool>(
@@ -502,6 +526,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<bool?> _showReasoningPickerSheet() async {
+    if (!mounted) return null;
+    
     final l10n = AppLocalizations.of(context)!;
     bool tempReasoning = _useReasoning;
     
@@ -639,6 +665,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String _getSyncStatusText(bool cloudSyncEnabled, bool isSyncing, DateTime? lastSyncTime, bool hasError) {
+    if (!mounted) return '';
+    
     final l10n = AppLocalizations.of(context)!;
     
     if (hasError) {
@@ -672,6 +700,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _toggleCloudSync(bool enabled) async {
+    if (!mounted) return;
+    
     final l10n = AppLocalizations.of(context)!;
     
     try {
@@ -696,9 +726,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _forceSyncNow() async {
-    final l10n = AppLocalizations.of(context)!;
-    
     if (!mounted) return;
+    
+    final l10n = AppLocalizations.of(context)!;
     
     try {
       await _stateManager.forceSyncNow();
