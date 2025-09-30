@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user_medical_preferences.dart';
 import '../services/medical_preferences_service.dart';
-import '../l10n/generated/app_localizations.dart'; // Agregar import
+import '../l10n/generated/app_localizations.dart';
 
 class MedicalPreferencesStatus extends StatefulWidget {
   const MedicalPreferencesStatus({Key? key}) : super(key: key);
@@ -34,7 +34,7 @@ class _MedicalPreferencesStatusState extends State<MedicalPreferencesStatus> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!; // Obtener localizaciones
+    final l10n = AppLocalizations.of(context)!;
     
     if (_isLoading) {
       return const Card(
@@ -52,7 +52,7 @@ class _MedicalPreferencesStatusState extends State<MedicalPreferencesStatus> {
     }
 
     return Card(
-      color: _preferences != null ? Colors.green : Colors.orange,
+      color: _preferences != null ? Colors.green[900] : Colors.orange[900],
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -62,7 +62,7 @@ class _MedicalPreferencesStatusState extends State<MedicalPreferencesStatus> {
               children: [
                 Icon(
                   _preferences != null ? Icons.check_circle : Icons.info,
-                  color: _preferences != null ? Colors.green : Colors.orange,
+                  color: _preferences != null ? Colors.green[300] : Colors.orange[300],
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -85,14 +85,14 @@ class _MedicalPreferencesStatusState extends State<MedicalPreferencesStatus> {
               _preferences != null
                   ? l10n.medicalProfileConfiguredDescription
                   : l10n.medicalProfileIncompleteDescription,
-              style: const TextStyle(
-                color: Colors.grey,
+              style: TextStyle(
+                color: Colors.grey[200],
                 fontSize: 14,
               ),
             ),
             if (_preferences != null) ...[
               const SizedBox(height: 12),
-              _buildPreferencesSummary(l10n),
+              _buildPreferencesSummary(),
             ],
           ],
         ),
@@ -100,9 +100,10 @@ class _MedicalPreferencesStatusState extends State<MedicalPreferencesStatus> {
     );
   }
 
-  Widget _buildPreferencesSummary(AppLocalizations l10n) {
+  Widget _buildPreferencesSummary() {
     if (_preferences == null) return const SizedBox.shrink();
-
+    
+    final l10n = AppLocalizations.of(context)!;
     final summary = <String>[];
 
     // Información básica
@@ -141,7 +142,7 @@ class _MedicalPreferencesStatusState extends State<MedicalPreferencesStatus> {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.green,
+            color: Colors.green[700],
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
