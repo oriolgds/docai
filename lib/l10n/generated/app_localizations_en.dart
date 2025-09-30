@@ -639,4 +639,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seekImmediateHelp => 'Seek immediate medical help';
+
+  @override
+  String get medicalProfileConfigured => 'Medical Profile Configured';
+
+  @override
+  String get medicalProfileIncomplete => 'Medical Profile Incomplete';
+
+  @override
+  String get medicalProfileConfiguredDescription =>
+      'Your medical profile is configured. DocAI can provide more personalized advice.';
+
+  @override
+  String get medicalProfileIncompleteDescription =>
+      'Configure your medical profile to receive more accurate and personalized advice.';
+
+  @override
+  String yearsOld(int age) {
+    return '$age years old';
+  }
+
+  @override
+  String allergiesCount(int count) {
+    return '$count allergies';
+  }
+
+  @override
+  String get naturalMedicine => 'Natural medicine';
+
+  @override
+  String get conventionalMedicine => 'Conventional medicine';
+
+  @override
+  String get integralMedicine => 'Integral medicine';
+
+  @override
+  String conditionsCount(int count) {
+    return '$count conditions';
+  }
+
+  @override
+  String get medicalPersonalization => 'Medical Personalization';
+
+  @override
+  String get configureMedicalPreferences =>
+      'Configure allergies, treatment preferences and more';
 }

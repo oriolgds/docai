@@ -1297,6 +1297,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Seek immediate medical help'**
   String get seekImmediateHelp;
+
+  /// Medical profile configured status title
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Profile Configured'**
+  String get medicalProfileConfigured;
+
+  /// Medical profile incomplete status title
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Profile Incomplete'**
+  String get medicalProfileIncomplete;
+
+  /// Medical profile configured status description
+  ///
+  /// In en, this message translates to:
+  /// **'Your medical profile is configured. DocAI can provide more personalized advice.'**
+  String get medicalProfileConfiguredDescription;
+
+  /// Medical profile incomplete status description
+  ///
+  /// In en, this message translates to:
+  /// **'Configure your medical profile to receive more accurate and personalized advice.'**
+  String get medicalProfileIncompleteDescription;
+
+  /// Age display format
+  ///
+  /// In en, this message translates to:
+  /// **'{age} years old'**
+  String yearsOld(int age);
+
+  /// Allergies count format
+  ///
+  /// In en, this message translates to:
+  /// **'{count} allergies'**
+  String allergiesCount(int count);
+
+  /// Natural medicine preference
+  ///
+  /// In en, this message translates to:
+  /// **'Natural medicine'**
+  String get naturalMedicine;
+
+  /// Conventional medicine preference
+  ///
+  /// In en, this message translates to:
+  /// **'Conventional medicine'**
+  String get conventionalMedicine;
+
+  /// Both medicine types preference
+  ///
+  /// In en, this message translates to:
+  /// **'Integral medicine'**
+  String get integralMedicine;
+
+  /// Conditions count format
+  ///
+  /// In en, this message translates to:
+  /// **'{count} conditions'**
+  String conditionsCount(int count);
+
+  /// Medical personalization button title
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Personalization'**
+  String get medicalPersonalization;
+
+  /// Medical personalization button subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Configure allergies, treatment preferences and more'**
+  String get configureMedicalPreferences;
 }
 
 class _AppLocalizationsDelegate

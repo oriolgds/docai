@@ -907,4 +907,5 @@
   "@configureMedicalPreferences": {
     "description": "Medical personalization button subtitle"
   }
+  
 }
