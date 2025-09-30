@@ -840,5 +840,71 @@
   "seekImmediateHelp": "Seek immediate medical help",
   "@seekImmediateHelp": {
     "description": "Seek immediate help advice"
+  },
+  "medicalProfileConfigured": "Medical Profile Configured",
+  "@medicalProfileConfigured": {
+    "description": "Medical profile configured status title"
+  },
+  "medicalProfileIncomplete": "Medical Profile Incomplete",
+  "@medicalProfileIncomplete": {
+    "description": "Medical profile incomplete status title"
+  },
+  "medicalProfileConfiguredDescription": "Your medical profile is configured. DocAI can provide more personalized advice.",
+  "@medicalProfileConfiguredDescription": {
+    "description": "Medical profile configured status description"
+  },
+  "medicalProfileIncompleteDescription": "Configure your medical profile to receive more accurate and personalized advice.",
+  "@medicalProfileIncompleteDescription": {
+    "description": "Medical profile incomplete status description"
+  },
+  "yearsOld": "{age} years old",
+  "@yearsOld": {
+    "description": "Age display format",
+    "placeholders": {
+      "age": {
+        "type": "int",
+        "description": "Age in years"
+      }
+    }
+  },
+  "allergiesCount": "{count} allergies",
+  "@allergiesCount": {
+    "description": "Allergies count format",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of allergies"
+      }
+    }
+  },
+  "naturalMedicine": "Natural medicine",
+  "@naturalMedicine": {
+    "description": "Natural medicine preference"
+  },
+  "conventionalMedicine": "Conventional medicine",
+  "@conventionalMedicine": {
+    "description": "Conventional medicine preference"
+  },
+  "integralMedicine": "Integral medicine",
+  "@integralMedicine": {
+    "description": "Both medicine types preference"
+  },
+  "conditionsCount": "{count} conditions",
+  "@conditionsCount": {
+    "description": "Conditions count format",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of conditions"
+      }
+    }
+  },
+  "medicalPersonalization": "Medical Personalization",
+  "@medicalPersonalization": {
+    "description": "Medical personalization button title"
+  },
+  "configureMedicalPreferences": "Configure allergies, treatment preferences and more",
+  "@configureMedicalPreferences": {
+    "description": "Medical personalization button subtitle"
   }
 }
