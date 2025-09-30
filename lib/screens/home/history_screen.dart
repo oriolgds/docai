@@ -136,7 +136,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.syncErrorMessage.replaceAll('{error}', e.toString())),
+            content: Text(l10n.syncErrorMessage(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -238,7 +238,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.errorDeletingHistory.replaceAll('{error}', e.toString())),
+            content: Text(l10n.errorDeletingHistory(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -542,11 +542,11 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       if (difference.inMinutes < 1) {
         return l10n.syncedLessThanMinute;
       } else if (difference.inMinutes < 60) {
-        return l10n.syncedMinutesAgo.replaceAll('{minutes}', difference.inMinutes.toString());
+        return l10n.syncedMinutesAgo(difference.inMinutes);
       } else if (difference.inHours < 24) {
-        return l10n.syncedHoursAgo.replaceAll('{hours}', difference.inHours.toString());
+        return l10n.syncedHoursAgo(difference.inHours);
       } else {
-        return l10n.syncedDaysAgo.replaceAll('{days}', difference.inDays.toString());
+        return l10n.syncedDaysAgo(difference.inDays);
       }
     }
     
