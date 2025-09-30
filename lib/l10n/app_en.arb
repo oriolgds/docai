@@ -151,6 +151,34 @@
   "@disclaimerText": {
     "description": "Medical disclaimer text"
   },
+  "medicalDisclaimerCard": "DocAI does not replace professional medical advice. The information provided is for educational purposes. For diagnoses, treatments or emergencies consult a healthcare professional.",
+  "@medicalDisclaimerCard": {
+    "description": "Medical disclaimer card text in chat"
+  },
+  "customizeYourExperience": "Customize your experience",
+  "@customizeYourExperience": {
+    "description": "Personalization menu subtitle"
+  },
+  "updateYourInformation": "Update your information",
+  "@updateYourInformation": {
+    "description": "Edit profile menu subtitle"
+  },
+  "manageYourAlerts": "Manage your alerts",
+  "@manageYourAlerts": {
+    "description": "Notifications menu subtitle"
+  },
+  "privacySecuritySettings": "Privacy & security settings",
+  "@privacySecuritySettings": {
+    "description": "Privacy and security menu subtitle"
+  },
+  "getHelpWhenYouNeedIt": "Get help when you need it",
+  "@getHelpWhenYouNeedIt": {
+    "description": "Help and support menu subtitle"
+  },
+  "learnMoreAboutDocAI": "Learn more about DocAI",
+  "@learnMoreAboutDocAI": {
+    "description": "About menu subtitle"
+  },
   "preferencesSavedSuccess": "Preferences saved successfully",
   "@preferencesSavedSuccess": {
     "description": "Success message when preferences are saved"
@@ -906,30 +934,6 @@
   "configureMedicalPreferences": "Configure allergies, treatment preferences and more",
   "@configureMedicalPreferences": {
     "description": "Medical personalization button subtitle"
-  },
-  "customizeYourExperience": "Customize your experience",
-  "@customizeYourExperience": {
-    "description": "Personalization menu subtitle"
-  },
-  "updateYourInformation": "Update your information",
-  "@updateYourInformation": {
-    "description": "Edit profile menu subtitle"
-  },
-  "manageYourAlerts": "Manage your alerts",
-  "@manageYourAlerts": {
-    "description": "Notifications menu subtitle"
-  },
-  "privacySecuritySettings": "Privacy & security settings",
-  "@privacySecuritySettings": {
-    "description": "Privacy and security menu subtitle"
-  },
-  "getHelpWhenYouNeedIt": "Get help when you need it",
-  "@getHelpWhenYouNeedIt": {
-    "description": "Help and support menu subtitle"
-  },
-  "learnMoreAboutDocAI": "Learn more about DocAI",
-  "@learnMoreAboutDocAI": {
-    "description": "About menu subtitle"
   },
   "privacyAndSecurity": "Privacy and Security",
   "@privacyAndSecurity": {
