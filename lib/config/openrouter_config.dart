@@ -30,6 +30,6 @@ class OpenRouterConfig {
       'cuando sea pertinente.';
 
   static const String disclaimerText =
-      'DocAI no sustituye el consejo médico profesional. La información proporcionada tiene fines '
-      'educativos. Para diagnósticos, tratamientos o emergencias acude a un profesional de la salud.';
+      'DocAI does not replace professional medical advice. The information provided is for '
+      'educational purposes. For diagnoses, treatments or emergencies consult a healthcare professional.';
 }
