@@ -198,5 +198,74 @@
   "emergencyWarningText": "Si estás experimentando una emergencia médica, por favor llama a los servicios de emergencia inmediatamente o ve a la sala de emergencias más cercana.",
   "notMedicalAdvice": "Esto no es consejo médico",
   "consultDoctor": "Por favor consulta a un médico",
-  "seekImmediateHelp": "Busca ayuda médica inmediata"
+  "seekImmediateHelp": "Busca ayuda médica inmediata",
+  {
+  "medicalProfileConfigured": "Perfil Médico Configurado",
+  "@medicalProfileConfigured": {
+    "description": "Estado cuando el perfil médico está completo"
+  },
+  "medicalProfileIncomplete": "Perfil Médico Incompleto",
+  "@medicalProfileIncomplete": {
+    "description": "Estado cuando el perfil médico está incompleto"
+  },
+  "medicalProfileConfiguredDescription": "Tu perfil médico está configurado. DocAI puede proporcionar consejos más personalizados.",
+  "@medicalProfileConfiguredDescription": {
+    "description": "Descripción del perfil médico configurado"
+  },
+  "medicalProfileIncompleteDescription": "Configura tu perfil médico para recibir consejos más precisos y personalizados.",
+  "@medicalProfileIncompleteDescription": {
+    "description": "Descripción del perfil médico incompleto"
+  },
+  "medicalPersonalization": "Personalización Médica",
+  "@medicalPersonalization": {
+    "description": "Título del botón de personalización médica"
+  },
+  "medicalPersonalizationDescription": "Configura alergias, preferencias de tratamiento y más",
+  "@medicalPersonalizationDescription": {
+    "description": "Descripción del botón de personalización médica"
+  },
+  "yearsOld": "{age} años",
+  "@yearsOld": {
+    "description": "Edad del usuario",
+    "placeholders": {
+      "age": {
+        "type": "int",
+        "example": "25"
+      }
+    }
+  },
+  "allergiesCount": "{count} alergias",
+  "@allergiesCount": {
+    "description": "Contador de alergias",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "naturalMedicine": "Medicina natural",
+  "@naturalMedicine": {
+    "description": "Preferencia de medicina natural"
+  },
+  "conventionalMedicine": "Medicina convencional",
+  "@conventionalMedicine": {
+    "description": "Preferencia de medicina convencional"
+  },
+  "integralMedicine": "Medicina integral",
+  "@integralMedicine": {
+    "description": "Preferencia de medicina integral (ambas)"
+  },
+  "conditionsCount": "{count} condiciones",
+  "@conditionsCount": {
+    "description": "Contador de condiciones crónicas",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  }
+}
+
 }
