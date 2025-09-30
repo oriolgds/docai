@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../screens/medical_preferences_screen.dart';
-import '../l10n/generated/app_localizations.dart'; // Agregar import
+import '../l10n/generated/app_localizations.dart';
 
 class MedicalPreferencesButton extends StatelessWidget {
   final VoidCallback? onPreferencesUpdated;
@@ -10,16 +10,16 @@ class MedicalPreferencesButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!; // Obtener localizaciones
+    final l10n = AppLocalizations.of(context)!;
     
     return Card(
-      color: Colors.grey,
+      color: Colors.grey[900],
       margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.blue,
+            color: Colors.blue[700],
             borderRadius: BorderRadius.circular(8),
           ),
           child: const Icon(
