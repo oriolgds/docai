@@ -37,7 +37,7 @@ class MedicalPreferencesButton extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          l10n.medicalPersonalizationDescription,
+          l10n.configureMedicalPreferences,
           style: const TextStyle(color: Colors.grey, fontSize: 14),
         ),
         trailing: const Icon(
