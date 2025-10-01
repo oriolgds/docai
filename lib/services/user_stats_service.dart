@@ -181,8 +181,11 @@ class UserStatsService {
     }
   }
   
+  /// Busca el último mensaje de todas las conversaciones
+  /// Siempre obtiene datos frescos del ChatHistoryService
   Future<DateTime?> getLastActivityDate() async {
     try {
+      // Forzar obtención de datos frescos para la última actividad
       final conversations = await _chatHistoryService.getAllConversations();
       if (conversations.isEmpty) return null;
       
@@ -190,10 +193,16 @@ class UserStatsService {
       
       // Buscar el último mensaje de todas las conversaciones
       for (final conversation in conversations) {
-        for (final message in conversation.messages) {
-          if (lastMessageDate == null || message.createdAt.isAfter(lastMessageDate)) {
-            lastMessageDate = message.createdAt;
-          }
+        if (conversation.messages.isEmpty) continue;
+        
+        // Ordenar mensajes por fecha para asegurar que obtenemos el último
+        final sortedMessages = List<ChatMessage>.from(conversation.messages)
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        
+        final lastMessageInConv = sortedMessages.last;
+        
+        if (lastMessageDate == null || lastMessageInConv.createdAt.isAfter(lastMessageDate)) {
+          lastMessageDate = lastMessageInConv.createdAt;
         }
       }
       
@@ -229,8 +238,14 @@ class UserStatsService {
   }
   
   /// Limpiar cache cuando se actualicen los datos
+  /// Llamar este método después de agregar nuevos mensajes
   void invalidateCache() {
     _invalidateCache();
+  }
+  
+  /// Forzar actualización de estadísticas y cache
+  Future<UserStats> refreshStats() async {
+    return await getUserStats(forceRefresh: true);
   }
 }
 
