@@ -68,7 +68,7 @@ class UserStatsService {
     int totalUserMessages = 0;
     int totalBotMessages = 0;
     int totalCharacters = 0;
-    DateTime? lastActivityDate;
+    int totalMessages = 0; // Para calcular promedio por conversación
     
     // Estadísticas semanales y mensuales
     int conversationsThisWeek = 0;
@@ -91,17 +91,13 @@ class UserStatsService {
       if (isThisWeek) conversationsThisWeek++;
       if (isThisMonth) conversationsThisMonth++;
       
-      // Contar mensajes por tipo y encontrar el último mensaje
+      // Contar mensajes por tipo
       int userMessagesInConv = 0;
       int botMessagesInConv = 0;
       
       for (final message in conversation.messages) {
         totalCharacters += message.content.length;
-        
-        // Actualizar última actividad con el mensaje más reciente
-        if (lastActivityDate == null || message.createdAt.isAfter(lastActivityDate)) {
-          lastActivityDate = message.createdAt;
-        }
+        totalMessages++; // Contar todos los mensajes para el promedio
         
         if (message.role == ChatRole.user) {
           totalUserMessages++;
@@ -136,6 +132,11 @@ class UserStatsService {
         ? (satisfactionScore / satisfactionSamples).clamp(0.0, 100.0)
         : 85.0; // Valor por defecto
     
+    // Calcular promedio de mensajes por conversación
+    final averageMessagesPerConversation = totalConversations > 0 
+        ? (totalMessages / totalConversations)
+        : 0.0;
+    
     // Calcular minutos de chat estimados (basado en caracteres)
     final estimatedMinutes = (totalCharacters / 200).round(); // ~200 caracteres por minuto
     
@@ -153,7 +154,7 @@ class UserStatsService {
       totalBotMessages: totalBotMessages,
       totalCharacters: totalCharacters,
       estimatedChatMinutes: estimatedMinutes,
-      lastActivityDate: lastActivityDate,
+      averageMessagesPerConversation: averageMessagesPerConversation,
       conversationsThisWeek: conversationsThisWeek,
       conversationsThisMonth: conversationsThisMonth,
       messagesThisWeek: messagesThisWeek,
@@ -181,59 +182,21 @@ class UserStatsService {
     }
   }
   
-  /// Busca el último mensaje de todas las conversaciones
-  /// Siempre obtiene datos frescos del ChatHistoryService
-  Future<DateTime?> getLastActivityDate() async {
+  /// Obtener el promedio de mensajes por conversación
+  Future<double> getAverageMessagesPerConversation() async {
     try {
-      // Forzar obtención de datos frescos para la última actividad
       final conversations = await _chatHistoryService.getAllConversations();
-      if (conversations.isEmpty) return null;
+      if (conversations.isEmpty) return 0.0;
       
-      DateTime? lastMessageDate;
-      
-      // Buscar el último mensaje de todas las conversaciones
+      int totalMessages = 0;
       for (final conversation in conversations) {
-        if (conversation.messages.isEmpty) continue;
-        
-        // Ordenar mensajes por fecha para asegurar que obtenemos el último
-        final sortedMessages = List<ChatMessage>.from(conversation.messages)
-          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-        
-        final lastMessageInConv = sortedMessages.last;
-        
-        if (lastMessageDate == null || lastMessageInConv.createdAt.isAfter(lastMessageDate)) {
-          lastMessageDate = lastMessageInConv.createdAt;
-        }
+        totalMessages += conversation.messages.length;
       }
       
-      return lastMessageDate;
+      return totalMessages / conversations.length;
     } catch (e) {
-      debugPrint('Error getting last activity: $e');
-      return null;
-    }
-  }
-  
-  Future<String> getFormattedLastActivity() async {
-    final lastActivity = await getLastActivityDate();
-    if (lastActivity == null) return 'Nunca';
-    
-    final now = DateTime.now();
-    final difference = now.difference(lastActivity);
-    
-    if (difference.inMinutes < 1) {
-      return 'Ahora';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}min';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d';
-    } else if (difference.inDays < 30) {
-      final weeks = (difference.inDays / 7).floor();
-      return '${weeks}sem';
-    } else {
-      final months = (difference.inDays / 30).floor();
-      return '${months}mes';
+      debugPrint('Error getting average messages per conversation: $e');
+      return 0.0;
     }
   }
   
@@ -256,7 +219,7 @@ class UserStats {
   final int totalBotMessages;
   final int totalCharacters;
   final int estimatedChatMinutes;
-  final DateTime? lastActivityDate;
+  final double averageMessagesPerConversation;
   final int conversationsThisWeek;
   final int conversationsThisMonth;
   final int messagesThisWeek;
@@ -272,7 +235,7 @@ class UserStats {
     required this.totalBotMessages,
     required this.totalCharacters,
     required this.estimatedChatMinutes,
-    this.lastActivityDate,
+    required this.averageMessagesPerConversation,
     required this.conversationsThisWeek,
     required this.conversationsThisMonth,
     required this.messagesThisWeek,
@@ -290,7 +253,7 @@ class UserStats {
       totalBotMessages: 0,
       totalCharacters: 0,
       estimatedChatMinutes: 0,
-      lastActivityDate: null,
+      averageMessagesPerConversation: 0.0,
       conversationsThisWeek: 0,
       conversationsThisMonth: 0,
       messagesThisWeek: 0,
@@ -302,27 +265,14 @@ class UserStats {
     );
   }
   
-  /// Obtener el último uso formateado
-  String get formattedLastActivity {
-    if (lastActivityDate == null) return 'Nunca';
-    
-    final now = DateTime.now();
-    final difference = now.difference(lastActivityDate!);
-    
-    if (difference.inMinutes < 1) {
-      return 'Ahora';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}min';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d';
-    } else if (difference.inDays < 30) {
-      final weeks = (difference.inDays / 7).floor();
-      return '${weeks}sem';
+  /// Obtener el promedio de mensajes por conversación formateado
+  String get formattedAverageMessages {
+    if (averageMessagesPerConversation < 1) {
+      return '0';
+    } else if (averageMessagesPerConversation < 10) {
+      return averageMessagesPerConversation.toStringAsFixed(1);
     } else {
-      final months = (difference.inDays / 30).floor();
-      return '${months}mes';
+      return averageMessagesPerConversation.round().toString();
     }
   }
   
@@ -358,5 +308,18 @@ class UserStats {
     const maxWeeklyMessages = maxMessagesPerDay * 7;
     
     return (totalWeeklyMessages / maxWeeklyMessages * 100).clamp(0.0, 100.0);
+  }
+  
+  /// Evaluar la intensidad de las conversaciones
+  String get conversationIntensityLevel {
+    if (averageMessagesPerConversation < 3) {
+      return 'Consultas rápidas';
+    } else if (averageMessagesPerConversation < 8) {
+      return 'Conversaciones normales';
+    } else if (averageMessagesPerConversation < 15) {
+      return 'Discusiones detalladas';
+    } else {
+      return 'Conversaciones profundas';
+    }
   }
 }
