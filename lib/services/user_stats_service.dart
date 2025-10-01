@@ -103,7 +103,7 @@ class UserStatsService {
       for (final message in conversation.messages) {
         totalCharacters += message.content.length;
         
-        if (message.isUser) {
+        if (message.role == ChatRole.user) {
           totalUserMessages++;
           userMessagesInConv++;
           if (isThisWeek) messagesThisWeek++;
