@@ -7,6 +7,9 @@ import '../models/model_profile.dart';
 
 class OpenRouterService {
   final http.Client _client;
+  StreamSubscription? _currentSubscription;
+  StreamController<String>? _currentController;
+  
   OpenRouterService({http.Client? client}) : _client = client ?? http.Client();
 
   Future<String> chatCompletion({
@@ -69,7 +72,7 @@ class OpenRouterService {
     return content;
   }
 
-  // Stream token-by-token (SSE) from OpenRouter
+  // Stream token-by-token (SSE) from OpenRouter with cancellation support
   Stream<String> streamChatCompletion({
     required List<ChatMessage> messages,
     required ModelProfile profile,
@@ -77,6 +80,9 @@ class OpenRouterService {
     double temperature = 0.3,
     bool useReasoning = false,
   }) async* {
+    // Cancel any existing stream
+    await cancelCurrentStream();
+    
     final headers = OpenRouterConfig.defaultHeaders();
     final payload = <String, dynamic>{
       'model': profile.modelId,
@@ -120,6 +126,7 @@ class OpenRouterService {
     // Parse SSE events separated by double newlines
     final completer = Completer<void>();
     final controller = StreamController<String>();
+    _currentController = controller;
 
     var buffer = '';
     late StreamSubscription sub;
@@ -135,9 +142,11 @@ class OpenRouterService {
           if (!l.startsWith('data:')) continue;
           final dataStr = l.substring(5).trim();
           if (dataStr == '[DONE]') {
-            controller.close();
+            if (!controller.isClosed) controller.close();
             sub.cancel();
-            completer.complete();
+            _currentSubscription = null;
+            _currentController = null;
+            if (!completer.isCompleted) completer.complete();
             return;
           }
           try {
@@ -148,7 +157,7 @@ class OpenRouterService {
             final delta = (c0['delta'] ?? c0['message']) as Map<String, dynamic>?;
             final text = delta?['content']?.toString();
             if (text != null && text.isNotEmpty) {
-              controller.add(text);
+              if (!controller.isClosed) controller.add(text);
             }
           } catch (_) {
             // ignore malformed chunk
@@ -158,14 +167,35 @@ class OpenRouterService {
     }, onError: (e) {
       if (!controller.isClosed) controller.addError(e);
       if (!completer.isCompleted) completer.completeError(e);
+      _currentSubscription = null;
+      _currentController = null;
     }, onDone: () {
       if (!controller.isClosed) controller.close();
       if (!completer.isCompleted) completer.complete();
+      _currentSubscription = null;
+      _currentController = null;
     });
+    
+    _currentSubscription = sub;
 
     yield* controller.stream;
     await completer.future;
   }
+  
+  // Cancel the current streaming request
+  Future<void> cancelCurrentStream() async {
+    if (_currentSubscription != null) {
+      await _currentSubscription!.cancel();
+      _currentSubscription = null;
+    }
+    if (_currentController != null && !_currentController!.isClosed) {
+      await _currentController!.close();
+      _currentController = null;
+    }
+  }
+  
+  // Check if there's an active stream
+  bool get isStreaming => _currentSubscription != null;
 
   // Generar título para una conversación basado en el primer mensaje del usuario
   Future<String> generateConversationTitle(String firstUserMessage) async {
@@ -259,5 +289,8 @@ class OpenRouterService {
     return '${cleanMessage.substring(0, 47)}...';
   }
 
-  void dispose() => _client.close();
+  void dispose() {
+    cancelCurrentStream();
+    _client.close();
+  }
 }
