@@ -5,7 +5,7 @@ import '../../widgets/medical_preferences_button.dart';
 import '../../widgets/medical_preferences_status.dart';
 import '../../widgets/language_selector.dart';
 import '../auth/login_screen.dart';
-import 'personalization_screen.dart';
+import '../medical_preferences_screen.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../main.dart';
 import 'privacy_security_screen.dart';
@@ -707,7 +707,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       _MenuItemData(
         icon: Icons.tune,
         title: l10n.personalization,
-        subtitle: 'Personaliza tu experiencia',
+        subtitle: 'Personaliza tu experiencia médica',
         color: const Color(0xFF6C5CE7),
         onTap: () => _navigateToPersonalization(context),
       ),
@@ -1115,7 +1115,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const PersonalizationScreen(),
+            const MedicalPreferencesScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
             position: animation.drive(
