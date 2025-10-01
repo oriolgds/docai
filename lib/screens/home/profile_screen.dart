@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/supabase_service.dart';
+import '../../services/user_stats_service.dart';
 import '../../widgets/medical_preferences_button.dart';
 import '../../widgets/medical_preferences_status.dart';
 import '../../widgets/language_selector.dart';
@@ -23,6 +24,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   late Animation<double> _fadeInAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _statsAnimation;
+  
+  final UserStatsService _statsService = UserStatsService();
+  UserStats? _userStats;
+  bool _isLoadingStats = true;
 
   @override
   void initState() {
@@ -54,9 +59,33 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
     
     _animationController.forward();
-    Future.delayed(const Duration(milliseconds: 400), () {
-      _statsAnimationController.forward();
-    });
+    _loadUserStats();
+  }
+  
+  Future<void> _loadUserStats() async {
+    try {
+      final stats = await _statsService.getUserStats();
+      if (mounted) {
+        setState(() {
+          _userStats = stats;
+          _isLoadingStats = false;
+        });
+        // Animar estadísticas después de cargar
+        Future.delayed(const Duration(milliseconds: 400), () {
+          if (mounted) {
+            _statsAnimationController.forward();
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _userStats = UserStats.empty();
+          _isLoadingStats = false;
+        });
+        _statsAnimationController.forward();
+      }
+    }
   }
 
   @override
@@ -119,37 +148,47 @@ class _ProfileScreenState extends State<ProfileScreen>
             opacity: _fadeInAnimation,
             child: SlideTransition(
               position: _slideAnimation,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 8),
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  await _loadUserStats();
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 8),
 
-                    // Compact Profile Header con stats
-                    _buildUltraCompactProfileHeader(l10n),
-                    const SizedBox(height: 16),
+                      // Compact Profile Header
+                      _buildUltraCompactProfileHeader(l10n),
+                      const SizedBox(height: 16),
 
-                    // Quick Stats Row
-                    _buildQuickStatsRow(l10n),
-                    const SizedBox(height: 20),
+                      // Quick Stats Row con datos reales
+                      _buildRealQuickStatsRow(l10n),
+                      const SizedBox(height: 20),
 
-                    // Quick Actions Grid
-                    _buildQuickActionsGrid(l10n),
-                    const SizedBox(height: 20),
+                      // Quick Actions Grid
+                      _buildQuickActionsGrid(l10n),
+                      const SizedBox(height: 20),
 
-                    // Medical & Subscription Combined
-                    _buildMedicalSubscriptionSection(l10n),
-                    const SizedBox(height: 20),
+                      // Medical Section (separada)
+                      _buildMedicalSection(l10n),
+                      const SizedBox(height: 16),
 
-                    // Responsive Menu Items (más compactos)
-                    _buildCompactMenuItems(l10n, localeProvider),
+                      // Subscription Section (separada)
+                      _buildSubscriptionSection(l10n),
+                      const SizedBox(height: 20),
 
-                    const SizedBox(height: 20),
+                      // Responsive Menu Items (más compactos)
+                      _buildCompactMenuItems(l10n, localeProvider),
 
-                    // Enhanced Logout Button
-                    _buildLogoutButton(l10n),
-                    const SizedBox(height: 32),
-                  ],
+                      const SizedBox(height: 20),
+
+                      // Enhanced Logout Button
+                      _buildLogoutButton(l10n),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -270,7 +309,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildQuickStatsRow(AppLocalizations l10n) {
+  Widget _buildRealQuickStatsRow(AppLocalizations l10n) {
     return AnimatedBuilder(
       animation: _statsAnimation,
       builder: (context, child) {
@@ -279,8 +318,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           child: Row(
             children: [
               Expanded(
-                child: _buildStatCard(
-                  '42',
+                child: _buildRealStatCard(
+                  _isLoadingStats ? '...' : '${_userStats?.totalConversations ?? 0}',
                   'Consultas',
                   Icons.chat_bubble_outline,
                   const Color(0xFF6C5CE7),
@@ -288,8 +327,8 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildStatCard(
-                  '28d',
+                child: _buildRealStatCard(
+                  _isLoadingStats ? '...' : (_userStats?.formattedLastActivity ?? 'Nunca'),
                   'Último uso',
                   Icons.access_time,
                   const Color(0xFF00B894),
@@ -297,8 +336,8 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildStatCard(
-                  '95%',
+                child: _buildRealStatCard(
+                  _isLoadingStats ? '...' : (_userStats?.formattedSatisfaction ?? '0%'),
                   'Satisfacción',
                   Icons.thumb_up_alt_outlined,
                   const Color(0xFFE17055),
@@ -311,7 +350,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildStatCard(String value, String label, IconData icon, Color color) {
+  Widget _buildRealStatCard(String value, String label, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -450,177 +489,213 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildMedicalSubscriptionSection(AppLocalizations l10n) {
-    return Row(
-      children: [
-        // Medical preferences - más compacto
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+  Widget _buildMedicalSection(AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C5CE7).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+                child: const Icon(
+                  Icons.local_hospital,
+                  color: Color(0xFF6C5CE7),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6C5CE7).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.local_hospital,
-                        color: Color(0xFF6C5CE7),
-                        size: 16,
+                    Text(
+                      l10n.medicalPreferences,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2D3436),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Médico',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2D3436),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const MedicalPreferencesStatus(),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  height: 32,
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6C5CE7),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Configurar',
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Configura tu información médica',
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        // Subscription - compacto
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF2E7D32), Color(0xFF4CAF50)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF2E7D32).withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.white, size: 16),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'Premium',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF00B894),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        l10n.active,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        color: Color(0xFF6C757D),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  'Consultas\nilimitadas',
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const MedicalPreferencesStatus(),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: MedicalPreferencesButton(
+              onPreferencesUpdated: () {
+                setState(() {});
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.medicalPreferencesUpdated),
+                    backgroundColor: const Color(0xFF00B894),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    margin: const EdgeInsets.all(16),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubscriptionSection(AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2E7D32), Color(0xFF4CAF50)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2E7D32).withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.star, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.premiumPlan,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Disfruta de todas las funciones',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00B894),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  l10n.active,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 12,
-                    height: 1.2,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  height: 32,
-                  child: ElevatedButton(
-                    onPressed: () => _showSubscriptionDetails(l10n),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Gestionar',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.unlimitedConsultations,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      l10n.expiresOn,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () => _showSubscriptionDetails(l10n),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.2),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Gestionar',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -792,7 +867,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // Nuevos métodos para funcionalidades adicionales
+  // Métodos auxiliares
   void _showQuickSettings(BuildContext context, AppLocalizations l10n) {
     showModalBottomSheet(
       context: context,
@@ -894,7 +969,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _shareProfile(AppLocalizations l10n) {
-    // Implementar funcionalidad de compartir perfil
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Función de compartir próximamente'),
