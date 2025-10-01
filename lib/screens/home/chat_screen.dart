@@ -13,8 +13,9 @@ import '../../models/user_preferences.dart';
 import '../../config/openrouter_config.dart';
 import '../../services/supabase_service.dart';
 import '../../theme/app_theme.dart';
+import '../../services/medical_data_bridge_service.dart';
 
-import 'personalization_screen.dart';
+import '../medical_preferences_screen.dart';
 import 'history_screen.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -139,6 +140,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _loadUserPreferences() async {
     try {
+      // First try to sync medical data to ensure comprehensive preferences are available
+      await MedicalDataBridgeService.syncMedicalDataToChat();
+      
+      // Then load the user preferences for chat
       final preferences = await SupabaseService.getUserPreferences();
       if (mounted) {
         setState(() {
@@ -946,7 +951,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                     await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => const PersonalizationScreen(),
+                                        builder: (context) => const MedicalPreferencesScreen(),
                                       ),
                                     );
                                     await _loadUserPreferences();
