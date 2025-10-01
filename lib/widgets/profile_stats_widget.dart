@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import '../services/user_stats_service.dart';
 
 class ProfileStatsWidget extends StatefulWidget {
   const ProfileStatsWidget({super.key});
@@ -14,6 +15,10 @@ class _ProfileStatsWidgetState extends State<ProfileStatsWidget>
   late AnimationController _progressController;
   late Animation<double> _pulseAnimation;
   late Animation<double> _progressAnimation;
+  
+  final UserStatsService _statsService = UserStatsService();
+  UserStats? _userStats;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -35,9 +40,32 @@ class _ProfileStatsWidgetState extends State<ProfileStatsWidget>
     );
 
     _pulseController.repeat(reverse: true);
-    Future.delayed(const Duration(milliseconds: 500), () {
-      _progressController.forward();
-    });
+    _loadStats();
+  }
+  
+  Future<void> _loadStats() async {
+    try {
+      final stats = await _statsService.getUserStats();
+      if (mounted) {
+        setState(() {
+          _userStats = stats;
+          _isLoading = false;
+        });
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            _progressController.forward();
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _userStats = UserStats.empty();
+          _isLoading = false;
+        });
+        _progressController.forward();
+      }
+    }
   }
 
   @override
@@ -71,7 +99,7 @@ class _ProfileStatsWidgetState extends State<ProfileStatsWidget>
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                    colors: [Color(0xFF2E7D32), Color(0xFF4CAF50)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -94,90 +122,170 @@ class _ProfileStatsWidgetState extends State<ProfileStatsWidget>
                   ),
                 ),
               ),
-              AnimatedBuilder(
-                animation: _pulseAnimation,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _pulseAnimation.value,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
+              if (!_isLoading && _userStats != null && _userStats!.isActiveThisWeek)
+                Row(
+                  children: [
+                    AnimatedBuilder(
+                      animation: _pulseAnimation,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: _pulseAnimation.value,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF00B894),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Activo',
+                      style: TextStyle(
+                        fontSize: 12,
                         color: Color(0xFF00B894),
-                        shape: BoxShape.circle,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  );
-                },
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'En línea',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF00B894),
-                  fontWeight: FontWeight.w600,
+                  ],
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 24),
           
-          // Stats grid
-          Row(
-            children: [
-              Expanded(
-                child: _buildAnimatedStatCard(
-                  '152',
-                  'Consultas totales',
-                  Icons.chat_bubble_outline,
-                  const Color(0xFF6C5CE7),
-                  0.0,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildAnimatedStatCard(
-                  '2.3k',
-                  'Minutos de chat',
-                  Icons.access_time,
-                  const Color(0xFF00B894),
-                  0.2,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildAnimatedStatCard(
-                  '96%',
-                  'Satisfacción',
-                  Icons.thumb_up_alt_outlined,
-                  const Color(0xFFE17055),
-                  0.4,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildAnimatedStatCard(
-                  '12',
-                  'Esta semana',
-                  Icons.trending_up,
-                  const Color(0xFFE84393),
-                  0.6,
-                ),
-              ),
-            ],
-          ),
+          if (_isLoading)
+            _buildLoadingStats()
+          else
+            _buildRealStats(),
           
           const SizedBox(height: 20),
           
-          // Weekly progress
+          // Weekly progress con datos reales
           _buildWeeklyProgress(),
         ],
       ),
+    );
+  }
+  
+  Widget _buildLoadingStats() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: _buildLoadingStat()),
+            const SizedBox(width: 12),
+            Expanded(child: _buildLoadingStat()),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: _buildLoadingStat()),
+            const SizedBox(width: 12),
+            Expanded(child: _buildLoadingStat()),
+          ],
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildLoadingStat() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            width: 40,
+            height: 20,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: 60,
+            height: 10,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildRealStats() {
+    final stats = _userStats!;
+    
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _buildAnimatedStatCard(
+                '${stats.totalConversations}',
+                'Consultas totales',
+                Icons.chat_bubble_outline,
+                const Color(0xFF6C5CE7),
+                0.0,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildAnimatedStatCard(
+                stats.formattedChatTime,
+                'Tiempo de chat',
+                Icons.access_time,
+                const Color(0xFF00B894),
+                0.2,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildAnimatedStatCard(
+                stats.formattedSatisfaction,
+                'Satisfacción',
+                Icons.thumb_up_alt_outlined,
+                const Color(0xFFE17055),
+                0.4,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildAnimatedStatCard(
+                '${stats.conversationsThisWeek}',
+                'Esta semana',
+                Icons.trending_up,
+                const Color(0xFFE84393),
+                0.6,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -217,24 +325,25 @@ class _ProfileStatsWidgetState extends State<ProfileStatsWidget>
                     children: [
                       Icon(icon, color: color, size: 20),
                       const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          '+5%',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                      if (!_isLoading && _userStats!.conversationsThisWeek > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            '+',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -265,6 +374,9 @@ class _ProfileStatsWidgetState extends State<ProfileStatsWidget>
   }
 
   Widget _buildWeeklyProgress() {
+    final weeklyPercentage = _isLoading ? 0.0 : (_userStats?.weeklyActivityPercentage ?? 0.0);
+    final weeklyActivity = _isLoading ? [0, 0, 0, 0, 0, 0, 0] : (_userStats?.weeklyActivity ?? [0, 0, 0, 0, 0, 0, 0]);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -280,7 +392,7 @@ class _ProfileStatsWidgetState extends State<ProfileStatsWidget>
               ),
             ),
             Text(
-              '87% completado',
+              _isLoading ? 'Cargando...' : '${weeklyPercentage.round()}% activo',
               style: TextStyle(
                 fontSize: 12,
                 color: const Color(0xFF00B894),
@@ -303,7 +415,7 @@ class _ProfileStatsWidgetState extends State<ProfileStatsWidget>
                   ),
                   child: FractionallySizedBox(
                     alignment: Alignment.centerLeft,
-                    widthFactor: 0.87 * _progressAnimation.value,
+                    widthFactor: (weeklyPercentage / 100) * _progressAnimation.value,
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
@@ -321,7 +433,8 @@ class _ProfileStatsWidgetState extends State<ProfileStatsWidget>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: List.generate(7, (index) {
                     final days = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-                    final isActive = index < 6; // Solo 6 días activos
+                    final activityCount = weeklyActivity[index];
+                    final isActive = activityCount > 0;
                     final opacity = math.max(
                       0.0,
                       math.min(1.0, (_progressAnimation.value - index * 0.1) / 0.7),
@@ -356,7 +469,7 @@ class _ProfileStatsWidgetState extends State<ProfileStatsWidget>
                           const SizedBox(height: 4),
                           Container(
                             width: 4,
-                            height: isActive ? 12 : 4,
+                            height: isActive ? math.min(12, activityCount * 2).toDouble() : 4,
                             decoration: BoxDecoration(
                               color: isActive 
                                   ? const Color(0xFF00B894)
