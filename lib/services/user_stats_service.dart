@@ -91,17 +91,17 @@ class UserStatsService {
       if (isThisWeek) conversationsThisWeek++;
       if (isThisMonth) conversationsThisMonth++;
       
-      // Actualizar última actividad
-      if (lastActivityDate == null || conversation.updatedAt.isAfter(lastActivityDate)) {
-        lastActivityDate = conversation.updatedAt;
-      }
-      
-      // Contar mensajes por tipo
+      // Contar mensajes por tipo y encontrar el último mensaje
       int userMessagesInConv = 0;
       int botMessagesInConv = 0;
       
       for (final message in conversation.messages) {
         totalCharacters += message.content.length;
+        
+        // Actualizar última actividad con el mensaje más reciente
+        if (lastActivityDate == null || message.createdAt.isAfter(lastActivityDate)) {
+          lastActivityDate = message.createdAt;
+        }
         
         if (message.role == ChatRole.user) {
           totalUserMessages++;
@@ -186,10 +186,18 @@ class UserStatsService {
       final conversations = await _chatHistoryService.getAllConversations();
       if (conversations.isEmpty) return null;
       
-      // Encontrar la conversación más reciente
-      final mostRecent = conversations.reduce((a, b) => 
-          a.updatedAt.isAfter(b.updatedAt) ? a : b);
-      return mostRecent.updatedAt;
+      DateTime? lastMessageDate;
+      
+      // Buscar el último mensaje de todas las conversaciones
+      for (final conversation in conversations) {
+        for (final message in conversation.messages) {
+          if (lastMessageDate == null || message.createdAt.isAfter(lastMessageDate)) {
+            lastMessageDate = message.createdAt;
+          }
+        }
+      }
+      
+      return lastMessageDate;
     } catch (e) {
       debugPrint('Error getting last activity: $e');
       return null;
