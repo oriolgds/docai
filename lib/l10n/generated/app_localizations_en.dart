@@ -128,6 +128,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'This information helps us personalize responses, but does not replace professional medical consultation.';
 
   @override
+  String get medicalDisclaimerCard =>
+      'DocAI does not replace professional medical advice. The information provided is for educational purposes. For diagnoses, treatments or emergencies consult a healthcare professional.';
+
+  @override
+  String get customizeYourExperience => 'Customize your experience';
+
+  @override
+  String get updateYourInformation => 'Update your information';
+
+  @override
+  String get manageYourAlerts => 'Manage your alerts';
+
+  @override
+  String get privacySecuritySettings => 'Privacy & security settings';
+
+  @override
+  String get getHelpWhenYouNeedIt => 'Get help when you need it';
+
+  @override
+  String get learnMoreAboutDocAI => 'Learn more about DocAI';
+
+  @override
   String get preferencesSavedSuccess => 'Preferences saved successfully';
 
   @override
@@ -684,24 +706,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get configureMedicalPreferences =>
       'Configure allergies, treatment preferences and more';
-
-  @override
-  String get customizeYourExperience => 'Customize your experience';
-
-  @override
-  String get updateYourInformation => 'Update your information';
-
-  @override
-  String get manageYourAlerts => 'Manage your alerts';
-
-  @override
-  String get privacySecuritySettings => 'Privacy & security settings';
-
-  @override
-  String get getHelpWhenYouNeedIt => 'Get help when you need it';
-
-  @override
-  String get learnMoreAboutDocAI => 'Learn more about DocAI';
 
   @override
   String get privacyAndSecurity => 'Privacy and Security';
