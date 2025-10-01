@@ -3,6 +3,7 @@ import '../../models/model_profile.dart';
 
 class ChatInput extends StatefulWidget {
   final ValueChanged<String> onSend;
+  final VoidCallback? onCancel; // New callback for cancel
   final bool isSending;
   final ModelProfile selectedProfile;
   final List<ModelProfile> allProfiles;
@@ -14,6 +15,7 @@ class ChatInput extends StatefulWidget {
   const ChatInput({
     super.key,
     required this.onSend,
+    this.onCancel, // Optional cancel callback
     this.isSending = false,
     required this.selectedProfile,
     required this.allProfiles,
@@ -37,6 +39,12 @@ class _ChatInputState extends State<ChatInput> {
     widget.onSend(text);
     _controller.clear();
     _focusNode.requestFocus();
+  }
+  
+  void _cancel() {
+    if (widget.onCancel != null) {
+      widget.onCancel!();
+    }
   }
 
   @override
@@ -82,11 +90,14 @@ class _ChatInputState extends State<ChatInput> {
                   child: TextField(
                     controller: _controller,
                     focusNode: _focusNode,
+                    enabled: !widget.isSending, // Disable when sending
                     minLines: 1,
                     maxLines: 6,
                     textInputAction: TextInputAction.newline,
                     decoration: InputDecoration(
-                      hintText: 'Escribe tu consulta médica...',
+                      hintText: widget.isSending 
+                          ? 'Generando respuesta...' 
+                          : 'Escribe tu consulta médica...',
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
@@ -102,32 +113,32 @@ class _ChatInputState extends State<ChatInput> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Send button
+                // Send/Cancel button
                 Container(
                   margin: const EdgeInsets.only(
                     bottom: 4,
                   ), // Align with text field
                   child: IconButton.filled(
-                    onPressed: widget.isSending ? null : _submit,
+                    onPressed: widget.isSending ? _cancel : _submit,
                     style: IconButton.styleFrom(
                       shape: const CircleBorder(),
                       padding: const EdgeInsets.all(12),
+                      backgroundColor: widget.isSending 
+                          ? Colors.red.shade600 
+                          : null, // Red color when sending/canceling
                     ),
                     icon: widget.isSending
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
+                        ? const Icon(
+                            Icons.stop_rounded,
+                            size: 20,
+                            color: Colors.white,
                           )
                         : const Icon(
                             Icons.send_rounded,
                             size: 20,
                             color: Colors.white,
                           ),
-                    tooltip: 'Enviar',
+                    tooltip: widget.isSending ? 'Cancelar' : 'Enviar',
                   ),
                 ),
               ],

@@ -1,0 +1,106 @@
+{
+  "project_info": {
+    "project_number": "161676278387",
+    "project_id": "docai-69f2a",
+    "storage_bucket": "docai-69f2a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:161676278387:android:efcfc3463120acef568806",
+        "android_client_info": {
+          "package_name": "com.oriolgds.docai"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "161676278387-6qcgt4o6omaf88qpdfati12hh2hne84q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.oriolgds.docai",
+            "certificate_hash": "21db6894794aa936205f6c1e44fdd3ad592e3552"
+          }
+        },
+        {
+          "client_id": "161676278387-as70b2lnt55if6652c3nja7f5h6jdb0v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChnwkLSVW1VBW-PouvaZBfvNhuYoZ0Nnc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "161676278387-as70b2lnt55if6652c3nja7f5h6jdb0v.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "161676278387-n38vguqd2r2avalh6ongtr93dt9tjuq7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.docai"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:161676278387:android:95a9ffa8b81bfdc8568806",
+        "android_client_info": {
+          "package_name": "com.oriolgds.doky"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "161676278387-avtk64jrbbdm8q2543rrg4icdo6rden9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.oriolgds.doky",
+            "certificate_hash": "18f3a87ac89c3a491ce3a3ece63bae378e8867af"
+          }
+        },
+        {
+          "client_id": "161676278387-uemcn13782451dnge8p97pov10mlfuvc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.oriolgds.doky",
+            "certificate_hash": "21db6894794aa936205f6c1e44fdd3ad592e3552"
+          }
+        },
+        {
+          "client_id": "161676278387-as70b2lnt55if6652c3nja7f5h6jdb0v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChnwkLSVW1VBW-PouvaZBfvNhuYoZ0Nnc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "161676278387-as70b2lnt55if6652c3nja7f5h6jdb0v.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "161676278387-n38vguqd2r2avalh6ongtr93dt9tjuq7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.docai"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

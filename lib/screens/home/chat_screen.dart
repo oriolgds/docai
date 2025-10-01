@@ -46,6 +46,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _showFirstTimeWarning = false;
   UserPreferences? _userPreferences;
   bool _isInitialized = false; // Flag to track initialization
+  StreamSubscription<String>? _currentStreamSubscription; // Track current stream
   
   // Variables para el historial
   ChatConversation? _currentConversation;
@@ -216,6 +217,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _scrollTimer?.cancel();
+    _currentStreamSubscription?.cancel();
     _scrollController.dispose();
     _service.dispose();
     _stateManager.removeListener(_onStateManagerChanged);
@@ -387,6 +389,43 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // New method to handle cancellation
+  Future<void> _cancelGeneration() async {
+    if (!_isSending) return;
+    
+    // Cancel the current stream
+    await _currentStreamSubscription?.cancel();
+    _currentStreamSubscription = null;
+    
+    // Cancel stream in service
+    await _service.cancelCurrentStream();
+    
+    // Update UI state
+    if (mounted) {
+      setState(() {
+        _isSending = false;
+        _streamingIndex = null;
+      });
+      
+      // Remove the incomplete assistant message if it exists
+      if (_messages.isNotEmpty && 
+          _messages.last.role == ChatRole.assistant && 
+          _messages.last.content.trim().isEmpty) {
+        setState(() {
+          _messages.removeLast();
+        });
+      }
+      
+      // Show cancellation message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Generación cancelada'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   Future<void> _sendMessage(
     String text, {
     int? regenerateIndex,
@@ -446,32 +485,76 @@ class _ChatScreenState extends State<ChatScreen> {
       // Initial scroll to bottom before starting the stream
       _scrollToBottom(force: true);
 
-      await for (final chunk in stream) {
-        if (!mounted) break;
-        setState(() {
-          if (_streamingIndex != null && _streamingIndex! < _messages.length) {
-            final curr = _messages[_streamingIndex!];
-            _messages[_streamingIndex!] = ChatMessage(
-              id: curr.id,
-              role: curr.role,
-              content: curr.content + chunk,
-              createdAt: curr.createdAt,
-            );
+      // Cancel any existing subscription
+      await _currentStreamSubscription?.cancel();
+      
+      // Listen to the stream
+      _currentStreamSubscription = stream.listen(
+        (chunk) {
+          if (!mounted) return;
+          setState(() {
+            if (_streamingIndex != null && _streamingIndex! < _messages.length) {
+              final curr = _messages[_streamingIndex!];
+              _messages[_streamingIndex!] = ChatMessage(
+                id: curr.id,
+                role: curr.role,
+                content: curr.content + chunk,
+                createdAt: curr.createdAt,
+              );
+            }
+          });
+
+          // Only scroll if we're near the bottom
+          final maxScroll = _scrollController.position.maxScrollExtent;
+          final currentScroll = _scrollController.offset;
+          if (maxScroll - currentScroll < 300) {
+            _scrollToBottom();
           }
-        });
-
-        // Only scroll if we're near the bottom
-        final maxScroll = _scrollController.position.maxScrollExtent;
-        final currentScroll = _scrollController.offset;
-        if (maxScroll - currentScroll < 300) {
-          _scrollToBottom();
-        }
-      }
-
-      // Guardar la conversación después de que se complete la respuesta del asistente
-      if (_currentConversation != null) {
-        await _createOrUpdateConversation(text);
-      }
+        },
+        onDone: () async {
+          // Stream completed successfully
+          _currentStreamSubscription = null;
+          
+          if (mounted) {
+            setState(() {
+              _isSending = false;
+              _streamingIndex = null;
+            });
+          }
+          
+          // Save the conversation after completion
+          if (_currentConversation != null) {
+            await _createOrUpdateConversation(text);
+          }
+        },
+        onError: (e) {
+          _currentStreamSubscription = null;
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              behavior: SnackBarBehavior.floating,
+            ));
+            
+            // Show error in the assistant bubble if placeholder exists
+            if (_streamingIndex != null && _streamingIndex! < _messages.length) {
+              setState(() {
+                _messages[_streamingIndex!] = ChatMessage(
+                  id: _messages[_streamingIndex!].id,
+                  role: ChatRole.assistant,
+                  content: 'Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.',
+                  createdAt: DateTime.now(),
+                );
+              });
+            }
+            
+            setState(() {
+              _isSending = false;
+              _streamingIndex = null;
+            });
+          }
+        },
+      );
 
     } catch (e) {
       if (mounted) {
@@ -491,9 +574,7 @@ class _ChatScreenState extends State<ChatScreen> {
             );
           });
         }
-      }
-    } finally {
-      if (mounted) {
+        
         setState(() {
           _isSending = false;
           _streamingIndex = null;
@@ -1000,6 +1081,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           ChatInput(
             onSend: (text) => _sendMessage(text),
+            onCancel: _cancelGeneration, // Connect cancel functionality
             isSending: _isSending,
             selectedProfile: _selectedProfile,
             allProfiles: ModelProfile.defaults(),

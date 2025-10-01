@@ -326,6 +326,48 @@ abstract class AppLocalizations {
   /// **'This information helps us personalize responses, but does not replace professional medical consultation.'**
   String get disclaimerText;
 
+  /// Medical disclaimer card text in chat
+  ///
+  /// In en, this message translates to:
+  /// **'DocAI does not replace professional medical advice. The information provided is for educational purposes. For diagnoses, treatments or emergencies consult a healthcare professional.'**
+  String get medicalDisclaimerCard;
+
+  /// Personalization menu subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Customize your experience'**
+  String get customizeYourExperience;
+
+  /// Edit profile menu subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Update your information'**
+  String get updateYourInformation;
+
+  /// Notifications menu subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your alerts'**
+  String get manageYourAlerts;
+
+  /// Privacy and security menu subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & security settings'**
+  String get privacySecuritySettings;
+
+  /// Help and support menu subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Get help when you need it'**
+  String get getHelpWhenYouNeedIt;
+
+  /// About menu subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Learn more about DocAI'**
+  String get learnMoreAboutDocAI;
+
   /// Success message when preferences are saved
   ///
   /// In en, this message translates to:
@@ -1369,42 +1411,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Configure allergies, treatment preferences and more'**
   String get configureMedicalPreferences;
-
-  /// Personalization menu subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Customize your experience'**
-  String get customizeYourExperience;
-
-  /// Edit profile menu subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Update your information'**
-  String get updateYourInformation;
-
-  /// Notifications menu subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Manage your alerts'**
-  String get manageYourAlerts;
-
-  /// Privacy and security menu subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Privacy & security settings'**
-  String get privacySecuritySettings;
-
-  /// Help and support menu subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Get help when you need it'**
-  String get getHelpWhenYouNeedIt;
-
-  /// About menu subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Learn more about DocAI'**
-  String get learnMoreAboutDocAI;
 
   /// Privacy and Security screen title
   ///
