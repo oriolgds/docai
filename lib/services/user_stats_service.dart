@@ -83,6 +83,9 @@ class UserStatsService {
     // Lista de días de actividad para el gráfico semanal
     final weeklyActivity = <DateTime, int>{};
     
+    // Para determinar la última actividad
+    DateTime? lastActivity;
+    
     for (final conversation in conversations) {
       // Verificar si está en el rango de tiempo
       final isThisWeek = conversation.updatedAt.isAfter(oneWeekAgo);
@@ -91,6 +94,11 @@ class UserStatsService {
       if (isThisWeek) conversationsThisWeek++;
       if (isThisMonth) conversationsThisMonth++;
       
+      // Actualizar última actividad
+      if (lastActivity == null || conversation.updatedAt.isAfter(lastActivity)) {
+        lastActivity = conversation.updatedAt;
+      }
+      
       // Contar mensajes por tipo
       int userMessagesInConv = 0;
       int botMessagesInConv = 0;
@@ -98,6 +106,11 @@ class UserStatsService {
       for (final message in conversation.messages) {
         totalCharacters += message.content.length;
         totalMessages++; // Contar todos los mensajes para el promedio
+        
+        // También verificar actividad en mensajes individuales
+        if (lastActivity == null || message.createdAt.isAfter(lastActivity)) {
+          lastActivity = message.createdAt;
+        }
         
         if (message.role == ChatRole.user) {
           totalUserMessages++;
@@ -163,6 +176,7 @@ class UserStatsService {
       weeklyActivity: weeklyActivityList,
       accountCreatedDate: _getAccountCreatedDate(),
       isCloudSyncEnabled: await _chatHistoryService.isCloudSyncEnabled(),
+      lastActivityDate: lastActivity,
     );
   }
   
@@ -228,6 +242,7 @@ class UserStats {
   final List<int> weeklyActivity; // 7 días de actividad
   final DateTime? accountCreatedDate;
   final bool isCloudSyncEnabled;
+  final DateTime? lastActivityDate;
   
   const UserStats({
     required this.totalConversations,
@@ -244,6 +259,7 @@ class UserStats {
     required this.weeklyActivity,
     this.accountCreatedDate,
     required this.isCloudSyncEnabled,
+    this.lastActivityDate,
   });
   
   factory UserStats.empty() {
@@ -262,6 +278,7 @@ class UserStats {
       weeklyActivity: [0, 0, 0, 0, 0, 0, 0],
       accountCreatedDate: null,
       isCloudSyncEnabled: false,
+      lastActivityDate: null,
     );
   }
   
@@ -292,6 +309,38 @@ class UserStats {
     } else {
       final days = (estimatedChatMinutes / 1440).floor();
       return '${days}d';
+    }
+  }
+  
+  /// Obtener la última actividad formateada
+  String get formattedLastActivity {
+    if (lastActivityDate == null) return 'Nunca';
+    
+    final now = DateTime.now();
+    final difference = now.difference(lastActivityDate!);
+    
+    if (difference.inDays == 0) {
+      if (difference.inHours == 0) {
+        if (difference.inMinutes < 5) {
+          return 'Ahora';
+        } else if (difference.inMinutes < 60) {
+          return 'Hace ${difference.inMinutes} min';
+        }
+      }
+      return 'Hace ${difference.inHours}h';
+    } else if (difference.inDays == 1) {
+      return 'Ayer';
+    } else if (difference.inDays < 7) {
+      return 'Hace ${difference.inDays} días';
+    } else if (difference.inDays < 30) {
+      final weeks = (difference.inDays / 7).floor();
+      return weeks == 1 ? 'Hace 1 semana' : 'Hace $weeks semanas';
+    } else if (difference.inDays < 365) {
+      final months = (difference.inDays / 30).floor();
+      return months == 1 ? 'Hace 1 mes' : 'Hace $months meses';
+    } else {
+      final years = (difference.inDays / 365).floor();
+      return years == 1 ? 'Hace 1 año' : 'Hace $years años';
     }
   }
   
