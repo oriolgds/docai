@@ -479,39 +479,50 @@ class SupabaseService {
     final user = currentUser;
     if (user == null) throw Exception('User not authenticated');
     
+    final userId = user.id;
+    final userEmail = user.email;
+
+    // Step 1: Clear conversations (best effort)
     try {
-      // Step 1: Clear all conversations and messages
       await clearAllConversations();
-      
-      // Step 2: Delete user preferences
-      await _deleteUserPreferences(user.id);
-      
-      // Step 3: Delete subscription data (if exists)
-      await _deleteUserSubscriptions(user.id);
-      
-      // Step 4: Delete user stats/analytics (if exists)
-      await _deleteUserStats(user.id);
-      
-      // Step 5: Delete any user-related metadata
-      await _deleteUserMetadata(user.id);
-      
-      // Step 6: Clear local storage and cached data
-      await _clearLocalUserData(user.email!);
-      
-      // Step 7: Sign out (this will clear the session)
-      await signOut();
-      
-      // Note: The actual user record deletion would typically be handled
-      // by a backend function or admin API, since client SDKs don't have
-      // permission to delete user accounts directly for security reasons.
-      // In production, this would trigger a backend function that handles
-      // the actual account deletion after data cleanup is complete.
-      
     } catch (e) {
-      throw Exception('Error during account deletion: $e');
+      print('Warning: Error clearing conversations before account deletion: $e');
     }
+
+    // Step 2: Remove data from auxiliary tables (best effort)
+    await _deleteUserPreferences(userId);
+    await _deleteUserSubscriptions(userId);
+    await _deleteUserStats(userId);
+    await _deleteUserMetadata(userId);
+
+    // Step 3: Invoke edge function to remove auth user and remaining data
+    final response = await client.functions.invoke('delete-user');
+
+    if (response.status >= 400) {
+      throw Exception('Failed to delete account. Status code: ${response.status}');
+    }
+
+    final responseData = response.data;
+    if (responseData is Map) {
+      final successValue = responseData['success'];
+      final isSuccess = successValue == true || successValue == 'true';
+      if (!isSuccess) {
+        final errorMessage = (responseData['error'] ?? responseData['message'] ??
+                'Edge function reported a failure while deleting the account')
+            .toString();
+        throw Exception(errorMessage);
+      }
+    }
+
+    // Step 4: Clear local storage and cached data
+    if (userEmail != null) {
+      await _clearLocalUserData(userEmail);
+    }
+
+    // Step 5: Sign out (this will clear the session)
+    await signOut();
   }
-  
+
   /// Delete user preferences data
   static Future<void> _deleteUserPreferences(String userId) async {
     try {
@@ -519,8 +530,13 @@ class SupabaseService {
           .from('user_preferences')
           .delete()
           .eq('user_id', userId);
+
+      await client
+          .from('user_medical_preferences')
+          .delete()
+          .eq('user_id', userId);
     } catch (e) {
-      print('Warning: Error deleting user preferences: $e');
+      print('Warning: Error deleting user preferences data: $e');
       // Don't throw - continue with deletion process
     }
   }
