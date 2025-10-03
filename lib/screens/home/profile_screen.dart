@@ -9,6 +9,7 @@ import '../medical_preferences_screen.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../main.dart';
 import 'privacy_security_screen.dart';
+import 'account_deletion_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -181,6 +182,11 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                       // Responsive Menu Items (más compactos)
                       _buildCompactMenuItems(l10n, localeProvider),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Account Deletion Section (NEW)
+                      _buildAccountDeletionSection(l10n),
 
                       const SizedBox(height: 20),
 
@@ -827,6 +833,96 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
     );
   }
+  
+  // NEW: Account Deletion Section
+  Widget _buildAccountDeletionSection(AppLocalizations l10n) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFE74C3C).withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigateToAccountDeletion(context),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE74C3C).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.delete_forever_outlined,
+                    color: Color(0xFFE74C3C),
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Eliminar cuenta',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFE74C3C),
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Eliminar permanentemente tu cuenta y todos los datos asociados',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6C757D),
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFEBEE),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFFE74C3C).withOpacity(0.3),
+                    ),
+                  ),
+                  child: const Text(
+                    'Peligroso',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFE74C3C),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildLogoutButton(AppLocalizations l10n) {
     return Container(
@@ -865,6 +961,38 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
       ),
     );
+  }
+  
+  // NEW: Navigation method for account deletion
+  Future<void> _navigateToAccountDeletion(BuildContext context) async {
+    final result = await Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const AccountDeletionScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: animation.drive(
+              Tween(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).chain(CurveTween(curve: Curves.easeOutQuart)),
+            ),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+
+    // If account was deleted, the user should already be redirected to login
+    // This is just a safety check
+    if (result == true && mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    }
   }
 
   // Métodos auxiliares
