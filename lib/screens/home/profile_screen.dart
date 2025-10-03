@@ -30,7 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   late Animation<double> _fadeInAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _statsAnimation;
-  
+
   final UserStatsService _statsService = UserStatsService();
   UserStats? _userStats;
   bool _isLoadingStats = true;
@@ -46,7 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    
+
     _fadeInAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOutQuart),
     );
@@ -59,15 +59,15 @@ class _ProfileScreenState extends State<ProfileScreen>
         );
     _statsAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-        parent: _statsAnimationController, 
+        parent: _statsAnimationController,
         curve: Curves.easeOutBack,
       ),
     );
-    
+
     _animationController.forward();
     _loadUserStats();
   }
-  
+
   Future<void> _loadUserStats() async {
     try {
       final stats = await _statsService.getUserStats();
@@ -187,9 +187,9 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                       // Responsive Menu Items (más compactos) - UPDATED
                       _buildCompactMenuItems(l10n, localeProvider),
-                      
+
                       const SizedBox(height: 16),
-                      
+
                       // Account Deletion Section (NEW)
                       _buildAccountDeletionSection(l10n),
 
@@ -277,7 +277,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                 const SizedBox(height: 4),
                 // Badge de estado
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF00B894),
                     borderRadius: BorderRadius.circular(12),
@@ -330,7 +333,9 @@ class _ProfileScreenState extends State<ProfileScreen>
             children: [
               Expanded(
                 child: _buildRealStatCard(
-                  _isLoadingStats ? '...' : '${_userStats?.totalConversations ?? 0}',
+                  _isLoadingStats
+                      ? '...'
+                      : '${_userStats?.totalConversations ?? 0}',
                   'Consultas',
                   Icons.chat_bubble_outline,
                   const Color(0xFF6C5CE7),
@@ -339,7 +344,9 @@ class _ProfileScreenState extends State<ProfileScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: _buildRealStatCard(
-                  _isLoadingStats ? '...' : (_userStats?.formattedLastActivity ?? 'Nunca'),
+                  _isLoadingStats
+                      ? '...'
+                      : (_userStats?.formattedLastActivity ?? 'Nunca'),
                   'Último uso',
                   Icons.access_time,
                   const Color(0xFF00B894),
@@ -348,7 +355,9 @@ class _ProfileScreenState extends State<ProfileScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: _buildRealStatCard(
-                  _isLoadingStats ? '...' : (_userStats?.formattedSatisfaction ?? '0%'),
+                  _isLoadingStats
+                      ? '...'
+                      : (_userStats?.formattedSatisfaction ?? '0%'),
                   'Satisfacción',
                   Icons.thumb_up_alt_outlined,
                   const Color(0xFFE17055),
@@ -361,7 +370,12 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildRealStatCard(String value, String label, IconData icon, Color color) {
+  Widget _buildRealStatCard(
+    String value,
+    String label,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -389,10 +403,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 10,
-              color: Color(0xFF6C757D),
-            ),
+            style: const TextStyle(fontSize: 10, color: Color(0xFF6C757D)),
           ),
         ],
       ),
@@ -454,7 +465,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: quickActions.map((action) => _buildQuickActionItem(action)).toList(),
+            children: quickActions
+                .map((action) => _buildQuickActionItem(action))
+                .toList(),
           ),
         ],
       ),
@@ -478,11 +491,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   color: action.color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  action.icon,
-                  color: action.color,
-                  size: 20,
-                ),
+                child: Icon(action.icon, color: action.color, size: 20),
               ),
               const SizedBox(height: 4),
               Text(
@@ -547,10 +556,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     const SizedBox(height: 2),
                     const Text(
                       'Configura tu información médica',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF6C757D),
-                      ),
+                      style: TextStyle(fontSize: 12, color: Color(0xFF6C757D)),
                     ),
                   ],
                 ),
@@ -632,10 +638,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     const SizedBox(height: 2),
                     const Text(
                       'Disfruta de todas las funciones',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                   ],
                 ),
@@ -697,10 +700,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
                 child: const Text(
                   'Gestionar',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -773,7 +773,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           final index = entry.key;
           final item = entry.value;
           final isLast = index == menuItems.length - 1;
-          
+
           return Column(
             children: [
               Material(
@@ -809,12 +809,15 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   fontSize: 14,
                                 ),
                               ),
-                              if (item.subtitle != null) const SizedBox(height: 2),
+                              if (item.subtitle != null)
+                                const SizedBox(height: 2),
                               if (item.subtitle != null)
                                 Text(
                                   item.subtitle!,
                                   style: TextStyle(
-                                    color: const Color(0xFF6C757D).withOpacity(0.8),
+                                    color: const Color(
+                                      0xFF6C757D,
+                                    ).withOpacity(0.8),
                                     fontSize: 11,
                                     fontWeight: FontWeight.w400,
                                   ),
@@ -845,7 +848,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
     );
   }
-  
+
   // NEW: Account Deletion Section
   Widget _buildAccountDeletionSection(AppLocalizations l10n) {
     return Container(
@@ -911,7 +914,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFEBEE),
                     borderRadius: BorderRadius.circular(8),
@@ -974,7 +980,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
     );
   }
-  
+
   // NEW: Navigation methods
   void _navigateToHistory() {
     Navigator.of(context).push(
@@ -1021,7 +1027,12 @@ class _ProfileScreenState extends State<ProfileScreen>
     // Then show the cloud sync modal after a short delay
     await Future.delayed(const Duration(milliseconds: 500));
     if (mounted) {
-      CloudSyncModal.show(context);
+      showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => const CloudSyncModal(),
+      );
     }
   }
 
@@ -1066,7 +1077,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
     );
   }
-  
+
   // Navigation method for account deletion
   Future<void> _navigateToAccountDeletion(BuildContext context) async {
     final result = await Navigator.push(
@@ -1124,15 +1135,27 @@ class _ProfileScreenState extends State<ProfileScreen>
             const SizedBox(height: 16),
             const Text(
               'Configuración rápida',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 16),
-            _buildQuickSettingItem(Icons.dark_mode, 'Modo oscuro', false, (value) {}),
-            _buildQuickSettingItem(Icons.notifications, 'Notificaciones', true, (value) {}),
-            _buildQuickSettingItem(Icons.location_on, 'Ubicación', true, (value) {}),
+            _buildQuickSettingItem(
+              Icons.dark_mode,
+              'Modo oscuro',
+              false,
+              (value) {},
+            ),
+            _buildQuickSettingItem(
+              Icons.notifications,
+              'Notificaciones',
+              true,
+              (value) {},
+            ),
+            _buildQuickSettingItem(
+              Icons.location_on,
+              'Ubicación',
+              true,
+              (value) {},
+            ),
             const SizedBox(height: 32),
           ],
         ),
@@ -1140,7 +1163,12 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildQuickSettingItem(IconData icon, String title, bool value, Function(bool) onChanged) {
+  Widget _buildQuickSettingItem(
+    IconData icon,
+    String title,
+    bool value,
+    Function(bool) onChanged,
+  ) {
     return ListTile(
       leading: Icon(icon, color: const Color(0xFF2E7D32)),
       title: Text(title),
@@ -1152,9 +1180,12 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  void _showLanguageSelector(BuildContext context, LocaleProvider? localeProvider) {
+  void _showLanguageSelector(
+    BuildContext context,
+    LocaleProvider? localeProvider,
+  ) {
     if (localeProvider == null) return;
-    
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1180,10 +1211,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               const SizedBox(height: 16),
               const Text(
                 'Seleccionar idioma',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
               LanguageSelector(
@@ -1226,10 +1254,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               const SizedBox(height: 20),
               const Text(
                 'Plan Premium',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 16),
               Container(
@@ -1316,13 +1341,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         children: [
           Icon(icon, color: Colors.white, size: 16),
           const SizedBox(width: 8),
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-            ),
-          ),
+          Text(text, style: const TextStyle(color: Colors.white, fontSize: 14)),
         ],
       ),
     );

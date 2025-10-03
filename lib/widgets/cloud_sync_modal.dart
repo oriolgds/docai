@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../l10n/generated/app_localizations.dart';
 
 class CloudSyncModal extends StatefulWidget {
   const CloudSyncModal({super.key});
@@ -56,6 +56,15 @@ class _CloudSyncModalState extends State<CloudSyncModal>
     if (mounted) {
       Navigator.of(context).pop(true);
     }
+  }
+
+  static Future<bool?> show(BuildContext context) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const CloudSyncModal(),
+    );
   }
 
   @override
@@ -282,12 +291,5 @@ class _CloudSyncModalState extends State<CloudSyncModal>
     );
   }
 
-  static Future<bool?> show(BuildContext context) {
-    return showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const CloudSyncModal(),
-    );
-  }
+  
 }
