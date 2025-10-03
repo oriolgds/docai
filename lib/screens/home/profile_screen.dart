@@ -18,7 +18,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen>
-    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late AnimationController _statsAnimationController;
   late Animation<double> _fadeInAnimation;
@@ -28,13 +28,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   final UserStatsService _statsService = UserStatsService();
   UserStats? _userStats;
   bool _isLoadingStats = true;
-  bool _isRefreshing = false;
-  
-  // Key para forzar rebuild del widget de preferencias médicas
-  final GlobalKey<_MedicalPreferencesStatusState> _medicalStatusKey = GlobalKey();
-
-  @override
-  bool get wantKeepAlive => false; // No mantener vivo para permitir actualizaciones
 
   @override
   void initState() {
@@ -68,19 +61,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     _animationController.forward();
     _loadUserStats();
   }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Refrescar datos cada vez que se navega a esta pantalla
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _refreshAllData();
-    });
-  }
   
   Future<void> _loadUserStats() async {
     try {
-      final stats = await _statsService.getUserStats(forceRefresh: true);
+      final stats = await _statsService.getUserStats();
       if (mounted) {
         setState(() {
           _userStats = stats;
@@ -88,7 +72,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         });
         // Animar estadísticas después de cargar
         Future.delayed(const Duration(milliseconds: 400), () {
-          if (mounted && _statsAnimationController.status != AnimationStatus.completed) {
+          if (mounted) {
             _statsAnimationController.forward();
           }
         });
@@ -104,35 +88,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  /// Método para refrescar todos los datos de la pantalla
-  Future<void> _refreshAllData() async {
-    if (_isRefreshing) return;
-    
-    setState(() {
-      _isRefreshing = true;
-    });
-
-    try {
-      // Invalidar cache del servicio de estadísticas
-      _statsService.invalidateCache();
-      
-      // Recargar estadísticas
-      await _loadUserStats();
-      
-      // Forzar actualización del widget de preferencias médicas
-      _medicalStatusKey.currentState?._refreshPreferences();
-      
-    } catch (e) {
-      debugPrint('Error refreshing profile data: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isRefreshing = false;
-        });
-      }
-    }
-  }
-
   @override
   void dispose() {
     _animationController.dispose();
@@ -142,7 +97,6 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Requerido por AutomaticKeepAliveClientMixin
     final l10n = AppLocalizations.of(context)!;
     final localeProvider = LocaleProvider.of(context);
 
@@ -195,9 +149,9 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: SlideTransition(
               position: _slideAnimation,
               child: RefreshIndicator(
-                onRefresh: _refreshAllData,
-                color: const Color(0xFF2E7D32),
-                backgroundColor: Colors.white,
+                onRefresh: () async {
+                  await _loadUserStats();
+                },
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -593,15 +547,13 @@ class _ProfileScreenState extends State<ProfileScreen>
             ],
           ),
           const SizedBox(height: 16),
-          // Widget de estado de preferencias médicas con key para forzar actualización
-          _MedicalPreferencesStatus(key: _medicalStatusKey),
+          const MedicalPreferencesStatus(),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: MedicalPreferencesButton(
               onPreferencesUpdated: () {
-                // Refrescar todos los datos cuando se actualicen las preferencias
-                _refreshAllData();
+                setState(() {});
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(l10n.medicalPreferencesUpdated),
@@ -1180,8 +1132,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
 
     if (result == true) {
-      // Refrescar todos los datos cuando se regrese de personalización
-      _refreshAllData();
+      setState(() {});
     }
   }
 
@@ -1238,174 +1189,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ],
       ),
-    );
-  }
-}
-
-// Widget personalizado para el estado de preferencias médicas con capacidad de refresh
-class _MedicalPreferencesStatus extends StatefulWidget {
-  const _MedicalPreferencesStatus({Key? key}) : super(key: key);
-
-  @override
-  State<_MedicalPreferencesStatus> createState() => _MedicalPreferencesStatusState();
-}
-
-class _MedicalPreferencesStatusState extends State<_MedicalPreferencesStatus> {
-  final MedicalPreferencesService _service = MedicalPreferencesService();
-  UserMedicalPreferences? _preferences;
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPreferences();
-  }
-
-  Future<void> _loadPreferences() async {
-    setState(() => _isLoading = true);
-    try {
-      _preferences = await _service.getUserMedicalPreferences();
-    } catch (e) {
-      // Error silencioso para este widget informativo
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  /// Método público para refrescar las preferencias desde el widget padre
-  Future<void> _refreshPreferences() async {
-    await _loadPreferences();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    
-    if (_isLoading) {
-      return Container(
-        height: 80,
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF6C5CE7),
-            strokeWidth: 2,
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _preferences != null ? const Color(0xFFE8F5E8) : const Color(0xFFFFF3E0),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: _preferences != null ? const Color(0xFF4CAF50) : const Color(0xFFFF9800),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                _preferences != null ? Icons.check_circle : Icons.info,
-                color: _preferences != null ? const Color(0xFF4CAF50) : const Color(0xFFFF9800),
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  _preferences != null
-                      ? l10n.medicalProfileConfigured
-                      : l10n.medicalProfileIncomplete,
-                  style: TextStyle(
-                    color: _preferences != null ? const Color(0xFF2E7D32) : const Color(0xFFE65100),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _preferences != null
-                ? l10n.medicalProfileConfiguredDescription
-                : l10n.medicalProfileIncompleteDescription,
-            style: TextStyle(
-              color: _preferences != null ? const Color(0xFF4CAF50) : const Color(0xFFFF9800),
-              fontSize: 14,
-            ),
-          ),
-          if (_preferences != null) ..[
-            const SizedBox(height: 12),
-            _buildPreferencesSummary(),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPreferencesSummary() {
-    if (_preferences == null) return const SizedBox.shrink();
-    
-    final l10n = AppLocalizations.of(context)!;
-    final summary = <String>[];
-
-    // Información básica
-    if (_preferences!.dateOfBirth != null) {
-      final age = DateTime.now().difference(_preferences!.dateOfBirth!).inDays ~/ 365;
-      summary.add(l10n.yearsOld(age));
-    }
-
-    // Alergias
-    if (_preferences!.allergies.isNotEmpty) {
-      summary.add(l10n.allergiesCount(_preferences!.allergies.length));
-    }
-
-    // Preferencias de medicina
-    switch (_preferences!.medicinePreference) {
-      case 'natural':
-        summary.add(l10n.naturalMedicine);
-        break;
-      case 'conventional':
-        summary.add(l10n.conventionalMedicine);
-        break;
-      case 'both':
-        summary.add(l10n.integralMedicine);
-        break;
-    }
-
-    // Condiciones crónicas
-    if (_preferences!.chronicConditions.isNotEmpty) {
-      summary.add(l10n.conditionsCount(_preferences!.chronicConditions.length));
-    }
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 4,
-      children: summary.map((item) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFF4CAF50),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            item,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        );
-      }).toList(),
     );
   }
 }
