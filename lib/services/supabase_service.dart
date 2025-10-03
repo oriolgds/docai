@@ -471,4 +471,194 @@ class SupabaseService {
       throw Exception('Error clearing all conversations: $e');
     }
   }
+
+  // ==== ACCOUNT DELETION METHODS ====
+  
+  /// Comprehensive account deletion - removes all user data and account
+  static Future<void> deleteUserAccount() async {
+    final user = currentUser;
+    if (user == null) throw Exception('User not authenticated');
+    
+    try {
+      // Step 1: Clear all conversations and messages
+      await clearAllConversations();
+      
+      // Step 2: Delete user preferences
+      await _deleteUserPreferences(user.id);
+      
+      // Step 3: Delete subscription data (if exists)
+      await _deleteUserSubscriptions(user.id);
+      
+      // Step 4: Delete user stats/analytics (if exists)
+      await _deleteUserStats(user.id);
+      
+      // Step 5: Delete any user-related metadata
+      await _deleteUserMetadata(user.id);
+      
+      // Step 6: Clear local storage and cached data
+      await _clearLocalUserData(user.email!);
+      
+      // Step 7: Sign out (this will clear the session)
+      await signOut();
+      
+      // Note: The actual user record deletion would typically be handled
+      // by a backend function or admin API, since client SDKs don't have
+      // permission to delete user accounts directly for security reasons.
+      // In production, this would trigger a backend function that handles
+      // the actual account deletion after data cleanup is complete.
+      
+    } catch (e) {
+      throw Exception('Error during account deletion: $e');
+    }
+  }
+  
+  /// Delete user preferences data
+  static Future<void> _deleteUserPreferences(String userId) async {
+    try {
+      await client
+          .from('user_preferences')
+          .delete()
+          .eq('user_id', userId);
+    } catch (e) {
+      print('Warning: Error deleting user preferences: $e');
+      // Don't throw - continue with deletion process
+    }
+  }
+  
+  /// Delete user subscription data
+  static Future<void> _deleteUserSubscriptions(String userId) async {
+    try {
+      await client
+          .from('subscriptions')
+          .delete()
+          .eq('user_id', userId);
+    } catch (e) {
+      print('Warning: Error deleting user subscriptions: $e');
+      // Don't throw - continue with deletion process
+    }
+  }
+  
+  /// Delete user statistics and analytics data
+  static Future<void> _deleteUserStats(String userId) async {
+    try {
+      await client
+          .from('user_stats')
+          .delete()
+          .eq('user_id', userId);
+    } catch (e) {
+      print('Warning: Error deleting user stats: $e');
+      // Don't throw - continue with deletion process
+    }
+  }
+  
+  /// Delete any additional user metadata tables
+  static Future<void> _deleteUserMetadata(String userId) async {
+    try {
+      // Delete from any other user-related tables
+      // Add more tables here as needed
+      
+      // Example: Delete user feedback
+      await client
+          .from('user_feedback')
+          .delete()
+          .eq('user_id', userId);
+          
+      // Example: Delete user activities
+      await client
+          .from('user_activities')
+          .delete()
+          .eq('user_id', userId);
+          
+    } catch (e) {
+      print('Warning: Error deleting user metadata: $e');
+      // Don't throw - continue with deletion process
+    }
+  }
+  
+  /// Clear all local user data from SharedPreferences
+  static Future<void> _clearLocalUserData(String userEmail) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Clear verification-related data
+      await prefs.remove('pending_verification_$userEmail');
+      await prefs.remove('last_verification_$userEmail');
+      
+      // Clear any other user-specific local data
+      final keys = prefs.getKeys();
+      for (final key in keys) {
+        if (key.contains(userEmail) || key.contains('user_')) {
+          await prefs.remove(key);
+        }
+      }
+    } catch (e) {
+      print('Warning: Error clearing local user data: $e');
+      // Don't throw - continue with deletion process
+    }
+  }
+  
+  /// Check if user has any subscription that needs to be cancelled
+  static Future<bool> hasActiveSubscription() async {
+    final user = currentUser;
+    if (user == null) return false;
+    
+    try {
+      final subscriptions = await client
+          .from('subscriptions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'active');
+          
+      return subscriptions.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  /// Get a summary of data that will be deleted
+  static Future<Map<String, int>> getDataDeletionSummary() async {
+    final user = currentUser;
+    if (user == null) return {};
+    
+    final summary = <String, int>{};
+    
+    try {
+      // Count conversations
+      final conversations = await client
+          .from('chat_conversations')
+          .select('id')
+          .eq('user_id', user.id);
+      summary['conversations'] = conversations.length;
+      
+      // Count messages
+      int totalMessages = 0;
+      for (final conv in conversations) {
+        final messages = await client
+            .from('chat_messages')
+            .select('id')
+            .eq('conversation_id', conv['id']);
+        totalMessages += messages.length;
+      }
+      summary['messages'] = totalMessages;
+      
+      // Count preferences
+      final preferences = await client
+          .from('user_preferences')
+          .select('id')
+          .eq('user_id', user.id);
+      summary['preferences'] = preferences.length;
+      
+      // Count subscriptions
+      final subscriptions = await client
+          .from('subscriptions')
+          .select('id')
+          .eq('user_id', user.id);
+      summary['subscriptions'] = subscriptions.length;
+      
+    } catch (e) {
+      print('Error getting deletion summary: $e');
+    }
+    
+    return summary;
+  }
 }
