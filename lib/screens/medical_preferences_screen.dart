@@ -251,7 +251,13 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
         _buildDropdownField(
           'Género',
           _gender,
-          ['', 'Masculino', 'Femenino', 'No binario', 'Prefiero no decir'],
+          [
+            {'value': '', 'label': 'No especificado'},
+            {'value': 'male', 'label': 'Masculino'},
+            {'value': 'female', 'label': 'Femenino'},
+            {'value': 'other', 'label': 'Otro'},
+            {'value': 'prefer_not_to_say', 'label': 'Prefiero no decir'},
+          ],
           (value) => setState(() => _gender = value ?? ''),
         ),
         const SizedBox(height: 16),
