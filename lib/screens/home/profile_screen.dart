@@ -4,12 +4,17 @@ import '../../services/user_stats_service.dart';
 import '../../widgets/medical_preferences_button.dart';
 import '../../widgets/medical_preferences_status.dart';
 import '../../widgets/language_selector.dart';
+import '../../widgets/share_modal.dart';
+import '../../widgets/cloud_sync_modal.dart';
 import '../auth/login_screen.dart';
 import '../medical_preferences_screen.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../main.dart';
 import 'privacy_security_screen.dart';
 import 'account_deletion_screen.dart';
+import 'help_support_screen.dart';
+import 'about_screen.dart';
+import 'history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -168,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       _buildRealQuickStatsRow(l10n),
                       const SizedBox(height: 20),
 
-                      // Quick Actions Grid
+                      // Quick Actions Grid - UPDATED with new functionality
                       _buildQuickActionsGrid(l10n),
                       const SizedBox(height: 20),
 
@@ -180,7 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       _buildSubscriptionSection(l10n),
                       const SizedBox(height: 20),
 
-                      // Responsive Menu Items (más compactos)
+                      // Responsive Menu Items (más compactos) - UPDATED
                       _buildCompactMenuItems(l10n, localeProvider),
                       
                       const SizedBox(height: 16),
@@ -400,7 +405,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         icon: Icons.history,
         label: 'Historial',
         color: const Color(0xFF6C5CE7),
-        onTap: () {},
+        onTap: () => _navigateToHistory(),
       ),
       _QuickAction(
         icon: Icons.favorite_outline,
@@ -412,13 +417,13 @@ class _ProfileScreenState extends State<ProfileScreen>
         icon: Icons.share,
         label: 'Compartir',
         color: const Color(0xFF00B894),
-        onTap: () => _shareProfile(l10n),
+        onTap: () => ShareModal.show(context),
       ),
       _QuickAction(
         icon: Icons.backup,
         label: 'Backup',
         color: const Color(0xFFFFB400),
-        onTap: () {},
+        onTap: () => _navigateToHistoryWithSync(),
       ),
     ];
 
@@ -740,7 +745,14 @@ class _ProfileScreenState extends State<ProfileScreen>
         title: l10n.helpSupport,
         subtitle: 'Centro de ayuda',
         color: const Color(0xFF00B894),
-        onTap: () {},
+        onTap: () => _navigateToHelpSupport(),
+      ),
+      _MenuItemData(
+        icon: Icons.info_outline,
+        title: 'Acerca de',
+        subtitle: 'Información del proyecto',
+        color: const Color(0xFF636E72),
+        onTap: () => _navigateToAbout(),
       ),
     ];
 
@@ -963,7 +975,99 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
   
-  // NEW: Navigation method for account deletion
+  // NEW: Navigation methods
+  void _navigateToHistory() {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const HistoryScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: animation.drive(
+              Tween(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).chain(CurveTween(curve: Curves.easeOutQuart)),
+            ),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+
+  void _navigateToHistoryWithSync() async {
+    // First navigate to history
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const HistoryScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: animation.drive(
+              Tween(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).chain(CurveTween(curve: Curves.easeOutQuart)),
+            ),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+
+    // Then show the cloud sync modal after a short delay
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      CloudSyncModal.show(context);
+    }
+  }
+
+  void _navigateToHelpSupport() {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const HelpSupportScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: animation.drive(
+              Tween(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).chain(CurveTween(curve: Curves.easeOutQuart)),
+            ),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+
+  void _navigateToAbout() {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const AboutScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: animation.drive(
+              Tween(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).chain(CurveTween(curve: Curves.easeOutQuart)),
+            ),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+  
+  // Navigation method for account deletion
   Future<void> _navigateToAccountDeletion(BuildContext context) async {
     final result = await Navigator.push(
       context,
@@ -1092,20 +1196,6 @@ class _ProfileScreenState extends State<ProfileScreen>
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _shareProfile(AppLocalizations l10n) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Función de compartir próximamente'),
-        backgroundColor: const Color(0xFF2E7D32),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        margin: const EdgeInsets.all(16),
       ),
     );
   }
