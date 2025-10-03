@@ -1155,7 +1155,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               ChatInput(
                 onSend: (text) => _sendMessage(text),
-                onCancel: _cancelGeneration, // Connect cancel functionality
+                onCancel: _cancelGeneration,
                 isSending: _isSending,
                 selectedProfile: _selectedProfile,
                 allProfiles: ModelProfile.defaults(),
@@ -1171,30 +1171,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   });
                 },
                 onRequestPro: () {},
+                // Add new scroll button properties
+                showScrollButton: _showScrollToBottomButton,
+                onScrollToBottom: _scrollToBottomButtonPressed,
               ),
             ],
           ),
-          // Botón flotante de scroll hacia abajo
-          if (_showScrollToBottomButton)
-            Positioned(
-              right: 16,
-              bottom: 80, // Por encima del ChatInput
-              child: AnimatedOpacity(
-                opacity: _showScrollToBottomButton ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 200),
-                child: FloatingActionButton(
-                  mini: true,
-                  backgroundColor: theme.colorScheme.primary.withOpacity(0.9),
-                  foregroundColor: Colors.white,
-                  elevation: 4,
-                  onPressed: _scrollToBottomButtonPressed,
-                  child: const Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ),
+          // Remove the floating button since we've moved it to the ChatInput
         ],
       ),
     );
