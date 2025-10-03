@@ -24,6 +24,8 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen>
   bool _hasReadWarnings = false;
   bool _confirmationMatches = false;
   String _confirmationText = '';
+  Map<String, int> _dataSummary = {};
+  bool _loadingSummary = true;
   
   @override
   void initState() {
@@ -52,8 +54,27 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen>
     );
     
     _animationController.forward();
+    _loadDataSummary();
     
     _confirmationController.addListener(_onConfirmationChanged);
+  }
+  
+  Future<void> _loadDataSummary() async {
+    try {
+      final summary = await SupabaseService.getDataDeletionSummary();
+      if (mounted) {
+        setState(() {
+          _dataSummary = summary;
+          _loadingSummary = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loadingSummary = false;
+        });
+      }
+    }
   }
   
   void _onConfirmationChanged() {
@@ -199,30 +220,35 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen>
         icon: Icons.person_outline,
         title: 'Información personal',
         description: 'Email, nombre, preferencias de usuario',
+        count: _dataSummary['preferences'] ?? 0,
         color: const Color(0xFF6C5CE7),
       ),
       _DataItem(
         icon: Icons.chat_bubble_outline,
         title: 'Historial de conversaciones',
-        description: 'Todas las consultas médicas y respuestas',
+        description: '${_dataSummary['conversations'] ?? 0} conversaciones, ${_dataSummary['messages'] ?? 0} mensajes',
+        count: _dataSummary['conversations'] ?? 0,
         color: const Color(0xFF00CEC9),
       ),
       _DataItem(
         icon: Icons.medical_information_outlined,
         title: 'Preferencias médicas',
-        description: 'Condiciones, alergias, medicamentos',
+        description: 'Condiciones, alergias, medicamentos guardados',
+        count: _dataSummary['preferences'] ?? 0,
         color: const Color(0xFF00B894),
       ),
       _DataItem(
         icon: Icons.cloud_off_outlined,
         title: 'Datos de respaldo',
         description: 'Configuraciones y datos sincronizados',
+        count: 1, // Always 1 for user data
         color: const Color(0xFFE84393),
       ),
       _DataItem(
         icon: Icons.subscriptions_outlined,
         title: 'Información de suscripción',
         description: 'Planes, pagos y facturación',
+        count: _dataSummary['subscriptions'] ?? 0,
         color: const Color(0xFFE17055),
       ),
     ];
@@ -243,22 +269,33 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.delete_forever_outlined,
                 color: Color(0xFFE74C3C),
                 size: 24,
               ),
-              SizedBox(width: 12),
-              Text(
-                'Datos que serán eliminados',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF2D3436),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Datos que serán eliminados',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2D3436),
+                  ),
                 ),
               ),
+              if (_loadingSummary)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6C757D)),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 16),
@@ -304,13 +341,35 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2D3436),
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.title,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2D3436),
+                        ),
+                      ),
+                    ),
+                    if (item.count > 0 && !_loadingSummary)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: item.color.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${item.count}',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: item.color,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -366,23 +425,23 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen>
           ),
           const SizedBox(height: 16),
           _buildWarningItem(
-            '• Una vez eliminada, tu cuenta no podrá ser recuperada',
+            'Una vez eliminada, tu cuenta no podrá ser recuperada',
             Icons.block,
           ),
           _buildWarningItem(
-            '• Todos tus datos médicos y conversaciones se perderán para siempre',
+            'Todos tus datos médicos y conversaciones se perderán para siempre',
             Icons.medical_information,
           ),
           _buildWarningItem(
-            '• Si tienes una suscripción activa, se cancelará automáticamente',
+            'Si tienes una suscripción activa, se cancelará automáticamente',
             Icons.money_off,
           ),
           _buildWarningItem(
-            '• Deberás crear una nueva cuenta si deseas usar DocAI nuevamente',
+            'Deberás crear una nueva cuenta si deseas usar DocAI nuevamente',
             Icons.person_add_alt_1,
           ),
           _buildWarningItem(
-            '• Esta acción se procesará inmediatamente y no hay período de gracia',
+            'Esta acción se procesará inmediatamente y no hay período de gracia',
             Icons.timer_off,
           ),
         ],
@@ -404,7 +463,7 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen>
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              text.substring(2), // Remove bullet point
+              text,
               style: const TextStyle(
                 fontSize: 13,
                 color: Color(0xFF6C757D),
@@ -659,7 +718,8 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen>
     });
     
     try {
-      await _performAccountDeletion();
+      // Use the improved SupabaseService method
+      await SupabaseService.deleteUserAccount();
       
       if (mounted) {
         // Navigate to login screen and clear the stack
@@ -762,43 +822,6 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen>
     
     return result ?? false;
   }
-  
-  Future<void> _performAccountDeletion() async {
-    final user = SupabaseService.currentUser;
-    if (user == null) throw Exception('Usuario no autenticado');
-    
-    try {
-      // Step 1: Delete all user conversations and messages
-      await SupabaseService.clearAllConversations();
-      
-      // Step 2: Delete user preferences
-      await SupabaseService.client
-          .from('user_preferences')
-          .delete()
-          .eq('user_id', user.id);
-      
-      // Step 3: Delete any subscription data (if exists)
-      await SupabaseService.client
-          .from('subscriptions')
-          .delete()
-          .eq('user_id', user.id);
-      
-      // Step 4: Delete any user stats or analytics data
-      await SupabaseService.client
-          .from('user_stats')
-          .delete()
-          .eq('user_id', user.id);
-      
-      // Step 5: Delete the user account (this must be last)
-      await SupabaseService.client.auth.admin.deleteUser(user.id);
-      
-      // Step 6: Sign out locally
-      await SupabaseService.signOut();
-      
-    } catch (e) {
-      throw Exception('Error durante la eliminación: $e');
-    }
-  }
 }
 
 // Helper class for data items
@@ -806,12 +829,14 @@ class _DataItem {
   final IconData icon;
   final String title;
   final String description;
+  final int count;
   final Color color;
   
   _DataItem({
     required this.icon,
     required this.title,
     required this.description,
+    required this.count,
     required this.color,
   });
 }
