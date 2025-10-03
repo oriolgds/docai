@@ -152,24 +152,27 @@ class _ChatInputState extends State<ChatInput> with SingleTickerProviderStateMix
                 ),
                 const SizedBox(width: 8),
                 // Scroll to bottom button (animated)
-                SizeTransition(
-                  sizeFactor: _scrollButtonAnimation,
-                  axis: Axis.horizontal,
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 4, right: 4),
-                    child: IconButton.filled(
-                      onPressed: _scrollToBottom,
-                      style: IconButton.styleFrom(
-                        shape: const CircleBorder(),
-                        padding: const EdgeInsets.all(12),
-                        backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.9),
+                FadeTransition(
+                  opacity: _scrollButtonAnimation,
+                  child: SizeTransition(
+                    sizeFactor: _scrollButtonAnimation,
+                    axis: Axis.horizontal,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 4, right: 4),
+                      child: IconButton.filled(
+                        onPressed: _scrollToBottom,
+                        style: IconButton.styleFrom(
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(12),
+                          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.9),
+                        ),
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down,
+                          size: 20,
+                          color: Colors.white,
+                        ),
+                        tooltip: 'Ir al final',
                       ),
-                      icon: const Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 20,
-                        color: Colors.white,
-                      ),
-                      tooltip: 'Ir al final',
                     ),
                   ),
                 ),
