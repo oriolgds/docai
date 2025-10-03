@@ -54,11 +54,21 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _hasFirstMessage = false;
   String? _conversationId; // ID único para esta sesión de chat
 
+  // Variables para el scroll mejorado
+  bool _showScrollToBottomButton = false;
+  bool _isUserScrolling = false;
+  Timer? _scrollVisibilityTimer;
+  double _lastScrollOffset = 0.0;
+  static const double _scrollThreshold = 150.0; // Pixeles desde abajo para mostrar botón
+
   @override
   void initState() {
     super.initState();
     _service = OpenRouterService();
     _selectedProfile = ModelProfile.defaultProfile;
+    
+    // Configurar listener del scroll controller
+    _scrollController.addListener(_onScrollChanged);
     
     // Inicializar con conversación existente o nueva
     if (widget.existingConversation != null) {
@@ -94,6 +104,35 @@ class _ChatScreenState extends State<ChatScreen> {
       _addInitialAssistantMessage();
       _isInitialized = true;
     }
+  }
+  
+  void _onScrollChanged() {
+    if (!_scrollController.hasClients) return;
+    
+    final currentOffset = _scrollController.offset;
+    final maxOffset = _scrollController.position.maxScrollExtent;
+    final distanceFromBottom = maxOffset - currentOffset;
+    
+    // Determinar si mostrar el botón de scroll al final
+    final shouldShowButton = distanceFromBottom > _scrollThreshold;
+    
+    if (shouldShowButton != _showScrollToBottomButton) {
+      setState(() {
+        _showScrollToBottomButton = shouldShowButton;
+      });
+    }
+    
+    // Detectar si el usuario está haciendo scroll manualmente
+    final scrollingUp = currentOffset < _lastScrollOffset;
+    if (scrollingUp && distanceFromBottom > 50) {
+      _isUserScrolling = true;
+      _scrollVisibilityTimer?.cancel();
+      _scrollVisibilityTimer = Timer(const Duration(seconds: 2), () {
+        _isUserScrolling = false;
+      });
+    }
+    
+    _lastScrollOffset = currentOffset;
   }
   
   void _onStateManagerChanged() {
@@ -222,7 +261,9 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _scrollTimer?.cancel();
+    _scrollVisibilityTimer?.cancel();
     _currentStreamSubscription?.cancel();
+    _scrollController.removeListener(_onScrollChanged);
     _scrollController.dispose();
     _service.dispose();
     _stateManager.removeListener(_onStateManagerChanged);
@@ -509,11 +550,22 @@ class _ChatScreenState extends State<ChatScreen> {
             }
           });
 
-          // Only scroll if we're near the bottom
-          final maxScroll = _scrollController.position.maxScrollExtent;
-          final currentScroll = _scrollController.offset;
-          if (maxScroll - currentScroll < 300) {
-            _scrollToBottom();
+          // Mejorar el auto-scroll durante streaming
+          // Solo hacer scroll automático si el usuario no está scrolleando manualmente
+          // y si está cerca del final
+          if (_scrollController.hasClients && !_isUserScrolling) {
+            final maxScroll = _scrollController.position.maxScrollExtent;
+            final currentScroll = _scrollController.offset;
+            final distanceFromBottom = maxScroll - currentScroll;
+            
+            // Auto scroll si está cerca del final (menos de 200px)
+            if (distanceFromBottom < 200) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (_scrollController.hasClients) {
+                  _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+                }
+              });
+            }
           }
         },
         onDone: () async {
@@ -586,7 +638,11 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     }
-    _scrollToBottom();
+    
+    // Final scroll to bottom after message is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToBottom();
+    });
   }
 
   Future<void> _scrollToBottom({bool force = false}) async {
@@ -609,6 +665,17 @@ class _ChatScreenState extends State<ChatScreen> {
         curve: Curves.easeOut,
       );
     }
+  }
+  
+  // Método para hacer scroll al final con el botón
+  void _scrollToBottomButtonPressed() {
+    if (!_scrollController.hasClients) return;
+    
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
+    );
   }
 
   Future<bool?> _showReasoningPickerSheet() async {
@@ -901,95 +968,47 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
-              itemCount: _messages.length + 
-                (_showDisclaimer ? 1 : 0) + 
-                (_showFirstTimeWarning ? 1 : 0) + 
-                (_hasFirstMessage ? 1 : 0), // Card de sincronización
-              itemBuilder: (context, index) {
-                int cardOffset = 0;
-                
-                
-                // Card de disclaimer
-                if (_showDisclaimer) {
-                  if (index == cardOffset) {
-                    return Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.25)),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.local_hospital_outlined, color: theme.colorScheme.primary, size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              OpenRouterConfig.disclaimerText,
-                              style: const TextStyle(fontSize: 12, color: Colors.black87),
-                            ),
+          Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+                  itemCount: _messages.length + 
+                    (_showDisclaimer ? 1 : 0) + 
+                    (_showFirstTimeWarning ? 1 : 0) + 
+                    (_hasFirstMessage ? 1 : 0), // Card de sincronización
+                  itemBuilder: (context, index) {
+                    int cardOffset = 0;
+                    
+                    
+                    // Card de disclaimer
+                    if (_showDisclaimer) {
+                      if (index == cardOffset) {
+                        return Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: theme.colorScheme.primary.withOpacity(0.25)),
                           ),
-                          InkWell(
-                            onTap: () => setState(() => _showDisclaimer = false),
-                            borderRadius: BorderRadius.circular(16),
-                            child: const Padding(
-                              padding: EdgeInsets.all(4),
-                              child: Icon(Icons.close, size: 16),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                  cardOffset++;
-                }
-                
-                // Card de primera vez
-                if (_showFirstTimeWarning) {
-                  if (index == cardOffset) {
-                    return Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [theme.colorScheme.primary.withOpacity(0.1), theme.colorScheme.primary.withOpacity(0.2)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.tune, color: theme.colorScheme.primary, size: 20),
+                              Icon(Icons.local_hospital_outlined, color: theme.colorScheme.primary, size: 20),
                               const SizedBox(width: 8),
-                              Text(
-                                l10n.personalizeYourExperience,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.primary,
+                              Expanded(
+                                child: Text(
+                                  OpenRouterConfig.disclaimerText,
+                                  style: const TextStyle(fontSize: 12, color: Colors.black87),
                                 ),
                               ),
-                              const Spacer(),
                               InkWell(
-                                onTap: () async {
-                                  await SupabaseService.markAsNotFirstTime();
-                                  setState(() => _showFirstTimeWarning = false);
-                                },
+                                onTap: () => setState(() => _showDisclaimer = false),
                                 borderRadius: BorderRadius.circular(16),
                                 child: const Padding(
                                   padding: EdgeInsets.all(4),
@@ -998,111 +1017,167 @@ class _ChatScreenState extends State<ChatScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.personalizeExperienceMessage,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: theme.colorScheme.onSurface,
+                        );
+                      }
+                      cardOffset++;
+                    }
+                    
+                    // Card de primera vez
+                    if (_showFirstTimeWarning) {
+                      if (index == cardOffset) {
+                        return Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [theme.colorScheme.primary.withOpacity(0.1), theme.colorScheme.primary.withOpacity(0.2)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
                           ),
-                          const SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              TextButton(
-                                onPressed: () async {
-                                  await SupabaseService.markAsNotFirstTime();
-                                  setState(() => _showFirstTimeWarning = false);
-                                },
-                                child: Text(
-                                  l10n.notNow,
-                                  style: TextStyle(
-                                    color: theme.colorScheme.primary,
-                                    fontSize: 12,
+                              Row(
+                                children: [
+                                  Icon(Icons.tune, color: theme.colorScheme.primary, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    l10n.personalizeYourExperience,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.primary,
+                                    ),
                                   ),
+                                  const Spacer(),
+                                  InkWell(
+                                    onTap: () async {
+                                      await SupabaseService.markAsNotFirstTime();
+                                      setState(() => _showFirstTimeWarning = false);
+                                    },
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(4),
+                                      child: Icon(Icons.close, size: 16),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                l10n.personalizeExperienceMessage,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: theme.colorScheme.onSurface,
                                 ),
                               ),
-                              const SizedBox(width: 6),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  await SupabaseService.markAsNotFirstTime();
-                                  setState(() => _showFirstTimeWarning = false);
-                                  if (mounted) {
-                                    await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const MedicalPreferencesScreen(),
+                              const SizedBox(height: 10),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  TextButton(
+                                    onPressed: () async {
+                                      await SupabaseService.markAsNotFirstTime();
+                                      setState(() => _showFirstTimeWarning = false);
+                                    },
+                                    child: Text(
+                                      l10n.notNow,
+                                      style: TextStyle(
+                                        color: theme.colorScheme.primary,
+                                        fontSize: 12,
                                       ),
-                                    );
-                                    await _loadUserPreferences();
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: theme.colorScheme.primary,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                ),
-                                child: Text(
-                                  l10n.personalize,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      await SupabaseService.markAsNotFirstTime();
+                                      setState(() => _showFirstTimeWarning = false);
+                                      if (mounted) {
+                                        await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const MedicalPreferencesScreen(),
+                                          ),
+                                        );
+                                        await _loadUserPreferences();
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: theme.colorScheme.primary,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    ),
+                                    child: Text(
+                                      l10n.personalize,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    );
-                  }
-                  cardOffset++;
-                }
-                
-                // Mensajes del chat
-                final messageIndex = index - cardOffset;
-                if (messageIndex >= 0 && messageIndex < _messages.length) {
-                  final m = _messages[messageIndex];
-                  final isAssistant = m.role == ChatRole.assistant;
-                  final isWelcomeMessage = messageIndex == 0 && isAssistant && _messages.length == 1;
+                        );
+                      }
+                      cardOffset++;
+                    }
+                    
+                    // Mensajes del chat
+                    final messageIndex = index - cardOffset;
+                    if (messageIndex >= 0 && messageIndex < _messages.length) {
+                      final m = _messages[messageIndex];
+                      final isAssistant = m.role == ChatRole.assistant;
+                      final isWelcomeMessage = messageIndex == 0 && isAssistant && _messages.length == 1;
 
-                  return MessageBubble(
-                    message: m.content,
-                    isAssistant: isAssistant,
-                    assistantLabel: _assistantLabel(),
-                    accentColor: brandColor(_selectedProfile.brand),
-                    isStreaming:
-                        isAssistant &&
-                        _streamingIndex != null &&
-                        messageIndex == _streamingIndex,
-                    showRegenerateButton: isAssistant && !isWelcomeMessage,
-                    onRegenerate: isAssistant && !isWelcomeMessage
-                        ? () => _regenerateResponse(messageIndex)
-                        : null,
-                  );
-                }
-                
-                return const SizedBox.shrink();
-              },
-            ),
+                      return MessageBubble(
+                        message: m.content,
+                        isAssistant: isAssistant,
+                        assistantLabel: _assistantLabel(),
+                        accentColor: brandColor(_selectedProfile.brand),
+                        isStreaming:
+                            isAssistant &&
+                            _streamingIndex != null &&
+                            messageIndex == _streamingIndex,
+                        showRegenerateButton: isAssistant && !isWelcomeMessage,
+                        onRegenerate: isAssistant && !isWelcomeMessage
+                            ? () => _regenerateResponse(messageIndex)
+                            : null,
+                      );
+                    }
+                    
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+              ChatInput(
+                onSend: (text) => _sendMessage(text),
+                onCancel: _cancelGeneration,
+                isSending: _isSending,
+                selectedProfile: _selectedProfile,
+                allProfiles: ModelProfile.defaults(),
+                useReasoning: _useReasoning,
+                onProfileChanged: (p) {
+                  setState(() {
+                    _selectedProfile = p;
+                  });
+                },
+                onReasoningChanged: (enabled) {
+                  setState(() {
+                    _useReasoning = enabled;
+                  });
+                },
+                onRequestPro: () {},
+                // Add new scroll button properties
+                showScrollButton: _showScrollToBottomButton,
+                onScrollToBottom: _scrollToBottomButtonPressed,
+              ),
+            ],
           ),
-          ChatInput(
-            onSend: (text) => _sendMessage(text),
-            onCancel: _cancelGeneration, // Connect cancel functionality
-            isSending: _isSending,
-            selectedProfile: _selectedProfile,
-            allProfiles: ModelProfile.defaults(),
-            useReasoning: _useReasoning,
-            onProfileChanged: (p) {
-              setState(() {
-                _selectedProfile = p;
-              });
-            },
-            onReasoningChanged: (enabled) {
-              setState(() {
-                _useReasoning = enabled;
-              });
-            },
-            onRequestPro: () {},
-          ),
+          // Remove the floating button since we've moved it to the ChatInput
         ],
       ),
     );

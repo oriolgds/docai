@@ -11,6 +11,8 @@ class ChatInput extends StatefulWidget {
   final VoidCallback onRequestPro;
   final bool useReasoning;
   final ValueChanged<bool> onReasoningChanged;
+  final VoidCallback? onScrollToBottom; // New callback for scroll to bottom
+  final bool showScrollButton; // New property to control scroll button visibility
 
   const ChatInput({
     super.key,
@@ -23,15 +25,44 @@ class ChatInput extends StatefulWidget {
     required this.onRequestPro,
     this.useReasoning = false,
     required this.onReasoningChanged,
+    this.onScrollToBottom, // Optional scroll callback
+    this.showScrollButton = false, // Default to hidden
   });
 
   @override
   State<ChatInput> createState() => _ChatInputState();
 }
 
-class _ChatInputState extends State<ChatInput> {
+class _ChatInputState extends State<ChatInput> with SingleTickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  late AnimationController _scrollButtonAnimController;
+  late Animation<double> _scrollButtonAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollButtonAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _scrollButtonAnimation = CurvedAnimation(
+      parent: _scrollButtonAnimController,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void didUpdateWidget(ChatInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.showScrollButton != oldWidget.showScrollButton) {
+      if (widget.showScrollButton) {
+        _scrollButtonAnimController.forward();
+      } else {
+        _scrollButtonAnimController.reverse();
+      }
+    }
+  }
 
   void _submit() {
     final text = _controller.text.trim();
@@ -47,10 +78,17 @@ class _ChatInputState extends State<ChatInput> {
     }
   }
 
+  void _scrollToBottom() {
+    if (widget.onScrollToBottom != null) {
+      widget.onScrollToBottom!();
+    }
+  }
+
   @override
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
+    _scrollButtonAnimController.dispose();
     super.dispose();
   }
 
@@ -113,6 +151,31 @@ class _ChatInputState extends State<ChatInput> {
                   ),
                 ),
                 const SizedBox(width: 8),
+                // Scroll to bottom button (animated)
+                FadeTransition(
+                  opacity: _scrollButtonAnimation,
+                  child: SizeTransition(
+                    sizeFactor: _scrollButtonAnimation,
+                    axis: Axis.horizontal,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 4, right: 4),
+                      child: IconButton.filled(
+                        onPressed: _scrollToBottom,
+                        style: IconButton.styleFrom(
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(12),
+                          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.9),
+                        ),
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down,
+                          size: 20,
+                          color: Colors.white,
+                        ),
+                        tooltip: 'Ir al final',
+                      ),
+                    ),
+                  ),
+                ),
                 // Send/Cancel button
                 Container(
                   margin: const EdgeInsets.only(
