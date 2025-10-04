@@ -1154,5 +1154,241 @@
   "reportSecurityIssuesDescription": "If you discover a security issue, contact us immediately:\n\n**Security email** security@docai.app\n**Bug bounty program** Rewards for vulnerability discoveries.\n**Responsible disclosure** Established process for reporting issues.\n**Guaranteed response** Confirmation in less than 24 hours.\n\nYour help in keeping DocAI secure is invaluable and always recognized.",
   "@reportSecurityIssuesDescription": {
     "description": "Report security issues description"
+  },
+  "quickAccess": "Quick Access",
+  "@quickAccess": {
+    "description": "Quick access section title"
+  },
+  "favorites": "Favorites",
+  "@favorites": {
+    "description": "Favorites menu item"
+  },
+  "share": "Share",
+  "@share": {
+    "description": "Share menu item"
+  },
+  "backup": "Backup",
+  "@backup": {
+    "description": "Backup menu item"
+  },
+  "consultations": "Consultations",
+  "@consultations": {
+    "description": "Consultations count label"
+  },
+  "lastUsage": "Last usage",
+  "@lastUsage": {
+    "description": "Last usage label"
+  },
+  "satisfaction": "Satisfaction",
+  "@satisfaction": {
+    "description": "Satisfaction label"
+  },
+  "never": "Never",
+  "@never": {
+    "description": "Never used label"
+  },
+  "configureMedicalInfo": "Configure your medical information",
+  "@configureMedicalInfo": {
+    "description": "Configure medical info subtitle"
+  },
+  "enjoyAllFeatures": "Enjoy all features",
+  "@enjoyAllFeatures": {
+    "description": "Premium plan subtitle"
+  },
+  "manage": "Manage",
+  "@manage": {
+    "description": "Manage button text"
+  },
+  "languageSettings": "Language",
+  "@languageSettings": {
+    "description": "Language settings menu item"
+  },
+  "changeAppLanguage": "Change app language",
+  "@changeAppLanguage": {
+    "description": "Change app language subtitle"
+  },
+  "privacyAndSecuritySettings": "Privacy and security",
+  "@privacyAndSecuritySettings": {
+    "description": "Privacy and security menu subtitle"
+  },
+  "helpCenter": "Help center",
+  "@helpCenter": {
+    "description": "Help center subtitle"
+  },
+  "projectInformation": "Project information",
+  "@projectInformation": {
+    "description": "About project subtitle"
+  },
+  "deleteAccount": "Delete account",
+  "@deleteAccount": {
+    "description": "Delete account menu item"
+  },
+  "deleteAccountDescription": "Permanently delete your account and all associated data",
+  "@deleteAccountDescription": {
+    "description": "Delete account description"
+  },
+  "dangerous": "Dangerous",
+  "@dangerous": {
+    "description": "Dangerous action label"
+  },
+  "quickSettings": "Quick Settings",
+  "@quickSettings": {
+    "description": "Quick settings modal title"
+  },
+  "darkMode": "Dark mode",
+  "@darkMode": {
+    "description": "Dark mode setting"
+  },
+  "location": "Location",
+  "@location": {
+    "description": "Location setting"
+  },
+  "selectLanguageTitle": "Select language",
+  "@selectLanguageTitle": {
+    "description": "Select language modal title"
+  },
+  "premiumPlanTitle": "Premium Plan",
+  "@premiumPlanTitle": {
+    "description": "Premium plan modal title"
+  },
+  "unlimitedConsultationsFeature": "Unlimited consultations",
+  "@unlimitedConsultationsFeature": {
+    "description": "Premium feature"
+  },
+  "priorityAccess": "Priority access",
+  "@priorityAccess": {
+    "description": "Premium feature"
+  },
+  "completeHistory": "Complete history",
+  "@completeHistory": {
+    "description": "Premium feature"
+  },
+  "premiumSupport": "Premium support",
+  "@premiumSupport": {
+    "description": "Premium feature"
+  },
+  "cancelPlan": "Cancel plan",
+  "@cancelPlan": {
+    "description": "Cancel plan button"
+  },
+  "cloudSyncTitle": "Cloud Sync",
+  "@cloudSyncTitle": {
+    "description": "Cloud sync modal title"
+  },
+  "syncCompleteTitle": "Sync Complete",
+  "@syncCompleteTitle": {
+    "description": "Sync complete title"
+  },
+  "syncingTitle": "Syncing...",
+  "@syncingTitle": {
+    "description": "Syncing title"
+  },
+  "syncCompleteDescription": "Your history has been successfully synced to the cloud. You can now access it from any device.",
+  "@syncCompleteDescription": {
+    "description": "Sync complete description"
+  },
+  "syncingDescription": "We are securely saving your history to the cloud...",
+  "@syncingDescription": {
+    "description": "Syncing description"
+  },
+  "cloudSyncDescription": "Back up your conversation history to the cloud to keep it safe and accessible from any device.",
+  "@cloudSyncDescription": {
+    "description": "Cloud sync description"
+  },
+  "security": "Security",
+  "@security": {
+    "description": "Security feature title"
+  },
+  "endToEndEncryption": "End-to-end encryption",
+  "@endToEndEncryption": {
+    "description": "Security feature description"
+  },
+  "multiDevice": "Multi-device",
+  "@multiDevice": {
+    "description": "Multi-device feature title"
+  },
+  "accessFromAnywhere": "Access from anywhere",
+  "@accessFromAnywhere": {
+    "description": "Multi-device feature description"
+  },
+  "automaticBackup": "Automatic Backup",
+  "@automaticBackup": {
+    "description": "Automatic backup feature title"
+  },
+  "continuousSync": "Continuous sync",
+  "@continuousSync": {
+    "description": "Automatic backup feature description"
+  },
+  "syncNow": "Sync Now",
+  "@syncNow": {
+    "description": "Sync now button"
+  },
+  "notNowButton": "Not Now",
+  "@notNowButton": {
+    "description": "Not now button"
+  },
+  "historySyncedSuccessfully": "History synced successfully",
+  "@historySyncedSuccessfully": {
+    "description": "History synced success message"
+  },
+  "typeYourMedicalQuery": "Type your medical query...",
+  "@typeYourMedicalQuery": {
+    "description": "Chat input placeholder"
+  },
+  "generatingResponseMessage": "Generating response...",
+  "@generatingResponseMessage": {
+    "description": "Generating response placeholder"
+  },
+  "send": "Send",
+  "@send": {
+    "description": "Send button tooltip"
+  },
+  "cancelGeneration": "Cancel",
+  "@cancelGeneration": {
+    "description": "Cancel generation tooltip"
+  },
+  "scrollToBottom": "Go to bottom",
+  "@scrollToBottom": {
+    "description": "Scroll to bottom tooltip"
+  },
+  "reasoning": "Reasoning",
+  "@reasoning": {
+    "description": "Reasoning toggle label"
+  },
+  "medicalDisclaimerCardText": "DocAI does not replace professional medical advice. The information provided is for educational purposes. For diagnoses, treatments or emergencies consult a healthcare professional.",
+  "@medicalDisclaimerCardText": {
+    "description": "Medical disclaimer card text"
+  },
+  "monday": "Mon",
+  "@monday": {
+    "description": "Monday abbreviation"
+  },
+  "tuesday": "Tue",
+  "@tuesday": {
+    "description": "Tuesday abbreviation"
+  },
+  "wednesday": "Wed",
+  "@wednesday": {
+    "description": "Wednesday abbreviation"
+  },
+  "thursday": "Thu",
+  "@thursday": {
+    "description": "Thursday abbreviation"
+  },
+  "friday": "Fri",
+  "@friday": {
+    "description": "Friday abbreviation"
+  },
+  "saturday": "Sat",
+  "@saturday": {
+    "description": "Saturday abbreviation"
+  },
+  "sunday": "Sun",
+  "@sunday": {
+    "description": "Sunday abbreviation"
+  },
+  "deleteConversationConfirm": "Are you sure you want to delete this conversation?",
+  "@deleteConversationConfirm": {
+    "description": "Delete conversation confirmation message"
   }
 }

@@ -1741,6 +1741,360 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'If you discover a security issue, contact us immediately:\n\n**Security email** security@docai.app\n**Bug bounty program** Rewards for vulnerability discoveries.\n**Responsible disclosure** Established process for reporting issues.\n**Guaranteed response** Confirmation in less than 24 hours.\n\nYour help in keeping DocAI secure is invaluable and always recognized.'**
   String get reportSecurityIssuesDescription;
+
+  /// Quick access section title
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Access'**
+  String get quickAccess;
+
+  /// Favorites menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get favorites;
+
+  /// Share menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// Backup menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Backup'**
+  String get backup;
+
+  /// Consultations count label
+  ///
+  /// In en, this message translates to:
+  /// **'Consultations'**
+  String get consultations;
+
+  /// Last usage label
+  ///
+  /// In en, this message translates to:
+  /// **'Last usage'**
+  String get lastUsage;
+
+  /// Satisfaction label
+  ///
+  /// In en, this message translates to:
+  /// **'Satisfaction'**
+  String get satisfaction;
+
+  /// Never used label
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get never;
+
+  /// Configure medical info subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Configure your medical information'**
+  String get configureMedicalInfo;
+
+  /// Premium plan subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoy all features'**
+  String get enjoyAllFeatures;
+
+  /// Manage button text
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get manage;
+
+  /// Language settings menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get languageSettings;
+
+  /// Change app language subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Change app language'**
+  String get changeAppLanguage;
+
+  /// Privacy and security menu subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy and security'**
+  String get privacyAndSecuritySettings;
+
+  /// Help center subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Help center'**
+  String get helpCenter;
+
+  /// About project subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Project information'**
+  String get projectInformation;
+
+  /// Delete account menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccount;
+
+  /// Delete account description
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete your account and all associated data'**
+  String get deleteAccountDescription;
+
+  /// Dangerous action label
+  ///
+  /// In en, this message translates to:
+  /// **'Dangerous'**
+  String get dangerous;
+
+  /// Quick settings modal title
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Settings'**
+  String get quickSettings;
+
+  /// Dark mode setting
+  ///
+  /// In en, this message translates to:
+  /// **'Dark mode'**
+  String get darkMode;
+
+  /// Location setting
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get location;
+
+  /// Select language modal title
+  ///
+  /// In en, this message translates to:
+  /// **'Select language'**
+  String get selectLanguageTitle;
+
+  /// Premium plan modal title
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Plan'**
+  String get premiumPlanTitle;
+
+  /// Premium feature
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited consultations'**
+  String get unlimitedConsultationsFeature;
+
+  /// Premium feature
+  ///
+  /// In en, this message translates to:
+  /// **'Priority access'**
+  String get priorityAccess;
+
+  /// Premium feature
+  ///
+  /// In en, this message translates to:
+  /// **'Complete history'**
+  String get completeHistory;
+
+  /// Premium feature
+  ///
+  /// In en, this message translates to:
+  /// **'Premium support'**
+  String get premiumSupport;
+
+  /// Cancel plan button
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel plan'**
+  String get cancelPlan;
+
+  /// Cloud sync modal title
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Sync'**
+  String get cloudSyncTitle;
+
+  /// Sync complete title
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Complete'**
+  String get syncCompleteTitle;
+
+  /// Syncing title
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing...'**
+  String get syncingTitle;
+
+  /// Sync complete description
+  ///
+  /// In en, this message translates to:
+  /// **'Your history has been successfully synced to the cloud. You can now access it from any device.'**
+  String get syncCompleteDescription;
+
+  /// Syncing description
+  ///
+  /// In en, this message translates to:
+  /// **'We are securely saving your history to the cloud...'**
+  String get syncingDescription;
+
+  /// Cloud sync description
+  ///
+  /// In en, this message translates to:
+  /// **'Back up your conversation history to the cloud to keep it safe and accessible from any device.'**
+  String get cloudSyncDescription;
+
+  /// Security feature title
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get security;
+
+  /// Security feature description
+  ///
+  /// In en, this message translates to:
+  /// **'End-to-end encryption'**
+  String get endToEndEncryption;
+
+  /// Multi-device feature title
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-device'**
+  String get multiDevice;
+
+  /// Multi-device feature description
+  ///
+  /// In en, this message translates to:
+  /// **'Access from anywhere'**
+  String get accessFromAnywhere;
+
+  /// Automatic backup feature title
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic Backup'**
+  String get automaticBackup;
+
+  /// Automatic backup feature description
+  ///
+  /// In en, this message translates to:
+  /// **'Continuous sync'**
+  String get continuousSync;
+
+  /// Sync now button
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Now'**
+  String get syncNow;
+
+  /// Not now button
+  ///
+  /// In en, this message translates to:
+  /// **'Not Now'**
+  String get notNowButton;
+
+  /// History synced success message
+  ///
+  /// In en, this message translates to:
+  /// **'History synced successfully'**
+  String get historySyncedSuccessfully;
+
+  /// Chat input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Type your medical query...'**
+  String get typeYourMedicalQuery;
+
+  /// Generating response placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Generating response...'**
+  String get generatingResponseMessage;
+
+  /// Send button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get send;
+
+  /// Cancel generation tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancelGeneration;
+
+  /// Scroll to bottom tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Go to bottom'**
+  String get scrollToBottom;
+
+  /// Reasoning toggle label
+  ///
+  /// In en, this message translates to:
+  /// **'Reasoning'**
+  String get reasoning;
+
+  /// Medical disclaimer card text
+  ///
+  /// In en, this message translates to:
+  /// **'DocAI does not replace professional medical advice. The information provided is for educational purposes. For diagnoses, treatments or emergencies consult a healthcare professional.'**
+  String get medicalDisclaimerCardText;
+
+  /// Monday abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'Mon'**
+  String get monday;
+
+  /// Tuesday abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'Tue'**
+  String get tuesday;
+
+  /// Wednesday abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'Wed'**
+  String get wednesday;
+
+  /// Thursday abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'Thu'**
+  String get thursday;
+
+  /// Friday abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'Fri'**
+  String get friday;
+
+  /// Saturday abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'Sat'**
+  String get saturday;
+
+  /// Sunday abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'Sun'**
+  String get sunday;
+
+  /// Delete conversation confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this conversation?'**
+  String get deleteConversationConfirm;
 }
 
 class _AppLocalizationsDelegate

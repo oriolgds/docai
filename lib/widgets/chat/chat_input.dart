@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/model_profile.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class ChatInput extends StatefulWidget {
   final ValueChanged<String> onSend;
@@ -141,8 +142,8 @@ class _ChatInputState extends State<ChatInput> with SingleTickerProviderStateMix
                     textInputAction: TextInputAction.newline,
                     decoration: InputDecoration(
                       hintText: widget.isSending 
-                          ? 'Generando respuesta...' 
-                          : 'Escribe tu consulta médica...',
+                          ? AppLocalizations.of(context)!.generatingResponseMessage 
+                          : AppLocalizations.of(context)!.typeYourMedicalQuery,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
@@ -178,7 +179,7 @@ class _ChatInputState extends State<ChatInput> with SingleTickerProviderStateMix
                           size: 20,
                           color: Colors.white,
                         ),
-                        tooltip: 'Ir al final',
+                        tooltip: AppLocalizations.of(context)!.scrollToBottom,
                       ),
                     ),
                   ),
@@ -208,7 +209,7 @@ class _ChatInputState extends State<ChatInput> with SingleTickerProviderStateMix
                             size: 20,
                             color: Colors.white,
                           ),
-                    tooltip: widget.isSending ? 'Cancelar' : 'Enviar',
+                    tooltip: widget.isSending ? AppLocalizations.of(context)!.cancelGeneration : AppLocalizations.of(context)!.send,
                   ),
                 ),
               ],
@@ -253,7 +254,7 @@ class _ReasoningToggle extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              'Razonamiento',
+              AppLocalizations.of(context)!.reasoning,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,

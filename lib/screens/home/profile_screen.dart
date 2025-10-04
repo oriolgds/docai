@@ -343,7 +343,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   _isLoadingStats
                       ? '...'
                       : '${_userStats?.totalConversations ?? 0}',
-                  'Consultas',
+                  l10n.consultations,
                   Icons.chat_bubble_outline,
                   const Color(0xFF6C5CE7),
                 ),
@@ -353,8 +353,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: _buildRealStatCard(
                   _isLoadingStats
                       ? '...'
-                      : (_userStats?.formattedLastActivity ?? 'Nunca'),
-                  'Último uso',
+                      : (_userStats?.formattedLastActivity ?? l10n.never),
+                  l10n.lastUsage,
                   Icons.access_time,
                   const Color(0xFF00B894),
                 ),
@@ -365,7 +365,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   _isLoadingStats
                       ? '...'
                       : (_userStats?.formattedSatisfaction ?? '0%'),
-                  'Satisfacción',
+                  l10n.satisfaction,
                   Icons.thumb_up_alt_outlined,
                   const Color(0xFFE17055),
                 ),
@@ -421,25 +421,25 @@ class _ProfileScreenState extends State<ProfileScreen>
     final quickActions = [
       _QuickAction(
         icon: Icons.history,
-        label: 'Historial',
+        label: l10n.history,
         color: const Color(0xFF6C5CE7),
         onTap: () => _navigateToHistoryTab(),
       ),
       _QuickAction(
         icon: Icons.favorite_outline,
-        label: 'Favoritos',
+        label: l10n.favorites,
         color: const Color(0xFFE84393),
         onTap: () {},
       ),
       _QuickAction(
         icon: Icons.share,
-        label: 'Compartir',
+        label: l10n.share,
         color: const Color(0xFF00B894),
         onTap: () => ShareModal.show(context),
       ),
       _QuickAction(
         icon: Icons.backup,
-        label: 'Backup',
+        label: l10n.backup,
         color: const Color(0xFF00B894),
         onTap: () => _navigateToBackupTab(),
       ),
@@ -461,9 +461,9 @@ class _ProfileScreenState extends State<ProfileScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Accesos rápidos',
-            style: TextStyle(
+          Text(
+            l10n.quickAccess,
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: Color(0xFF2D3436),
@@ -561,9 +561,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                     ),
                     const SizedBox(height: 2),
-                    const Text(
-                      'Configura tu información médica',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF6C757D)),
+                    Text(
+                      l10n.configureMedicalInfo,
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF6C757D)),
                     ),
                   ],
                 ),
@@ -643,9 +643,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                     ),
                     const SizedBox(height: 2),
-                    const Text(
-                      'Disfruta de todas las funciones',
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    Text(
+                      l10n.enjoyAllFeatures,
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                   ],
                 ),
@@ -705,9 +705,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text(
-                  'Gestionar',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                child: Text(
+                  l10n.manage,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -725,21 +725,21 @@ class _ProfileScreenState extends State<ProfileScreen>
       _MenuItemData(
         icon: Icons.tune,
         title: l10n.personalization,
-        subtitle: 'Personaliza tu experiencia médica',
+        subtitle: l10n.customizeYourExperience,
         color: const Color(0xFF6C5CE7),
         onTap: () => _navigateToPersonalization(context),
       ),
       _MenuItemData(
         icon: Icons.language,
-        title: 'Idioma',
-        subtitle: 'Cambiar idioma de la app',
+        title: l10n.languageSettings,
+        subtitle: l10n.changeAppLanguage,
         color: const Color(0xFF00CEC9),
         onTap: () => _showLanguageSelector(context, localeProvider),
       ),
       _MenuItemData(
         icon: Icons.security,
         title: l10n.privacySecurity,
-        subtitle: 'Privacidad y seguridad',
+        subtitle: l10n.privacyAndSecuritySettings,
         color: const Color(0xFFE84393),
         onTap: () {
           Navigator.of(context).push(
@@ -750,14 +750,14 @@ class _ProfileScreenState extends State<ProfileScreen>
       _MenuItemData(
         icon: Icons.help_outline,
         title: l10n.helpSupport,
-        subtitle: 'Centro de ayuda',
+        subtitle: l10n.helpCenter,
         color: const Color(0xFF00B894),
         onTap: () => _navigateToHelpSupport(),
       ),
       _MenuItemData(
         icon: Icons.info_outline,
-        title: 'Acerca de',
-        subtitle: 'Información del proyecto',
+        title: l10n.about,
+        subtitle: l10n.projectInformation,
         color: const Color(0xFF636E72),
         onTap: () => _navigateToAbout(),
       ),
@@ -896,22 +896,22 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Eliminar cuenta',
-                        style: TextStyle(
+                        l10n.deleteAccount,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFFE74C3C),
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        'Eliminar permanentemente tu cuenta y todos los datos asociados',
-                        style: TextStyle(
+                        l10n.deleteAccountDescription,
+                        style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF6C757D),
                           height: 1.3,
@@ -932,9 +932,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                       color: const Color(0xFFE74C3C).withOpacity(0.3),
                     ),
                   ),
-                  child: const Text(
-                    'Peligroso',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.dangerous,
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFFE74C3C),
@@ -970,7 +970,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.logout, color: const Color(0xFFE74C3C), size: 20),
+                const Icon(Icons.logout, color: Color(0xFFE74C3C), size: 20),
                 const SizedBox(width: 8),
                 Text(
                   l10n.logout,
@@ -1109,26 +1109,26 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Configuración rápida',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            Text(
+              l10n.quickSettings,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 16),
             _buildQuickSettingItem(
               Icons.dark_mode,
-              'Modo oscuro',
+              l10n.darkMode,
               false,
               (value) {},
             ),
             _buildQuickSettingItem(
               Icons.notifications,
-              'Notificaciones',
+              l10n.notifications,
               true,
               (value) {},
             ),
             _buildQuickSettingItem(
               Icons.location_on,
-              'Ubicación',
+              l10n.location,
               true,
               (value) {},
             ),
@@ -1185,9 +1185,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Seleccionar idioma',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              Text(
+                AppLocalizations.of(context)!.selectLanguageTitle,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
               LanguageSelector(
@@ -1228,9 +1228,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Plan Premium',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+              Text(
+                l10n.premiumPlanTitle,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 16),
               Container(
@@ -1260,10 +1260,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildFeatureItem('Consultas ilimitadas', Icons.chat),
-                    _buildFeatureItem('Acceso prioritario', Icons.flash_on),
-                    _buildFeatureItem('Historial completo', Icons.history),
-                    _buildFeatureItem('Soporte premium', Icons.headset_mic),
+                    _buildFeatureItem(l10n.unlimitedConsultationsFeature, Icons.chat),
+                    _buildFeatureItem(l10n.priorityAccess, Icons.flash_on),
+                    _buildFeatureItem(l10n.completeHistory, Icons.history),
+                    _buildFeatureItem(l10n.premiumSupport, Icons.headset_mic),
                   ],
                 ),
               ),
@@ -1279,9 +1279,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Cancelar plan',
-                        style: TextStyle(color: Color(0xFFE74C3C)),
+                      child: Text(
+                        l10n.cancelPlan,
+                        style: const TextStyle(color: Color(0xFFE74C3C)),
                       ),
                     ),
                   ),
@@ -1295,9 +1295,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Gestionar',
-                        style: TextStyle(color: Colors.white),
+                      child: Text(
+                        l10n.manage,
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ),
                   ),

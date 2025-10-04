@@ -118,10 +118,10 @@ class _CloudSyncModalState extends State<CloudSyncModal>
             // Title
             Text(
               _isSynced
-                  ? 'Sincronización Completada'
+                  ? AppLocalizations.of(context)!.syncCompleteTitle
                   : _isLoading
-                      ? 'Sincronizando...'
-                      : 'Sincronizar con la Nube',
+                      ? AppLocalizations.of(context)!.syncingTitle
+                      : AppLocalizations.of(context)!.cloudSyncTitle,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
@@ -133,10 +133,10 @@ class _CloudSyncModalState extends State<CloudSyncModal>
             // Description
             Text(
               _isSynced
-                  ? 'Tu historial se ha sincronizado correctamente con la nube. Ahora puedes acceder a él desde cualquier dispositivo.'
+                  ? AppLocalizations.of(context)!.syncCompleteDescription
                   : _isLoading
-                      ? 'Estamos guardando tu historial de forma segura en la nube...'
-                      : 'Respalda tu historial de conversaciones en la nube para mantenerlo seguro y accesible desde cualquier dispositivo.',
+                      ? AppLocalizations.of(context)!.syncingDescription
+                      : AppLocalizations.of(context)!.cloudSyncDescription,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey[700],
                     height: 1.4,
@@ -150,20 +150,20 @@ class _CloudSyncModalState extends State<CloudSyncModal>
                 // Sync info cards
                 _buildInfoCard(
                   icon: Icons.security,
-                  title: 'Seguridad',
-                  description: 'Encriptación de extremo a extremo',
+                  title: AppLocalizations.of(context)!.security,
+                  description: AppLocalizations.of(context)!.endToEndEncryption,
                 ),
                 const SizedBox(height: 12),
                 _buildInfoCard(
                   icon: Icons.devices,
-                  title: 'Multi-dispositivo',
-                  description: 'Accede desde cualquier lugar',
+                  title: AppLocalizations.of(context)!.multiDevice,
+                  description: AppLocalizations.of(context)!.accessFromAnywhere,
                 ),
                 const SizedBox(height: 12),
                 _buildInfoCard(
                   icon: Icons.backup,
-                  title: 'Respaldo Automático',
-                  description: 'Sincronización continua',
+                  title: AppLocalizations.of(context)!.automaticBackup,
+                  description: AppLocalizations.of(context)!.continuousSync,
                 ),
                 const SizedBox(height: 32),
 
@@ -173,9 +173,9 @@ class _CloudSyncModalState extends State<CloudSyncModal>
                   child: ElevatedButton.icon(
                     onPressed: _performSync,
                     icon: const Icon(Icons.cloud_upload, color: Colors.white),
-                    label: const Text(
-                      'Sincronizar Ahora',
-                      style: TextStyle(
+                    label: Text(
+                      AppLocalizations.of(context)!.syncNow,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -197,7 +197,7 @@ class _CloudSyncModalState extends State<CloudSyncModal>
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pop(false),
                     child: Text(
-                      'Ahora No',
+                      AppLocalizations.of(context)!.notNowButton,
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontWeight: FontWeight.w500,
@@ -223,7 +223,7 @@ class _CloudSyncModalState extends State<CloudSyncModal>
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Historial sincronizado exitosamente',
+                          AppLocalizations.of(context)!.historySyncedSuccessfully,
                           style: TextStyle(
                             color: Colors.green[700],
                             fontWeight: FontWeight.w600,
