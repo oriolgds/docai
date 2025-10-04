@@ -1,0 +1,44 @@
+{
+  "available_models": [
+    {
+      "id": "doky_instant",
+      "brand": "doky",
+      "displayName": "Doky Instant",
+      "modelId": "google/gemini-2.0-flash-exp:free",
+      "description": "Respuestas rápidas para consultas médicas básicas",
+      "reasoning": false,
+      "color1": "#4CAF50",
+      "color2": "#8BC34A"
+    },
+    {
+      "id": "doky_balanced",
+      "brand": "doky",
+      "displayName": "Doky Balanced",
+      "modelId": "deepseek/deepseek-chat-v3.1:free",
+      "description": "Balance perfecto entre velocidad y precisión médica",
+      "reasoning": false,
+      "color1": "#2196F3",
+      "color2": "#03DAC6"
+    },
+    {
+      "id": "doky_reasoning",
+      "brand": "doky",
+      "displayName": "Doky Reasoning",
+      "modelId": "deepseek/deepseek-reasoner:free",
+      "description": "Análisis médico profundo con razonamiento avanzado",
+      "reasoning": true,
+      "color1": "#9C27B0",
+      "color2": "#E91E63"
+    },
+    {
+      "id": "doky_pro",
+      "brand": "doky",
+      "displayName": "Doky Pro",
+      "modelId": "x-ai/grok-4-fast:free",
+      "description": "Máxima precisión para casos médicos complejos",
+      "reasoning": false,
+      "color1": "#FF9800",
+      "color2": "#FF5722"
+    }
+  ]
+}

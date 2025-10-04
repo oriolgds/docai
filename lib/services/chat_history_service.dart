@@ -319,26 +319,68 @@ class ChatHistoryService {
   }
 
   Future<ChatConversation> createNewConversation(String firstMessage) async {
-    // Generar título usando IA
-    String title;
-    try {
-      title = await _openRouterService.generateConversationTitle(firstMessage);
-    } catch (e) {
-      // Si falla la generación con IA, usar el método por defecto
-      debugPrint('Error generating AI title: $e');
-      title = ChatConversation.generateTitle(firstMessage);
-    }
-    
+    // Crear conversación con título temporal
     final conversation = ChatConversation(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
-      title: title,
+      title: 'Nueva conversación', // Título temporal
       messages: [],
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
-    
-    // No guardar automáticamente al crear - se guardará cuando se agreguen mensajes
+
+    // Generar título de forma asíncrona en background
+    _generateTitleAsync(conversation.id, firstMessage);
+
     return conversation;
+  }
+
+  // Generar título de forma asíncrona sin bloquear la UI
+  void _generateTitleAsync(String conversationId, String firstMessage) {
+    Future.microtask(() async {
+      try {
+        debugPrint('[DEBUG] ChatHistoryService._generateTitleAsync: Starting title generation for conversation $conversationId');
+        final generatedTitle = await _openRouterService.generateConversationTitle(firstMessage);
+
+        // Actualizar el título de la conversación
+        await updateConversationTitle(conversationId, generatedTitle);
+        debugPrint('[DEBUG] ChatHistoryService._generateTitleAsync: Title updated successfully for conversation $conversationId: $generatedTitle');
+      } catch (e) {
+        debugPrint('[DEBUG] ChatHistoryService._generateTitleAsync: Failed to generate title for conversation $conversationId: $e');
+        // Mantener el título temporal o usar fallback
+        try {
+          final fallbackTitle = ChatConversation.generateTitle(firstMessage);
+          await updateConversationTitle(conversationId, fallbackTitle);
+          debugPrint('[DEBUG] ChatHistoryService._generateTitleAsync: Applied fallback title for conversation $conversationId: $fallbackTitle');
+        } catch (fallbackError) {
+          debugPrint('[DEBUG] ChatHistoryService._generateTitleAsync: Failed to apply fallback title: $fallbackError');
+        }
+      }
+    });
+  }
+
+  // Actualizar el título de una conversación existente
+  Future<void> updateConversationTitle(String conversationId, String newTitle) async {
+    try {
+      final conversations = await getAllConversations();
+      final conversationIndex = conversations.indexWhere((c) => c.id == conversationId);
+
+      if (conversationIndex == -1) {
+        debugPrint('[DEBUG] ChatHistoryService.updateConversationTitle: Conversation $conversationId not found');
+        return;
+      }
+
+      final conversation = conversations[conversationIndex];
+      final updatedConversation = conversation.copyWith(
+        title: newTitle,
+        updatedAt: DateTime.now(),
+      );
+
+      await saveConversation(updatedConversation);
+      debugPrint('[DEBUG] ChatHistoryService.updateConversationTitle: Title updated for conversation $conversationId');
+    } catch (e) {
+      debugPrint('[DEBUG] ChatHistoryService.updateConversationTitle: Error updating title: $e');
+      rethrow;
+    }
   }
 
   Future<void> addMessageToConversation(String conversationId, ChatMessage message) async {

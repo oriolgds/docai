@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/model_profile.dart';
+import '../../services/model_service.dart';
 
 class ModelSelector extends StatefulWidget {
   final ModelProfile selected;
@@ -14,21 +15,53 @@ class ModelSelector extends StatefulWidget {
 class _ModelSelectorState extends State<ModelSelector> {
   late BrandName _brand;
   late ModelProfile _profile;
-  late final Map<BrandName, List<ModelProfile>> _byBrand;
+  Map<BrandName, List<ModelProfile>> _byBrand = {};
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _byBrand = ModelProfile.groupedByBrand();
     _profile = widget.selected;
     _brand = _profile.brand;
-    // Ensure current brand exists; otherwise pick the first available
-    if (!_byBrand.containsKey(_brand) || (_byBrand[_brand]?.isEmpty ?? true)) {
-      if (_byBrand.isNotEmpty) {
-        _brand = _byBrand.keys.first;
-        _profile = _byBrand[_brand]!.first;
-        WidgetsBinding.instance.addPostFrameCallback((_) => widget.onSelected(_profile));
+    _loadModels();
+  }
+  
+  Future<void> _loadModels() async {
+    try {
+      final models = await ModelService.getAvailableModels();
+      if (models.isEmpty) {
+        setState(() {
+          _errorMessage = 'No hay modelos disponibles';
+          _isLoading = false;
+        });
+        return;
       }
+      
+      final grouped = <BrandName, List<ModelProfile>>{};
+      for (final model in models) {
+        grouped.putIfAbsent(model.brand, () => []).add(model);
+      }
+      
+      setState(() {
+        _byBrand = grouped;
+        _isLoading = false;
+        _errorMessage = null;
+        
+        // Verificar si el modelo actual sigue disponible
+        final currentModelExists = models.any((m) => m.id == _profile.id);
+        if (!currentModelExists && models.isNotEmpty) {
+          _profile = models.first;
+          _brand = _profile.brand;
+          WidgetsBinding.instance.addPostFrameCallback((_) => widget.onSelected(_profile));
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error cargando modelos';
+        _isLoading = false;
+        _byBrand = ModelProfile.groupedByBrand(); // Fallback
+      });
     }
   }
 
@@ -49,6 +82,43 @@ class _ModelSelectorState extends State<ModelSelector> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    
+    if (_errorMessage != null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.orange),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.orange),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _isLoading = true;
+                  _errorMessage = null;
+                });
+                _loadModels();
+              },
+              child: const Text('Reintentar'),
+            ),
+          ],
+        ),
+      );
+    }
+    
     final brands = _byBrand.keys.toList();
 
     return Column(
@@ -87,19 +157,29 @@ class _ModelSelectorState extends State<ModelSelector> {
           runSpacing: 8,
           children: [
             for (final p in (_byBrand[_brand] ?? []))
-              FilterChip(
-                label: Text(p.displayName),
-                selected: _profile.id == p.id,
-                onSelected: (_) => _selectProfile(p),
-                selectedColor: brandColor(_brand).withOpacity(0.15),
-                checkmarkColor: brandColor(_brand),
-                labelStyle: TextStyle(
-                  color: _profile.id == p.id ? brandColor(_brand) : Colors.black,
-                  fontWeight: _profile.id == p.id ? FontWeight.bold : FontWeight.normal,
-                ),
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(color: brandColor(_brand).withOpacity(0.35)),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: _profile.id == p.id ? LinearGradient(
+                    colors: [p.primaryColor.withOpacity(0.1), p.secondaryColor.withOpacity(0.1)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ) : null,
                   borderRadius: BorderRadius.circular(10),
+                ),
+                child: FilterChip(
+                  label: Text(p.displayName),
+                  selected: _profile.id == p.id,
+                  onSelected: (_) => _selectProfile(p),
+                  selectedColor: Colors.transparent,
+                  checkmarkColor: p.primaryColor,
+                  labelStyle: TextStyle(
+                    color: _profile.id == p.id ? p.primaryColor : Colors.black,
+                    fontWeight: _profile.id == p.id ? FontWeight.bold : FontWeight.normal,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(color: p.primaryColor.withOpacity(0.35)),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
           ],

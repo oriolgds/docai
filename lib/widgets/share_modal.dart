@@ -44,16 +44,34 @@ class ShareModal extends StatelessWidget {
             height: 80,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              gradient: const LinearGradient(
-                colors: [Colors.black87, Colors.grey],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
             ),
-            child: const Icon(
-              Icons.medical_services,
-              size: 40,
-              color: Colors.white,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset(
+                'assets/logo/logo compress.png',
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: const LinearGradient(
+                        colors: [Colors.black87, Colors.grey],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.medical_services,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                  );
+                },
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -99,7 +117,7 @@ class ShareModal extends StatelessWidget {
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
+                backgroundColor: const Color(0xFF00B894),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

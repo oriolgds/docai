@@ -151,7 +151,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.deleteConversation),
-        content: Text('¿Estás seguro de que quieres eliminar "${conversation.title}"?'),
+        content: Text(l10n.deleteConversationConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -431,7 +431,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Sincronización en la nube',
+                  l10n.cloudSyncTitle,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -504,7 +504,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Tus datos están protegidos con encriptación',
+                    l10n.endToEndEncryption,
                     style: TextStyle(
                       fontSize: 12,
                       color: theme.colorScheme.primary.withOpacity(0.8),
@@ -725,7 +725,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
     } else if (difference.inDays == 1) {
       return l10n.yesterday;
     } else if (difference.inDays < 7) {
-      const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+      final days = [l10n.monday, l10n.tuesday, l10n.wednesday, l10n.thursday, l10n.friday, l10n.saturday, l10n.sunday];
       return days[date.weekday - 1];
     } else {
       return '${date.day}/${date.month}/${date.year}';

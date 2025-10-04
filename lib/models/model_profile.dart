@@ -24,6 +24,9 @@ class ModelProfile {
   final String modelId; // OpenRouter model string
   final String description;
   final bool reasoning;
+  final String color1; // Color primario del degradado
+  final String color2; // Color secundario del degradado
+  final bool disabled; // Si el modelo está deshabilitado
 
   const ModelProfile({
     required this.id,
@@ -33,7 +36,13 @@ class ModelProfile {
     required this.modelId,
     required this.description,
     this.reasoning = false,
+    this.color1 = '#3F51B5',
+    this.color2 = '#2196F3',
+    this.disabled = false,
   });
+  
+  Color get primaryColor => Color(int.parse(color1.replaceFirst('#', '0xFF')));
+  Color get secondaryColor => Color(int.parse(color2.replaceFirst('#', '0xFF')));
 
   static List<ModelProfile> defaults() => const [
         // Solo Doky 1, sin subcategorías
@@ -44,6 +53,8 @@ class ModelProfile {
           displayName: 'Doky 1.0',
           modelId: 'x-ai/grok-4-fast:free',
           description: 'Asistente médico inteligente con razonamiento opcional.',
+          color1: '#3F51B5',
+          color2: '#2196F3',
         ),
       ];
 

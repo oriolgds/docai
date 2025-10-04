@@ -88,7 +88,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get medicalPreferences => 'Medical preferences';
 
   @override
-  String get preferredMedicineType => 'Preferred medicine type';
+  String get preferredMedicineType => 'Preferred Medicine Type';
 
   @override
   String get medicalInformation => 'Medical information';
@@ -894,4 +894,359 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get reportSecurityIssuesDescription =>
       'If you discover a security issue, contact us immediately:\n\n**Security email** security@docai.app\n**Bug bounty program** Rewards for vulnerability discoveries.\n**Responsible disclosure** Established process for reporting issues.\n**Guaranteed response** Confirmation in less than 24 hours.\n\nYour help in keeping DocAI secure is invaluable and always recognized.';
+
+  @override
+  String get quickAccess => 'Quick Access';
+
+  @override
+  String get favorites => 'Favorites';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get backup => 'Backup';
+
+  @override
+  String get consultations => 'Consultations';
+
+  @override
+  String get lastUsage => 'Last usage';
+
+  @override
+  String get satisfaction => 'Satisfaction';
+
+  @override
+  String get never => 'Never';
+
+  @override
+  String get configureMedicalInfo => 'Configure your medical information';
+
+  @override
+  String get enjoyAllFeatures => 'Enjoy all features';
+
+  @override
+  String get manage => 'Manage';
+
+  @override
+  String get languageSettings => 'Language';
+
+  @override
+  String get changeAppLanguage => 'Change app language';
+
+  @override
+  String get privacyAndSecuritySettings => 'Privacy and security';
+
+  @override
+  String get helpCenter => 'Help center';
+
+  @override
+  String get projectInformation => 'Project information';
+
+  @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String get deleteAccountDescription =>
+      'Permanently delete your account and all associated data';
+
+  @override
+  String get dangerous => 'Dangerous';
+
+  @override
+  String get quickSettings => 'Quick Settings';
+
+  @override
+  String get darkMode => 'Dark mode';
+
+  @override
+  String get location => 'Location';
+
+  @override
+  String get selectLanguageTitle => 'Select language';
+
+  @override
+  String get premiumPlanTitle => 'Premium Plan';
+
+  @override
+  String get unlimitedConsultationsFeature => 'Unlimited consultations';
+
+  @override
+  String get priorityAccess => 'Priority access';
+
+  @override
+  String get completeHistory => 'Complete history';
+
+  @override
+  String get premiumSupport => 'Premium support';
+
+  @override
+  String get cancelPlan => 'Cancel plan';
+
+  @override
+  String get cloudSyncTitle => 'Cloud Sync';
+
+  @override
+  String get syncCompleteTitle => 'Sync Complete';
+
+  @override
+  String get syncingTitle => 'Syncing...';
+
+  @override
+  String get syncCompleteDescription =>
+      'Your history has been successfully synced to the cloud. You can now access it from any device.';
+
+  @override
+  String get syncingDescription =>
+      'We are securely saving your history to the cloud...';
+
+  @override
+  String get cloudSyncDescription =>
+      'Back up your conversation history to the cloud to keep it safe and accessible from any device.';
+
+  @override
+  String get security => 'Security';
+
+  @override
+  String get endToEndEncryption => 'End-to-end encryption';
+
+  @override
+  String get multiDevice => 'Multi-device';
+
+  @override
+  String get accessFromAnywhere => 'Access from anywhere';
+
+  @override
+  String get automaticBackup => 'Automatic Backup';
+
+  @override
+  String get continuousSync => 'Continuous sync';
+
+  @override
+  String get syncNow => 'Sync Now';
+
+  @override
+  String get notNowButton => 'Not Now';
+
+  @override
+  String get historySyncedSuccessfully => 'History synced successfully';
+
+  @override
+  String get typeYourMedicalQuery => 'Type your medical query...';
+
+  @override
+  String get generatingResponseMessage => 'Generating response...';
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String get cancelGeneration => 'Cancel';
+
+  @override
+  String get scrollToBottom => 'Go to bottom';
+
+  @override
+  String get reasoning => 'Reasoning';
+
+  @override
+  String get medicalDisclaimerCardText =>
+      'DocAI does not replace professional medical advice. The information provided is for educational purposes. For diagnoses, treatments or emergencies consult a healthcare professional.';
+
+  @override
+  String get monday => 'Mon';
+
+  @override
+  String get tuesday => 'Tue';
+
+  @override
+  String get wednesday => 'Wed';
+
+  @override
+  String get thursday => 'Thu';
+
+  @override
+  String get friday => 'Fri';
+
+  @override
+  String get saturday => 'Sat';
+
+  @override
+  String get sunday => 'Sun';
+
+  @override
+  String get deleteConversationConfirm =>
+      'Are you sure you want to delete this conversation?';
+
+  @override
+  String get medicalPersonalizationTitle => 'Medical Personalization';
+
+  @override
+  String get importantNotice => 'Important Notice';
+
+  @override
+  String get docaiDisclaimer =>
+      'DocAI does not replace professional medical advice. The information provided is for educational purposes. For diagnoses, treatments or emergencies consult a healthcare professional.';
+
+  @override
+  String get dateOfBirth => 'Date of Birth';
+
+  @override
+  String get notSpecified => 'Not specified';
+
+  @override
+  String get male => 'Male';
+
+  @override
+  String get female => 'Female';
+
+  @override
+  String get preferNotToSay => 'Prefer not to say';
+
+  @override
+  String get weightKg => 'Weight (kg)';
+
+  @override
+  String get heightCm => 'Height (cm)';
+
+  @override
+  String get allergiesAndIntolerances => 'Allergies and Intolerances';
+
+  @override
+  String get generalAllergies => 'General Allergies';
+
+  @override
+  String get medicationAllergies => 'Medication Allergies';
+
+  @override
+  String get foodIntolerances => 'Food Intolerances';
+
+  @override
+  String get treatmentPreferences => 'Treatment Preferences';
+
+  @override
+  String get both => 'Both';
+
+  @override
+  String get medicationsToAvoid => 'Medications to Avoid';
+
+  @override
+  String get preferredTreatments => 'Preferred Treatments';
+
+  @override
+  String get previousSurgeries => 'Previous Surgeries';
+
+  @override
+  String get smokingHabit => 'Smoking Habit';
+
+  @override
+  String get formerSmoker => 'Former Smoker';
+
+  @override
+  String get lightSmoker => 'Light Smoker';
+
+  @override
+  String get moderateSmoker => 'Moderate Smoker';
+
+  @override
+  String get heavySmoker => 'Heavy Smoker';
+
+  @override
+  String get alcoholConsumption => 'Alcohol Consumption';
+
+  @override
+  String get occasional => 'Occasional';
+
+  @override
+  String get frequent => 'Frequent';
+
+  @override
+  String get daily => 'Daily';
+
+  @override
+  String get exerciseFrequency => 'Exercise Frequency';
+
+  @override
+  String get intense => 'Intense';
+
+  @override
+  String get dietType => 'Diet Type';
+
+  @override
+  String get omnivore => 'Omnivore';
+
+  @override
+  String get vegetarian => 'Vegetarian';
+
+  @override
+  String get vegan => 'Vegan';
+
+  @override
+  String get pescatarian => 'Pescatarian';
+
+  @override
+  String get keto => 'Keto';
+
+  @override
+  String get mediterranean => 'Mediterranean';
+
+  @override
+  String get emergencyContact => 'Emergency Contact';
+
+  @override
+  String get contactName => 'Contact Name';
+
+  @override
+  String get emergencyPhone => 'Emergency Phone';
+
+  @override
+  String get additionalPreferences => 'Additional Preferences';
+
+  @override
+  String get preferredLanguage => 'Preferred Language';
+
+  @override
+  String get spanish => 'Spanish';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get catalan => 'Catalan';
+
+  @override
+  String get french => 'French';
+
+  @override
+  String get german => 'German';
+
+  @override
+  String get communicationStyle => 'Communication Style';
+
+  @override
+  String get direct => 'Direct';
+
+  @override
+  String get detailed => 'Detailed';
+
+  @override
+  String get gentle => 'Gentle';
+
+  @override
+  String get other => 'Other';
+
+  @override
+  String get lifestyle => 'Lifestyle';
+
+  @override
+  String get moderate => 'Moderate';
+
+  @override
+  String get none => 'None';
+
+  @override
+  String get light => 'Light';
+
+  @override
+  String get balanced => 'Balanced';
 }
