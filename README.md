@@ -121,14 +121,30 @@ Use a test email (e.g., `test@example.com`) and password to log in (ensure these
 - **Build Errors**: Ensure Xcode/Android SDK tools are updated
 - **Authentication Issues**: Check [AUTHENTICATION_IMPROVEMENTS.md](AUTHENTICATION_IMPROVEMENTS.md) for recent fixes
 
-## Model Selection (Camouflaged)
+## 🤖 Dynamic Model Management
 
-The app features intelligent model selection:
-- **Feya** (sencillo)
-- **Gaia** (normal)  
-- **Heynos** (pro)
+The app now features **dynamic model management** through Firebase Remote Config:
 
-Each brand has tiers like Instant/Balanced/Reasoning/Pro, which map internally to OpenRouter free models (e.g., `google/gemini-2.0-flash-exp:free`, `deepseek/deepseek-chat-v3.1:free`, `x-ai/grok-4-fast:free`, `meta-llama/llama-4-maverick:free`). The UI only exposes brand and tier names.
+### Key Features:
+- **Real-time model updates** without app updates
+- **Custom branding** with configurable names and colors
+- **Automatic fallback** when models become unavailable
+- **5-minute cache** for optimal performance
+- **Reasoning support** for advanced models
+
+### Current Models:
+- **Doky Instant** → `google/gemini-2.0-flash-exp:free`
+- **Doky Balanced** → `deepseek/deepseek-chat-v3.1:free`
+- **Doky Reasoning** → `deepseek/deepseek-reasoner:free`
+- **Doky Pro** → `x-ai/grok-4-fast:free`
+
+### Configuration:
+Models are managed through Firebase Remote Config. See [REMOTE_CONFIG_SETUP.md](REMOTE_CONFIG_SETUP.md) for detailed setup instructions.
+
+### Error Handling:
+- Graceful handling of unavailable models
+- User-friendly error messages
+- Automatic model switching when needed
 
 ## Contributing
 

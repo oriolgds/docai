@@ -6,7 +6,9 @@ import '../../l10n/generated/app_localizations.dart';
 
 import '../../services/openrouter_service.dart';
 import '../../services/chat_state_manager.dart';
+import '../../services/model_service.dart';
 import '../../models/model_profile.dart';
+import '../../exceptions/model_exceptions.dart';
 import '../../models/chat_message.dart';
 import '../../models/chat_conversation.dart';
 import '../../models/user_preferences.dart';
@@ -36,7 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final ChatStateManager _stateManager = ChatStateManager();
   late List<ChatMessage> _messages;
-  late ModelProfile _selectedProfile;
+  ModelProfile _selectedProfile = ModelProfile.defaultProfile;
   bool _isSending = false;
   late OpenRouterService _service;
   bool _showDisclaimer = true;
@@ -65,7 +67,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _service = OpenRouterService();
-    _selectedProfile = ModelProfile.defaultProfile;
+    _initializeDefaultModel();
     
     // Configurar listener del scroll controller
     _scrollController.addListener(_onScrollChanged);
@@ -89,10 +91,25 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     
     _checkFirstTimeUser();
+    
+    // Cargar preferencias antes que nada para tenerlas disponibles
     _loadUserPreferences();
     
     // Escuchar cambios en el state manager para manejar conversaciones externas
     _stateManager.addListener(_onStateManagerChanged);
+  }
+  
+  Future<void> _initializeDefaultModel() async {
+    try {
+      final defaultModel = await ModelService.getDefaultModel();
+      if (defaultModel != null && mounted) {
+        setState(() {
+          _selectedProfile = defaultModel;
+        });
+      }
+    } catch (e) {
+      // Ya tiene el valor por defecto
+    }
   }
   
   @override
@@ -103,6 +120,8 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!_isInitialized && widget.existingConversation == null && _messages.isEmpty) {
       _addInitialAssistantMessage();
       _isInitialized = true;
+      // Recargar preferencias para asegurar que estén disponibles
+      _loadUserPreferences();
     }
   }
   
@@ -189,6 +208,10 @@ class _ChatScreenState extends State<ChatScreen> {
         setState(() {
           _userPreferences = preferences;
         });
+        // Rebuild to apply new preferences to system prompt
+        if (_messages.isNotEmpty) {
+          setState(() {});
+        }
       }
     } catch (e) {
       // Silently fail if we can't load preferences - not critical
@@ -588,8 +611,15 @@ class _ChatScreenState extends State<ChatScreen> {
           _currentStreamSubscription = null;
           
           if (mounted) {
+            String errorMessage;
+            if (e is ModelUnavailableException) {
+              errorMessage = e.toString();
+            } else {
+              errorMessage = 'Error: ${e.toString()}';
+            }
+            
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('Error: ${e.toString()}'),
+              content: Text(errorMessage),
               behavior: SnackBarBehavior.floating,
             ));
             
@@ -599,7 +629,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 _messages[_streamingIndex!] = ChatMessage(
                   id: _messages[_streamingIndex!].id,
                   role: ChatRole.assistant,
-                  content: 'Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.',
+                  content: e is ModelUnavailableException 
+                    ? 'El modelo seleccionado no está disponible. Por favor, selecciona otro modelo e inténtalo de nuevo.'
+                    : 'Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.',
                   createdAt: DateTime.now(),
                 );
               });
@@ -615,8 +647,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
     } catch (e) {
       if (mounted) {
+        String errorMessage;
+        if (e is ModelUnavailableException) {
+          errorMessage = e.toString();
+        } else {
+          errorMessage = 'Error: ${e.toString()}';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error: ${e.toString()}'),
+          content: Text(errorMessage),
           behavior: SnackBarBehavior.floating,
         ));
         // Show error in the assistant bubble if placeholder exists
@@ -625,8 +664,9 @@ class _ChatScreenState extends State<ChatScreen> {
             _messages[_streamingIndex!] = ChatMessage(
               id: _messages[_streamingIndex!].id,
               role: ChatRole.assistant,
-              content:
-                  'Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.',
+              content: e is ModelUnavailableException 
+                ? 'El modelo seleccionado no está disponible. Por favor, selecciona otro modelo e inténtalo de nuevo.'
+                : 'Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.',
               createdAt: DateTime.now(),
             );
           });
@@ -926,7 +966,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final accent = brandColor(_selectedProfile.brand);
+    final accent = _selectedProfile.primaryColor;
     
     return Scaffold(
       appBar: AppBar(
@@ -1031,7 +1071,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [theme.colorScheme.primary.withOpacity(0.1), theme.colorScheme.primary.withOpacity(0.2)],
+                              colors: [_selectedProfile.primaryColor.withOpacity(0.1), _selectedProfile.secondaryColor.withOpacity(0.2)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -1043,14 +1083,14 @@ class _ChatScreenState extends State<ChatScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.tune, color: theme.colorScheme.primary, size: 20),
+                                  Icon(Icons.tune, color: _selectedProfile.primaryColor, size: 20),
                                   const SizedBox(width: 8),
                                   Text(
                                     l10n.personalizeYourExperience,
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
-                                      color: theme.colorScheme.primary,
+                                      color: _selectedProfile.primaryColor,
                                     ),
                                   ),
                                   const Spacer(),
@@ -1087,7 +1127,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                     child: Text(
                                       l10n.notNow,
                                       style: TextStyle(
-                                        color: theme.colorScheme.primary,
+                                        color: _selectedProfile.primaryColor,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -1108,7 +1148,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                       }
                                     },
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: theme.colorScheme.primary,
+                                      backgroundColor: _selectedProfile.primaryColor,
                                       foregroundColor: Colors.white,
                                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                     ),
@@ -1137,7 +1177,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         message: m.content,
                         isAssistant: isAssistant,
                         assistantLabel: _assistantLabel(),
-                        accentColor: brandColor(_selectedProfile.brand),
+                        accentColor: _selectedProfile.primaryColor,
                         isStreaming:
                             isAssistant &&
                             _streamingIndex != null &&
@@ -1153,27 +1193,33 @@ class _ChatScreenState extends State<ChatScreen> {
                   },
                 ),
               ),
-              ChatInput(
-                onSend: (text) => _sendMessage(text),
-                onCancel: _cancelGeneration,
-                isSending: _isSending,
-                selectedProfile: _selectedProfile,
-                allProfiles: ModelProfile.defaults(),
-                useReasoning: _useReasoning,
-                onProfileChanged: (p) {
-                  setState(() {
-                    _selectedProfile = p;
-                  });
+              FutureBuilder<List<ModelProfile>>(
+                future: ModelService.getAvailableModels(),
+                builder: (context, snapshot) {
+                  final profiles = snapshot.data ?? [];
+                  return ChatInput(
+                    onSend: (text) => _sendMessage(text),
+                    onCancel: _cancelGeneration,
+                    isSending: _isSending,
+                    selectedProfile: _selectedProfile,
+                    allProfiles: profiles,
+                    useReasoning: _useReasoning,
+                    onProfileChanged: (p) {
+                      setState(() {
+                        _selectedProfile = p;
+                      });
+                    },
+                    onReasoningChanged: (enabled) {
+                      setState(() {
+                        _useReasoning = enabled;
+                      });
+                    },
+                    onRequestPro: () {},
+                    // Add new scroll button properties
+                    showScrollButton: _showScrollToBottomButton,
+                    onScrollToBottom: _scrollToBottomButtonPressed,
+                  );
                 },
-                onReasoningChanged: (enabled) {
-                  setState(() {
-                    _useReasoning = enabled;
-                  });
-                },
-                onRequestPro: () {},
-                // Add new scroll button properties
-                showScrollButton: _showScrollToBottomButton,
-                onScrollToBottom: _scrollToBottomButtonPressed,
               ),
             ],
           ),

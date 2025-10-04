@@ -108,14 +108,21 @@ class _ChatInputState extends State<ChatInput> with SingleTickerProviderStateMix
               padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
               child: Row(
                 children: [
-                  Expanded(child: _ModelDisplay(selected: current)),
-                  const SizedBox(width: 12),
-                  // Botón de razonamiento
-                  _ReasoningToggle(
-                    useReasoning: widget.useReasoning,
-                    onChanged: widget.onReasoningChanged,
-                    accentColor: brandColor(current.brand),
+                  Expanded(
+                    child: _ModelDisplay(
+                      selected: current,
+                      allProfiles: widget.allProfiles,
+                      onChanged: widget.onProfileChanged,
+                    ),
                   ),
+                  if (current.reasoning || widget.useReasoning) ...[
+                    const SizedBox(width: 12),
+                    _ReasoningToggle(
+                      useReasoning: widget.useReasoning,
+                      onChanged: widget.onReasoningChanged,
+                      accentColor: current.primaryColor,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -284,52 +291,153 @@ class _ReasoningToggle extends StatelessWidget {
   }
 }
 
-// Nuevo widget simplificado que solo muestra el modelo sin selector
-class _ModelDisplay extends StatelessWidget {
+class _ModelDisplay extends StatefulWidget {
   final ModelProfile selected;
+  final List<ModelProfile> allProfiles;
+  final ValueChanged<ModelProfile> onChanged;
 
-  const _ModelDisplay({required this.selected});
+  const _ModelDisplay({
+    required this.selected,
+    required this.allProfiles,
+    required this.onChanged,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-        borderRadius: BorderRadius.circular(10),
-        color: Colors.white,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildGradientCircle(selected.brand),
-          const SizedBox(width: 8),
-          Text(
-            selected.displayName, // Solo "Gaia", sin subcategoría
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-        ],
+  State<_ModelDisplay> createState() => _ModelDisplayState();
+}
+
+class _ModelDisplayState extends State<_ModelDisplay> {
+  bool _isExpanded = false;
+
+  void _showModelSelector() {
+    if (widget.allProfiles.isEmpty) return;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'Seleccionar modelo',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+            ),
+            ...widget.allProfiles.map((profile) => 
+              ListTile(
+                leading: _buildGradientCircle(profile),
+                title: Text(
+                  profile.displayName,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+                subtitle: Text(
+                  profile.description,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (profile.reasoning)
+                      Icon(
+                        Icons.psychology,
+                        size: 20,
+                        color: profile.primaryColor,
+                      ),
+                    if (widget.selected.id == profile.id)
+                      Icon(
+                        Icons.check_circle,
+                        color: profile.primaryColor,
+                      ),
+                  ],
+                ),
+                onTap: () {
+                  widget.onChanged(profile);
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildGradientCircle(BrandName b, {double size = 20}) {
-    final color = brandColor(b);
-    final colors = [color, Color.lerp(color, Colors.black, 0.2) ?? color];
+  @override
+  Widget build(BuildContext context) {
+    if (widget.allProfiles.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.orange),
+          borderRadius: BorderRadius.circular(10),
+          color: Colors.orange.withOpacity(0.1),
+        ),
+        child: const Text(
+          'No hay modelos disponibles',
+          style: TextStyle(color: Colors.orange, fontSize: 14),
+        ),
+      );
+    }
 
+    return GestureDetector(
+      onTap: _showModelSelector,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFFE0E0E0)),
+          borderRadius: BorderRadius.circular(10),
+          color: Colors.white,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildGradientCircle(widget.selected),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                widget.selected.displayName,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+            ),
+            const Icon(Icons.arrow_drop_down, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradientCircle(ModelProfile profile, {double size = 20}) {
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
-          colors: colors,
+          colors: [profile.primaryColor, profile.secondaryColor],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
+            color: profile.primaryColor.withOpacity(0.3),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),

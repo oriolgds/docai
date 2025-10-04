@@ -13,6 +13,7 @@ import 'screens/auth/email_verified_screen.dart';
 import 'screens/splash/splash_screen.dart';
 import 'services/supabase_service.dart';
 import 'services/localization_service.dart';
+import 'services/remote_config_service.dart';
 import 'l10n/generated/app_localizations.dart';
 
 Future<void> main() async {
@@ -30,6 +31,9 @@ Future<void> main() async {
   
   // Initialize Supabase
   await SupabaseService.initialize();
+  
+  // Initialize Remote Config
+  await RemoteConfigService.initialize();
   
   runApp(const DocAIApp());
 }

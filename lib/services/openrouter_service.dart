@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../config/openrouter_config.dart';
 import '../models/chat_message.dart';
 import '../models/model_profile.dart';
+import '../exceptions/model_exceptions.dart';
 
 class OpenRouterService {
   final http.Client _client;
@@ -53,9 +54,18 @@ class OpenRouterService {
       try {
         final data = jsonDecode(resp.body);
         if (data is Map && data['error'] != null) {
-          message = data['error']['message']?.toString() ?? message;
+          final errorMessage = data['error']['message']?.toString() ?? message;
+          // Detectar errores de modelo no disponible
+          if (errorMessage.contains('No endpoints found') || 
+              errorMessage.contains('not found') ||
+              errorMessage.contains('unavailable')) {
+            throw ModelUnavailableException('El modelo seleccionado no está disponible temporalmente');
+          }
+          message = errorMessage;
         }
-      } catch (_) {}
+      } catch (e) {
+        if (e is ModelUnavailableException) rethrow;
+      }
       throw Exception(message);
     }
 
@@ -117,9 +127,18 @@ class OpenRouterService {
       try {
         final data = jsonDecode(body);
         if (data is Map && data['error'] != null) {
-          message = data['error']['message']?.toString() ?? message;
+          final errorMessage = data['error']['message']?.toString() ?? message;
+          // Detectar errores de modelo no disponible
+          if (errorMessage.contains('No endpoints found') || 
+              errorMessage.contains('not found') ||
+              errorMessage.contains('unavailable')) {
+            throw ModelUnavailableException('El modelo seleccionado no está disponible temporalmente');
+          }
+          message = errorMessage;
         }
-      } catch (_) {}
+      } catch (e) {
+        if (e is ModelUnavailableException) rethrow;
+      }
       throw Exception(message);
     }
 

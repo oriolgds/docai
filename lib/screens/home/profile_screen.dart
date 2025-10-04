@@ -17,7 +17,14 @@ import 'about_screen.dart';
 import 'history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final VoidCallback? onNavigateToHistory;
+  final VoidCallback? onNavigateToBackup;
+  
+  const ProfileScreen({
+    super.key,
+    this.onNavigateToHistory,
+    this.onNavigateToBackup,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -416,7 +423,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         icon: Icons.history,
         label: 'Historial',
         color: const Color(0xFF6C5CE7),
-        onTap: () => _navigateToHistory(),
+        onTap: () => _navigateToHistoryTab(),
       ),
       _QuickAction(
         icon: Icons.favorite_outline,
@@ -433,8 +440,8 @@ class _ProfileScreenState extends State<ProfileScreen>
       _QuickAction(
         icon: Icons.backup,
         label: 'Backup',
-        color: const Color(0xFFFFB400),
-        onTap: () => _navigateToHistoryWithSync(),
+        color: const Color(0xFF00B894),
+        onTap: () => _navigateToBackupTab(),
       ),
     ];
 
@@ -981,58 +988,27 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // NEW: Navigation methods
-  void _navigateToHistory() {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const HistoryScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: animation.drive(
-              Tween(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).chain(CurveTween(curve: Curves.easeOutQuart)),
-            ),
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 300),
-      ),
-    );
+  // Navigation methods using tabs
+  void _navigateToHistoryTab() {
+    if (widget.onNavigateToHistory != null) {
+      widget.onNavigateToHistory!();
+    }
   }
 
-  void _navigateToHistoryWithSync() async {
-    // First navigate to history
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const HistoryScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: animation.drive(
-              Tween(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).chain(CurveTween(curve: Curves.easeOutQuart)),
-            ),
-            child: child,
+  void _navigateToBackupTab() {
+    if (widget.onNavigateToBackup != null) {
+      widget.onNavigateToBackup!();
+      // Show cloud sync modal after tab change
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          showModalBottomSheet<bool>(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => const CloudSyncModal(),
           );
-        },
-        transitionDuration: const Duration(milliseconds: 300),
-      ),
-    );
-
-    // Then show the cloud sync modal after a short delay
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) {
-      showModalBottomSheet<bool>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => const CloudSyncModal(),
-      );
+        }
+      });
     }
   }
 

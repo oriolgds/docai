@@ -55,7 +55,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onNavigateToChat: () => _changeTab(0),
         onStartNewChat: _goToChatAndStartNew,
       ),
-      const ProfileScreen(),
+      ProfileScreen(
+        onNavigateToHistory: () => _changeTab(1),
+        onNavigateToBackup: () => _changeTab(1),
+      ),
     ];
     
     // Mostrar modal de descarga para Android si es necesario
