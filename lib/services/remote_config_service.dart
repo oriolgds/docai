@@ -22,13 +22,15 @@ class RemoteConfigService {
             'id': 'doky',
             'brand': 'doky',
             'displayName': 'Doky 1.0',
-            'modelId': 'x-ai/grok-4-fast:free',
+            'modelId': 'deepseek/deepseek-chat-v3.1:free',
             'description': 'Asistente médico inteligente con razonamiento opcional.',
             'reasoning': false,
             'color1': '#3F51B5',
-            'color2': '#2196F3'
+            'color2': '#2196F3',
+            'disabled': false
           }
-        ])
+        ]),
+        'title_generation_models': 'deepseek/deepseek-chat-v3.1:free'
       });
       
       await _fetchAndActivate();
@@ -67,8 +69,10 @@ class RemoteConfigService {
       final List<dynamic> modelsList = jsonDecode(modelsJson);
       print('[DEBUG] RemoteConfigService: modelsList length = ${modelsList.length}');
       final models = modelsList.map((json) => _parseModelFromJson(json)).toList();
-      print('[DEBUG] RemoteConfigService: parsed models count = ${models.length}');
-      return models.isEmpty ? [] : models;
+      // Filter out disabled models
+      final enabledModels = models.where((model) => !model.disabled).toList();
+      print('[DEBUG] RemoteConfigService: parsed models count = ${models.length}, enabled models count = ${enabledModels.length}');
+      return enabledModels.isEmpty ? [] : enabledModels;
     } catch (e) {
       print('[DEBUG] RemoteConfigService: Error getting available models: $e');
       return [];
@@ -86,9 +90,42 @@ class RemoteConfigService {
       reasoning: json['reasoning'] ?? false,
       color1: json['color1'] ?? '#3F51B5',
       color2: json['color2'] ?? '#2196F3',
+      disabled: json['disabled'] ?? false,
     );
   }
   
+  static Future<List<String>> getTitleGenerationModels() async {
+    await _fetchAndActivate();
+
+    if (_remoteConfig == null) {
+      print('[DEBUG] RemoteConfigService: _remoteConfig is null, using defaults');
+      return ['openai/gpt-3.5-turbo', 'openai/gpt-4o-mini', 'x-ai/grok-2-1212'];
+    }
+
+    try {
+      final modelsStr = _remoteConfig!.getString('title_generation_models');
+      print('[DEBUG] RemoteConfigService: title_generation_models = $modelsStr');
+
+      // Check if title generation is disabled
+      if (modelsStr.trim().toLowerCase() == 'disabled') {
+        print('[DEBUG] RemoteConfigService: title generation is disabled');
+        return []; // Return empty list to disable AI title generation
+      }
+
+      if (modelsStr.isEmpty) {
+        print('[DEBUG] RemoteConfigService: title_generation_models is empty, using defaults');
+        return ['openai/gpt-3.5-turbo', 'openai/gpt-4o-mini', 'x-ai/grok-2-1212'];
+      }
+
+      final models = modelsStr.split(',').map((m) => m.trim()).where((m) => m.isNotEmpty).toList();
+      print('[DEBUG] RemoteConfigService: parsed title generation models = $models');
+      return models.isEmpty ? ['openai/gpt-3.5-turbo', 'openai/gpt-4o-mini', 'x-ai/grok-2-1212'] : models;
+    } catch (e) {
+      print('[DEBUG] RemoteConfigService: Error getting title generation models: $e');
+      return ['openai/gpt-3.5-turbo', 'openai/gpt-4o-mini', 'x-ai/grok-2-1212'];
+    }
+  }
+
   static BrandName _parseBrand(String? brandStr) {
     switch (brandStr?.toLowerCase()) {
       case 'doky':

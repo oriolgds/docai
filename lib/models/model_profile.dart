@@ -26,6 +26,7 @@ class ModelProfile {
   final bool reasoning;
   final String color1; // Color primario del degradado
   final String color2; // Color secundario del degradado
+  final bool disabled; // Si el modelo está deshabilitado
 
   const ModelProfile({
     required this.id,
@@ -37,6 +38,7 @@ class ModelProfile {
     this.reasoning = false,
     this.color1 = '#3F51B5',
     this.color2 = '#2196F3',
+    this.disabled = false,
   });
   
   Color get primaryColor => Color(int.parse(color1.replaceFirst('#', '0xFF')));

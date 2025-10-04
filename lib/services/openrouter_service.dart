@@ -5,6 +5,7 @@ import '../config/openrouter_config.dart';
 import '../models/chat_message.dart';
 import '../models/model_profile.dart';
 import '../exceptions/model_exceptions.dart';
+import 'remote_config_service.dart';
 
 class OpenRouterService {
   final http.Client _client;
@@ -228,11 +229,40 @@ class OpenRouterService {
 
   // Generar título para una conversación basado en el primer mensaje del usuario
   Future<String> generateConversationTitle(String firstUserMessage) async {
+    final models = await RemoteConfigService.getTitleGenerationModels();
+
+    // If no models are configured (disabled), use fallback directly
+    if (models.isEmpty) {
+      print('[DEBUG] OpenRouterService.generateConversationTitle: Title generation disabled, using fallback');
+      return _generateFallbackTitle(firstUserMessage);
+    }
+
+    for (final model in models) {
+      try {
+        print('[DEBUG] OpenRouterService.generateConversationTitle: Trying model $model');
+        final title = await _generateTitleWithModel(firstUserMessage, model);
+        if (title != null) {
+          print('[DEBUG] OpenRouterService.generateConversationTitle: Success with model $model, title: $title');
+          return title;
+        }
+      } catch (e) {
+        print('[DEBUG] OpenRouterService.generateConversationTitle: Failed with model $model: $e');
+        // Continue to next model
+      }
+    }
+
+    // Si todos los modelos fallan, usar fallback
+    print('[DEBUG] OpenRouterService.generateConversationTitle: All models failed, using fallback');
+    return _generateFallbackTitle(firstUserMessage);
+  }
+
+  // Generar título usando un modelo específico con timeout
+  Future<String?> _generateTitleWithModel(String firstUserMessage, String model) async {
     try {
       final headers = OpenRouterConfig.defaultHeaders();
-      
+
       final payload = <String, dynamic>{
-        'model': 'openai/gpt-3.5-turbo', // Usar un modelo rápido y económico para títulos
+        'model': model,
         'messages': [
           {
             'role': 'system',
@@ -252,30 +282,30 @@ class OpenRouterService {
       };
 
       final uri = Uri.parse('${OpenRouterConfig.baseUrl}/chat/completions');
-      final resp = await _client.post(
-        uri,
-        headers: headers,
-        body: jsonEncode(payload),
-      );
+
+      // Usar timeout de 10 segundos para evitar esperas largas
+      final resp = await _client.post(uri, headers: headers, body: jsonEncode(payload))
+          .timeout(const Duration(seconds: 10), onTimeout: () {
+        throw TimeoutException('Request timed out after 10 seconds');
+      });
 
       if (resp.statusCode != 200) {
-        // Si falla la generación de título, usar un título por defecto
-        return _generateFallbackTitle(firstUserMessage);
+        throw Exception('HTTP ${resp.statusCode}: ${resp.body}');
       }
 
       final data = jsonDecode(resp.body) as Map<String, dynamic>;
       final choices = data['choices'] as List?;
       if (choices == null || choices.isEmpty) {
-        return _generateFallbackTitle(firstUserMessage);
+        throw Exception('No choices in response');
       }
-      
+
       final message = choices.first['message'] as Map<String, dynamic>;
       final content = message['content']?.toString().trim() ?? '';
-      
+
       if (content.isEmpty) {
-        return _generateFallbackTitle(firstUserMessage);
+        throw Exception('Empty content in response');
       }
-      
+
       // Limpiar el título (remover comillas si las hay)
       String title = content;
       if (title.startsWith('"') && title.endsWith('"')) {
@@ -284,16 +314,16 @@ class OpenRouterService {
       if (title.startsWith("'") && title.endsWith("'")) {
         title = title.substring(1, title.length - 1);
       }
-      
+
       // Limitar longitud del título
       if (title.length > 50) {
         title = title.substring(0, 47) + '...';
       }
-      
+
       return title;
     } catch (e) {
-      // En caso de error, usar título por defecto
-      return _generateFallbackTitle(firstUserMessage);
+      print('[DEBUG] OpenRouterService._generateTitleWithModel: Error with model $model: $e');
+      return null; // Return null to indicate failure, allowing fallback to next model
     }
   }
 
