@@ -718,142 +718,23 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Future<bool?> _showReasoningPickerSheet() async {
-    if (!mounted) return null;
-    
-    final l10n = AppLocalizations.of(context)!;
-    bool tempReasoning = _useReasoning;
-    
-    return await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.configureRegeneration,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFE0E0E0)),
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.grey[50],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                brandColor(_selectedProfile.brand),
-                                Color.lerp(brandColor(_selectedProfile.brand), AppTheme.darkGreen, 0.2)!,
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          _selectedProfile.displayName,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Icon(Icons.psychology, size: 20, color: brandColor(_selectedProfile.brand)),
-                      const SizedBox(width: 8),
-                      Text(l10n.advancedReasoning),
-                      const Spacer(),
-                      Switch(
-                        value: tempReasoning,
-                        onChanged: (value) => setState(() => tempReasoning = value),
-                      ),
-                    ],
-                  ),
-                  if (tempReasoning)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        l10n.advancedReasoningDescription,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text(l10n.cancel),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () => Navigator.of(context).pop(tempReasoning),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                          child: Text(l10n.regenerate),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _regenerateResponse(int assistantIndex) async {
+  Future<void> _regenerateWithModel(int assistantIndex, ModelProfile model, bool reasoning) async {
     if (_isSending) return;
     if (assistantIndex <= 0) return;
     if (_messages[assistantIndex - 1].role != ChatRole.user) return;
-    final userMessage = _messages[assistantIndex - 1];
-    final newReasoning = await _showReasoningPickerSheet();
-    if (newReasoning == null) return;
     
-    if (newReasoning != _useReasoning) {
-      setState(() {
-        _useReasoning = newReasoning;
-      });
-    }
+    final userMessage = _messages[assistantIndex - 1];
+    
+    setState(() {
+      _selectedProfile = model;
+      _useReasoning = reasoning;
+    });
     
     await _sendMessage(
       userMessage.content,
       regenerateIndex: assistantIndex - 1,
-      overrideProfile: _selectedProfile,
-      overrideReasoning: newReasoning,
+      overrideProfile: model,
+      overrideReasoning: reasoning,
     );
   }
 
@@ -1173,19 +1054,27 @@ class _ChatScreenState extends State<ChatScreen> {
                       final isAssistant = m.role == ChatRole.assistant;
                       final isWelcomeMessage = messageIndex == 0 && isAssistant && _messages.length == 1;
 
-                      return MessageBubble(
-                        message: m.content,
-                        isAssistant: isAssistant,
-                        assistantLabel: _assistantLabel(),
-                        accentColor: _selectedProfile.primaryColor,
-                        isStreaming:
-                            isAssistant &&
-                            _streamingIndex != null &&
-                            messageIndex == _streamingIndex,
-                        showRegenerateButton: isAssistant && !isWelcomeMessage,
-                        onRegenerate: isAssistant && !isWelcomeMessage
-                            ? () => _regenerateResponse(messageIndex)
-                            : null,
+                      return FutureBuilder<List<ModelProfile>>(
+                        future: ModelService.getAvailableModels(),
+                        builder: (context, snapshot) {
+                          final models = snapshot.data ?? [];
+                          return MessageBubble(
+                            message: m.content,
+                            isAssistant: isAssistant,
+                            assistantLabel: _assistantLabel(),
+                            accentColor: _selectedProfile.primaryColor,
+                            isStreaming:
+                                isAssistant &&
+                                _streamingIndex != null &&
+                                messageIndex == _streamingIndex,
+                            showRegenerateButton: isAssistant && !isWelcomeMessage && messageIndex > 0,
+                            onRegenerateWithModel: isAssistant && !isWelcomeMessage && messageIndex > 0
+                                ? (model, reasoning) => _regenerateWithModel(messageIndex, model, reasoning)
+                                : null,
+                            availableModels: models,
+                            useReasoning: _useReasoning,
+                          );
+                        },
                       );
                     }
                     
