@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/supabase_service.dart';
 import '../../services/user_stats_service.dart';
 import '../../widgets/medical_preferences_button.dart';
@@ -753,6 +755,18 @@ class _ProfileScreenState extends State<ProfileScreen>
         subtitle: l10n.helpCenter,
         color: const Color(0xFF00B894),
         onTap: () => _navigateToHelpSupport(),
+      ),
+      _MenuItemData(
+        icon: FontAwesomeIcons.xTwitter,
+        title: 'X (Twitter)',
+        subtitle: '@docaiapp',
+        color: const Color(0xFF000000),
+        onTap: () async {
+          final url = Uri.parse('https://x.com/docaiapp');
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          }
+        },
       ),
       _MenuItemData(
         icon: Icons.info_outline,
