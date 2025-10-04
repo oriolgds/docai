@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/user_medical_preferences.dart';
 import '../services/medical_preferences_service.dart';
 import '../widgets/custom_text_field.dart';
@@ -82,7 +83,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
         });
       }
     } catch (e) {
-      _showErrorSnackBar('Error al cargar preferencias: $e');
+      _showErrorSnackBar(AppLocalizations.of(context)!.errorLoadingPreferences(e.toString()));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -147,14 +148,14 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
       );
 
       await _medicalService.saveMedicalPreferences(preferences);
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preferencias guardadas exitosamente')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.preferencesSavedSuccess)),
       );
-      
+
       Navigator.of(context).pop(true); // Retornar true para indicar que se guardaron cambios
     } catch (e) {
-      _showErrorSnackBar('Error al guardar preferencias: $e');
+      _showErrorSnackBar(AppLocalizations.of(context)!.errorSavingPreferences(e.toString()));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -173,11 +174,11 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
       appBar: AppBar(
         backgroundColor: Colors.grey[850], // Mantener consistencia con el fondo
         foregroundColor: Colors.white,
-        title: const Text('Personalización Médica'),
+        title: Text(AppLocalizations.of(context)!.medicalPersonalizationTitle),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _savePreferences,
-            child: const Text('Guardar', style: TextStyle(color: Colors.white)),
+            child: Text(AppLocalizations.of(context)!.save, style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -221,13 +222,13 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
           children: [
             const Icon(Icons.warning_amber, color: Colors.amber, size: 32),
             const SizedBox(height: 8),
-            const Text(
-              'Aviso Importante',
+            Text(
+              AppLocalizations.of(context)!.importantNotice,
               style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'DocAI no sustituye el consejo médico profesional. La información proporcionada tiene fines educativos. Para diagnósticos, tratamientos o emergencias acude a un profesional de la salud.',
+            Text(
+              AppLocalizations.of(context)!.docaiDisclaimer,
               style: TextStyle(color: Colors.white70, fontSize: 14),
               textAlign: TextAlign.center,
             ),
@@ -239,24 +240,24 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
 
   Widget _buildBasicInfoSection() {
     return _buildSection(
-      'Información Básica',
+      AppLocalizations.of(context)!.basicInformation,
       Icons.person,
       [
         _buildDateField(
-          'Fecha de Nacimiento',
+          AppLocalizations.of(context)!.dateOfBirth,
           _dateOfBirth,
           (date) => setState(() => _dateOfBirth = date),
         ),
         const SizedBox(height: 16),
         _buildDropdownField(
-          'Género',
+          AppLocalizations.of(context)!.gender,
           _gender,
           [
-            {'value': '', 'label': 'No especificado'},
-            {'value': 'male', 'label': 'Masculino'},
-            {'value': 'female', 'label': 'Femenino'},
-            {'value': 'other', 'label': 'Otro'},
-            {'value': 'prefer_not_to_say', 'label': 'Prefiero no decir'},
+            {'value': '', 'label': AppLocalizations.of(context)!.notSpecified},
+            {'value': 'male', 'label': AppLocalizations.of(context)!.male},
+            {'value': 'female', 'label': AppLocalizations.of(context)!.female},
+            {'value': 'other', 'label': AppLocalizations.of(context)!.other},
+            {'value': 'prefer_not_to_say', 'label': AppLocalizations.of(context)!.preferNotToSay},
           ],
           (value) => setState(() => _gender = value ?? ''),
         ),
@@ -266,7 +267,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
             Expanded(
               child: CustomTextField(
                 controller: _weightController,
-                labelText: 'Peso (kg)',
+                labelText: AppLocalizations.of(context)!.weightKg,
                 keyboardType: TextInputType.number,
               ),
             ),
@@ -274,7 +275,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
             Expanded(
               child: CustomTextField(
                 controller: _heightController,
-                labelText: 'Altura (cm)',
+                labelText: AppLocalizations.of(context)!.heightCm,
                 keyboardType: TextInputType.number,
               ),
             ),
@@ -286,25 +287,25 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
 
   Widget _buildAllergiesSection() {
     return _buildSection(
-      'Alergias e Intolerancias',
+      AppLocalizations.of(context)!.allergiesAndIntolerances,
       Icons.warning,
       [
         MultiSelectField(
-          title: 'Alergias Generales',
+          title: AppLocalizations.of(context)!.generalAllergies,
           items: _allergies,
           onChanged: (items) => setState(() => _allergies = items),
           suggestions: ['Polen', 'Polvo', 'Ácaros', 'Pelo de animales', 'Látex'],
         ),
         const SizedBox(height: 16),
         MultiSelectField(
-          title: 'Alergias a Medicamentos',
+          title: AppLocalizations.of(context)!.medicationAllergies,
           items: _medicationAllergies,
           onChanged: (items) => setState(() => _medicationAllergies = items),
           suggestions: ['Penicilina', 'Aspirina', 'Ibuprofeno', 'Sulfa', 'Morfina'],
         ),
         const SizedBox(height: 16),
         MultiSelectField(
-          title: 'Intolerancias Alimentarias',
+          title: AppLocalizations.of(context)!.foodIntolerances,
           items: _foodIntolerances,
           onChanged: (items) => setState(() => _foodIntolerances = items),
           suggestions: ['Lactosa', 'Gluten', 'Frutos secos', 'Mariscos', 'Huevos'],
@@ -315,29 +316,29 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
 
   Widget _buildTreatmentPreferencesSection() {
     return _buildSection(
-      'Preferencias de Tratamiento',
+      AppLocalizations.of(context)!.treatmentPreferences,
       Icons.healing,
       [
         _buildDropdownField(
-          'Tipo de Medicina Preferida',
+          AppLocalizations.of(context)!.preferredMedicineType,
           _medicinePreference,
           [
-            {'value': 'natural', 'label': 'Medicina Natural'},
-            {'value': 'conventional', 'label': 'Medicina Convencional'},
-            {'value': 'both', 'label': 'Ambas'},
+            {'value': 'natural', 'label': AppLocalizations.of(context)!.naturalMedicine},
+            {'value': 'conventional', 'label': AppLocalizations.of(context)!.conventionalMedicine},
+            {'value': 'both', 'label': AppLocalizations.of(context)!.both},
           ],
           (value) => setState(() => _medicinePreference = value!),
         ),
         const SizedBox(height: 16),
         MultiSelectField(
-          title: 'Medicamentos a Evitar',
+          title: AppLocalizations.of(context)!.medicationsToAvoid,
           items: _avoidMedications,
           onChanged: (items) => setState(() => _avoidMedications = items),
           suggestions: ['Opiáceos', 'Esteroides', 'Antibióticos', 'Benzodiacepinas'],
         ),
         const SizedBox(height: 16),
         MultiSelectField(
-          title: 'Tratamientos Preferidos',
+          title: AppLocalizations.of(context)!.preferredTreatments,
           items: _preferredTreatments,
           onChanged: (items) => setState(() => _preferredTreatments = items),
           suggestions: ['Fisioterapia', 'Acupuntura', 'Homeopatía', 'Yoga', 'Meditación'],
@@ -348,25 +349,25 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
 
   Widget _buildMedicalConditionsSection() {
     return _buildSection(
-      'Historial Médico',
+      AppLocalizations.of(context)!.medicalHistory,
       Icons.medical_services,
       [
         MultiSelectField(
-          title: 'Condiciones Crónicas',
+          title: AppLocalizations.of(context)!.chronicConditions,
           items: _chronicConditions,
           onChanged: (items) => setState(() => _chronicConditions = items),
           suggestions: ['Diabetes', 'Hipertensión', 'Asma', 'Artritis', 'Migraña'],
         ),
         const SizedBox(height: 16),
         MultiSelectField(
-          title: 'Medicamentos Actuales',
+          title: AppLocalizations.of(context)!.currentMedications,
           items: _currentMedications,
           onChanged: (items) => setState(() => _currentMedications = items),
           suggestions: ['Metformina', 'Lisinopril', 'Omeprazol', 'Simvastatina'],
         ),
         const SizedBox(height: 16),
         MultiSelectField(
-          title: 'Cirugías Previas',
+          title: AppLocalizations.of(context)!.previousSurgeries,
           items: _previousSurgeries,
           onChanged: (items) => setState(() => _previousSurgeries = items),
           suggestions: ['Apendicectomía', 'Colecistectomía', 'Cesárea', 'Artroscopia'],
@@ -377,60 +378,60 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
 
   Widget _buildLifestyleSection() {
     return _buildSection(
-      'Estilo de Vida',
+      AppLocalizations.of(context)!.lifestyle,
       Icons.fitness_center,
       [
         _buildDropdownField(
-          'Hábito de Fumar',
+          AppLocalizations.of(context)!.smokingHabit,
           _smokingStatus,
           [
-            {'value': 'never', 'label': 'Nunca'},
-            {'value': 'former', 'label': 'Ex-fumador'},
-            {'value': 'current_light', 'label': 'Fumador ligero'},
-            {'value': 'current_moderate', 'label': 'Fumador moderado'},
-            {'value': 'current_heavy', 'label': 'Fumador intenso'},
+            {'value': 'never', 'label': AppLocalizations.of(context)!.never},
+            {'value': 'former', 'label': AppLocalizations.of(context)!.formerSmoker},
+            {'value': 'current_light', 'label': AppLocalizations.of(context)!.lightSmoker},
+            {'value': 'current_moderate', 'label': AppLocalizations.of(context)!.moderateSmoker},
+            {'value': 'current_heavy', 'label': AppLocalizations.of(context)!.heavySmoker},
           ],
           (value) => setState(() => _smokingStatus = value!),
         ),
         const SizedBox(height: 16),
         _buildDropdownField(
-          'Consumo de Alcohol',
+          AppLocalizations.of(context)!.alcoholConsumption,
           _alcoholConsumption,
           [
-            {'value': 'never', 'label': 'Nunca'},
-            {'value': 'occasional', 'label': 'Ocasional'},
-            {'value': 'moderate', 'label': 'Moderado'},
-            {'value': 'frequent', 'label': 'Frecuente'},
-            {'value': 'daily', 'label': 'Diario'},
+            {'value': 'never', 'label': AppLocalizations.of(context)!.never},
+            {'value': 'occasional', 'label': AppLocalizations.of(context)!.occasional},
+            {'value': 'moderate', 'label': AppLocalizations.of(context)!.moderate},
+            {'value': 'frequent', 'label': AppLocalizations.of(context)!.frequent},
+            {'value': 'daily', 'label': AppLocalizations.of(context)!.daily},
           ],
           (value) => setState(() => _alcoholConsumption = value!),
         ),
         const SizedBox(height: 16),
         _buildDropdownField(
-          'Frecuencia de Ejercicio',
+          AppLocalizations.of(context)!.exerciseFrequency,
           _exerciseFrequency,
           [
-            {'value': 'none', 'label': 'Ninguno'},
-            {'value': 'light', 'label': 'Ligero'},
-            {'value': 'moderate', 'label': 'Moderado'},
-            {'value': 'intense', 'label': 'Intenso'},
-            {'value': 'daily', 'label': 'Diario'},
+            {'value': 'none', 'label': AppLocalizations.of(context)!.none},
+            {'value': 'light', 'label': AppLocalizations.of(context)!.light},
+            {'value': 'moderate', 'label': AppLocalizations.of(context)!.moderate},
+            {'value': 'intense', 'label': AppLocalizations.of(context)!.intense},
+            {'value': 'daily', 'label': AppLocalizations.of(context)!.daily},
           ],
           (value) => setState(() => _exerciseFrequency = value!),
         ),
         const SizedBox(height: 16),
         _buildDropdownField(
-          'Tipo de Dieta',
+          AppLocalizations.of(context)!.dietType,
           _dietTypeController.text,
           [
-            {'value': '', 'label': 'No especificado'},
-            {'value': 'omnivore', 'label': 'Omnívora'},
-            {'value': 'vegetarian', 'label': 'Vegetariana'},
-            {'value': 'vegan', 'label': 'Vegana'},
-            {'value': 'pescatarian', 'label': 'Pescatariana'},
-            {'value': 'keto', 'label': 'Cetogénica'},
-            {'value': 'mediterranean', 'label': 'Mediterránea'},
-            {'value': 'other', 'label': 'Otro'},
+            {'value': '', 'label': AppLocalizations.of(context)!.notSpecified},
+            {'value': 'omnivore', 'label': AppLocalizations.of(context)!.omnivore},
+            {'value': 'vegetarian', 'label': AppLocalizations.of(context)!.vegetarian},
+            {'value': 'vegan', 'label': AppLocalizations.of(context)!.vegan},
+            {'value': 'pescatarian', 'label': AppLocalizations.of(context)!.pescatarian},
+            {'value': 'keto', 'label': AppLocalizations.of(context)!.keto},
+            {'value': 'mediterranean', 'label': AppLocalizations.of(context)!.mediterranean},
+            {'value': 'other', 'label': AppLocalizations.of(context)!.other},
           ],
           (value) => _dietTypeController.text = value ?? '',
         ),
@@ -440,17 +441,17 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
 
   Widget _buildEmergencyContactSection() {
     return _buildSection(
-      'Contacto de Emergencia',
+      AppLocalizations.of(context)!.emergencyContact,
       Icons.emergency,
       [
         CustomTextField(
           controller: _emergencyNameController,
-          labelText: 'Nombre del Contacto',
+          labelText: AppLocalizations.of(context)!.contactName,
         ),
         const SizedBox(height: 16),
         CustomTextField(
           controller: _emergencyPhoneController,
-          labelText: 'Teléfono de Emergencia',
+          labelText: AppLocalizations.of(context)!.emergencyPhone,
           keyboardType: TextInputType.phone,
         ),
       ],
@@ -459,30 +460,30 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
 
   Widget _buildPreferencesSection() {
     return _buildSection(
-      'Preferencias Adicionales',
+      AppLocalizations.of(context)!.additionalPreferences,
       Icons.settings,
       [
         _buildDropdownField(
-          'Idioma Preferido',
+          AppLocalizations.of(context)!.preferredLanguage,
           _languagePreference,
           [
-            {'value': 'es', 'label': 'Español'},
-            {'value': 'en', 'label': 'Inglés'},
-            {'value': 'ca', 'label': 'Catalán'},
-            {'value': 'fr', 'label': 'Francés'},
-            {'value': 'de', 'label': 'Alemán'},
+            {'value': 'es', 'label': AppLocalizations.of(context)!.spanish},
+            {'value': 'en', 'label': AppLocalizations.of(context)!.english},
+            {'value': 'ca', 'label': AppLocalizations.of(context)!.catalan},
+            {'value': 'fr', 'label': AppLocalizations.of(context)!.french},
+            {'value': 'de', 'label': AppLocalizations.of(context)!.german},
           ],
           (value) => setState(() => _languagePreference = value!),
         ),
         const SizedBox(height: 16),
         _buildDropdownField(
-          'Estilo de Comunicación',
+          AppLocalizations.of(context)!.communicationStyle,
           _communicationStyle,
           [
-            {'value': 'direct', 'label': 'Directo'},
-            {'value': 'detailed', 'label': 'Detallado'},
-            {'value': 'balanced', 'label': 'Balanceado'},
-            {'value': 'gentle', 'label': 'Suave'},
+            {'value': 'direct', 'label': AppLocalizations.of(context)!.direct},
+            {'value': 'detailed', 'label': AppLocalizations.of(context)!.detailed},
+            {'value': 'balanced', 'label': AppLocalizations.of(context)!.balanced},
+            {'value': 'gentle', 'label': AppLocalizations.of(context)!.gentle},
           ],
           (value) => setState(() => _communicationStyle = value!),
         ),
@@ -560,7 +561,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
             Text(
               value != null
                   ? '${value.day}/${value.month}/${value.year}'
-                  : label,
+                  : AppLocalizations.of(context)!.dateOfBirth,
               style: TextStyle(
                 color: value != null ? Colors.white : Colors.grey[400],
                 fontSize: 16,

@@ -20,6 +20,7 @@ class OpenRouterService {
     double temperature = 0.3,
     bool useReasoning = false,
   }) async {
+    print('[DEBUG] OpenRouterService.chatCompletion: Using modelId = ${profile.modelId}');
     final headers = OpenRouterConfig.defaultHeaders();
 
     final payload = <String, dynamic>{
@@ -51,20 +52,24 @@ class OpenRouterService {
 
     if (resp.statusCode != 200) {
       var message = 'OpenRouter error (${resp.statusCode})';
+      print('[DEBUG] OpenRouterService.chatCompletion: HTTP error ${resp.statusCode}, body: ${resp.body}');
       try {
         final data = jsonDecode(resp.body);
         if (data is Map && data['error'] != null) {
           final errorMessage = data['error']['message']?.toString() ?? message;
+          print('[DEBUG] OpenRouterService.chatCompletion: API error message: $errorMessage');
           // Detectar errores de modelo no disponible
-          if (errorMessage.contains('No endpoints found') || 
+          if (errorMessage.contains('No endpoints found') ||
               errorMessage.contains('not found') ||
               errorMessage.contains('unavailable')) {
+            print('[DEBUG] OpenRouterService.chatCompletion: Model unavailable detected');
             throw ModelUnavailableException('El modelo seleccionado no está disponible temporalmente');
           }
           message = errorMessage;
         }
       } catch (e) {
         if (e is ModelUnavailableException) rethrow;
+        print('[DEBUG] OpenRouterService.chatCompletion: Error parsing response: $e');
       }
       throw Exception(message);
     }
@@ -90,9 +95,10 @@ class OpenRouterService {
     double temperature = 0.3,
     bool useReasoning = false,
   }) async* {
+    print('[DEBUG] OpenRouterService.streamChatCompletion: Using modelId = ${profile.modelId}');
     // Cancel any existing stream
     await cancelCurrentStream();
-    
+
     final headers = OpenRouterConfig.defaultHeaders();
     final payload = <String, dynamic>{
       'model': profile.modelId,
@@ -123,21 +129,25 @@ class OpenRouterService {
 
     if (streamedResponse.statusCode != 200) {
       final body = await streamedResponse.stream.bytesToString();
+      print('[DEBUG] OpenRouterService.streamChatCompletion: HTTP error ${streamedResponse.statusCode}, body: $body');
       var message = 'OpenRouter error (${streamedResponse.statusCode})';
       try {
         final data = jsonDecode(body);
         if (data is Map && data['error'] != null) {
           final errorMessage = data['error']['message']?.toString() ?? message;
+          print('[DEBUG] OpenRouterService.streamChatCompletion: API error message: $errorMessage');
           // Detectar errores de modelo no disponible
-          if (errorMessage.contains('No endpoints found') || 
+          if (errorMessage.contains('No endpoints found') ||
               errorMessage.contains('not found') ||
               errorMessage.contains('unavailable')) {
+            print('[DEBUG] OpenRouterService.streamChatCompletion: Model unavailable detected');
             throw ModelUnavailableException('El modelo seleccionado no está disponible temporalmente');
           }
           message = errorMessage;
         }
       } catch (e) {
         if (e is ModelUnavailableException) rethrow;
+        print('[DEBUG] OpenRouterService.streamChatCompletion: Error parsing response: $e');
       }
       throw Exception(message);
     }

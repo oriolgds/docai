@@ -89,7 +89,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get medicalPreferences => 'Preferencias médicas';
 
   @override
-  String get preferredMedicineType => 'Tipo de medicina preferida';
+  String get preferredMedicineType => 'Tipo de Medicina Preferida';
 
   @override
   String get medicalInformation => 'Información médica';
@@ -1087,4 +1087,176 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get deleteConversationConfirm =>
       '¿Estás seguro de que quieres eliminar esta conversación?';
+
+  @override
+  String get medicalPersonalizationTitle => 'Personalización Médica';
+
+  @override
+  String get importantNotice => 'Aviso Importante';
+
+  @override
+  String get docaiDisclaimer =>
+      'DocAI no sustituye el consejo médico profesional. La información proporcionada tiene fines educativos. Para diagnósticos, tratamientos o emergencias consulta a un profesional de la salud.';
+
+  @override
+  String get dateOfBirth => 'Fecha de Nacimiento';
+
+  @override
+  String get notSpecified => 'No especificado';
+
+  @override
+  String get male => 'Masculino';
+
+  @override
+  String get female => 'Femenino';
+
+  @override
+  String get preferNotToSay => 'Prefiero no decir';
+
+  @override
+  String get weightKg => 'Peso (kg)';
+
+  @override
+  String get heightCm => 'Altura (cm)';
+
+  @override
+  String get allergiesAndIntolerances => 'Alergias e Intolerancias';
+
+  @override
+  String get generalAllergies => 'Alergias Generales';
+
+  @override
+  String get medicationAllergies => 'Alergias a Medicamentos';
+
+  @override
+  String get foodIntolerances => 'Intolerancias Alimentarias';
+
+  @override
+  String get treatmentPreferences => 'Preferencias de Tratamiento';
+
+  @override
+  String get both => 'Ambas';
+
+  @override
+  String get medicationsToAvoid => 'Medicamentos a Evitar';
+
+  @override
+  String get preferredTreatments => 'Tratamientos Preferidos';
+
+  @override
+  String get previousSurgeries => 'Cirugías Previas';
+
+  @override
+  String get smokingHabit => 'Hábito de Fumar';
+
+  @override
+  String get formerSmoker => 'Ex-fumador';
+
+  @override
+  String get lightSmoker => 'Fumador ligero';
+
+  @override
+  String get moderateSmoker => 'Fumador moderado';
+
+  @override
+  String get heavySmoker => 'Fumador intenso';
+
+  @override
+  String get alcoholConsumption => 'Consumo de Alcohol';
+
+  @override
+  String get occasional => 'Ocasional';
+
+  @override
+  String get frequent => 'Frecuente';
+
+  @override
+  String get daily => 'Diario';
+
+  @override
+  String get exerciseFrequency => 'Frecuencia de Ejercicio';
+
+  @override
+  String get intense => 'Intenso';
+
+  @override
+  String get dietType => 'Tipo de Dieta';
+
+  @override
+  String get omnivore => 'Omnívora';
+
+  @override
+  String get vegetarian => 'Vegetariana';
+
+  @override
+  String get vegan => 'Vegana';
+
+  @override
+  String get pescatarian => 'Pescatariana';
+
+  @override
+  String get keto => 'Cetogénica';
+
+  @override
+  String get mediterranean => 'Mediterránea';
+
+  @override
+  String get emergencyContact => 'Contacto de Emergencia';
+
+  @override
+  String get contactName => 'Nombre del Contacto';
+
+  @override
+  String get emergencyPhone => 'Teléfono de Emergencia';
+
+  @override
+  String get additionalPreferences => 'Preferencias Adicionales';
+
+  @override
+  String get preferredLanguage => 'Idioma Preferido';
+
+  @override
+  String get spanish => 'Español';
+
+  @override
+  String get english => 'Inglés';
+
+  @override
+  String get catalan => 'Catalán';
+
+  @override
+  String get french => 'Francés';
+
+  @override
+  String get german => 'Alemán';
+
+  @override
+  String get communicationStyle => 'Estilo de Comunicación';
+
+  @override
+  String get direct => 'Directo';
+
+  @override
+  String get detailed => 'Detallado';
+
+  @override
+  String get gentle => 'Suave';
+
+  @override
+  String get other => 'Otro';
+
+  @override
+  String get lifestyle => 'Estilo de Vida';
+
+  @override
+  String get moderate => 'Moderado';
+
+  @override
+  String get none => 'Ninguno';
+
+  @override
+  String get light => 'Ligero';
+
+  @override
+  String get balanced => 'Balanceado';
 }

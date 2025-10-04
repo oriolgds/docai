@@ -254,10 +254,10 @@ abstract class AppLocalizations {
   /// **'Medical preferences'**
   String get medicalPreferences;
 
-  /// Medicine preference field label
+  /// Preferred medicine type field label
   ///
   /// In en, this message translates to:
-  /// **'Preferred medicine type'**
+  /// **'Preferred Medicine Type'**
   String get preferredMedicineType;
 
   /// Medical information section title
@@ -2095,6 +2095,348 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete this conversation?'**
   String get deleteConversationConfirm;
+
+  /// Medical personalization screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Personalization'**
+  String get medicalPersonalizationTitle;
+
+  /// Important notice card title
+  ///
+  /// In en, this message translates to:
+  /// **'Important Notice'**
+  String get importantNotice;
+
+  /// DocAI medical disclaimer text
+  ///
+  /// In en, this message translates to:
+  /// **'DocAI does not replace professional medical advice. The information provided is for educational purposes. For diagnoses, treatments or emergencies consult a healthcare professional.'**
+  String get docaiDisclaimer;
+
+  /// Date of birth field label
+  ///
+  /// In en, this message translates to:
+  /// **'Date of Birth'**
+  String get dateOfBirth;
+
+  /// Not specified option
+  ///
+  /// In en, this message translates to:
+  /// **'Not specified'**
+  String get notSpecified;
+
+  /// Male gender option
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get male;
+
+  /// Female gender option
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get female;
+
+  /// Prefer not to say gender option
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer not to say'**
+  String get preferNotToSay;
+
+  /// Weight field label
+  ///
+  /// In en, this message translates to:
+  /// **'Weight (kg)'**
+  String get weightKg;
+
+  /// Height field label
+  ///
+  /// In en, this message translates to:
+  /// **'Height (cm)'**
+  String get heightCm;
+
+  /// Allergies and intolerances section title
+  ///
+  /// In en, this message translates to:
+  /// **'Allergies and Intolerances'**
+  String get allergiesAndIntolerances;
+
+  /// General allergies field title
+  ///
+  /// In en, this message translates to:
+  /// **'General Allergies'**
+  String get generalAllergies;
+
+  /// Medication allergies field title
+  ///
+  /// In en, this message translates to:
+  /// **'Medication Allergies'**
+  String get medicationAllergies;
+
+  /// Food intolerances field title
+  ///
+  /// In en, this message translates to:
+  /// **'Food Intolerances'**
+  String get foodIntolerances;
+
+  /// Treatment preferences section title
+  ///
+  /// In en, this message translates to:
+  /// **'Treatment Preferences'**
+  String get treatmentPreferences;
+
+  /// Both medicine types option
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get both;
+
+  /// Medications to avoid field title
+  ///
+  /// In en, this message translates to:
+  /// **'Medications to Avoid'**
+  String get medicationsToAvoid;
+
+  /// Preferred treatments field title
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Treatments'**
+  String get preferredTreatments;
+
+  /// Previous surgeries field title
+  ///
+  /// In en, this message translates to:
+  /// **'Previous Surgeries'**
+  String get previousSurgeries;
+
+  /// Smoking habit field label
+  ///
+  /// In en, this message translates to:
+  /// **'Smoking Habit'**
+  String get smokingHabit;
+
+  /// Former smoker option
+  ///
+  /// In en, this message translates to:
+  /// **'Former Smoker'**
+  String get formerSmoker;
+
+  /// Light smoker option
+  ///
+  /// In en, this message translates to:
+  /// **'Light Smoker'**
+  String get lightSmoker;
+
+  /// Moderate smoker option
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate Smoker'**
+  String get moderateSmoker;
+
+  /// Heavy smoker option
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy Smoker'**
+  String get heavySmoker;
+
+  /// Alcohol consumption field label
+  ///
+  /// In en, this message translates to:
+  /// **'Alcohol Consumption'**
+  String get alcoholConsumption;
+
+  /// Occasional alcohol consumption option
+  ///
+  /// In en, this message translates to:
+  /// **'Occasional'**
+  String get occasional;
+
+  /// Frequent alcohol consumption option
+  ///
+  /// In en, this message translates to:
+  /// **'Frequent'**
+  String get frequent;
+
+  /// Daily alcohol consumption option
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get daily;
+
+  /// Exercise frequency field label
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise Frequency'**
+  String get exerciseFrequency;
+
+  /// Intense exercise option
+  ///
+  /// In en, this message translates to:
+  /// **'Intense'**
+  String get intense;
+
+  /// Diet type field label
+  ///
+  /// In en, this message translates to:
+  /// **'Diet Type'**
+  String get dietType;
+
+  /// Omnivore diet option
+  ///
+  /// In en, this message translates to:
+  /// **'Omnivore'**
+  String get omnivore;
+
+  /// Vegetarian diet option
+  ///
+  /// In en, this message translates to:
+  /// **'Vegetarian'**
+  String get vegetarian;
+
+  /// Vegan diet option
+  ///
+  /// In en, this message translates to:
+  /// **'Vegan'**
+  String get vegan;
+
+  /// Pescatarian diet option
+  ///
+  /// In en, this message translates to:
+  /// **'Pescatarian'**
+  String get pescatarian;
+
+  /// Keto diet option
+  ///
+  /// In en, this message translates to:
+  /// **'Keto'**
+  String get keto;
+
+  /// Mediterranean diet option
+  ///
+  /// In en, this message translates to:
+  /// **'Mediterranean'**
+  String get mediterranean;
+
+  /// Emergency contact section title
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Contact'**
+  String get emergencyContact;
+
+  /// Emergency contact name field label
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Name'**
+  String get contactName;
+
+  /// Emergency phone field label
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Phone'**
+  String get emergencyPhone;
+
+  /// Additional preferences section title
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Preferences'**
+  String get additionalPreferences;
+
+  /// Preferred language field label
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Language'**
+  String get preferredLanguage;
+
+  /// Spanish language option
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get spanish;
+
+  /// English language option
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get english;
+
+  /// Catalan language option
+  ///
+  /// In en, this message translates to:
+  /// **'Catalan'**
+  String get catalan;
+
+  /// French language option
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get french;
+
+  /// German language option
+  ///
+  /// In en, this message translates to:
+  /// **'German'**
+  String get german;
+
+  /// Communication style field label
+  ///
+  /// In en, this message translates to:
+  /// **'Communication Style'**
+  String get communicationStyle;
+
+  /// Direct communication style option
+  ///
+  /// In en, this message translates to:
+  /// **'Direct'**
+  String get direct;
+
+  /// Detailed communication style option
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed'**
+  String get detailed;
+
+  /// Gentle communication style option
+  ///
+  /// In en, this message translates to:
+  /// **'Gentle'**
+  String get gentle;
+
+  /// Other gender option
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get other;
+
+  /// Lifestyle section title
+  ///
+  /// In en, this message translates to:
+  /// **'Lifestyle'**
+  String get lifestyle;
+
+  /// Moderate option
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get moderate;
+
+  /// None option
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get none;
+
+  /// Light option
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get light;
+
+  /// Balanced communication style option
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get balanced;
 }
 
 class _AppLocalizationsDelegate

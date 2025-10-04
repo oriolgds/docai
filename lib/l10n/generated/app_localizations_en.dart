@@ -88,7 +88,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get medicalPreferences => 'Medical preferences';
 
   @override
-  String get preferredMedicineType => 'Preferred medicine type';
+  String get preferredMedicineType => 'Preferred Medicine Type';
 
   @override
   String get medicalInformation => 'Medical information';
@@ -1077,4 +1077,176 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteConversationConfirm =>
       'Are you sure you want to delete this conversation?';
+
+  @override
+  String get medicalPersonalizationTitle => 'Medical Personalization';
+
+  @override
+  String get importantNotice => 'Important Notice';
+
+  @override
+  String get docaiDisclaimer =>
+      'DocAI does not replace professional medical advice. The information provided is for educational purposes. For diagnoses, treatments or emergencies consult a healthcare professional.';
+
+  @override
+  String get dateOfBirth => 'Date of Birth';
+
+  @override
+  String get notSpecified => 'Not specified';
+
+  @override
+  String get male => 'Male';
+
+  @override
+  String get female => 'Female';
+
+  @override
+  String get preferNotToSay => 'Prefer not to say';
+
+  @override
+  String get weightKg => 'Weight (kg)';
+
+  @override
+  String get heightCm => 'Height (cm)';
+
+  @override
+  String get allergiesAndIntolerances => 'Allergies and Intolerances';
+
+  @override
+  String get generalAllergies => 'General Allergies';
+
+  @override
+  String get medicationAllergies => 'Medication Allergies';
+
+  @override
+  String get foodIntolerances => 'Food Intolerances';
+
+  @override
+  String get treatmentPreferences => 'Treatment Preferences';
+
+  @override
+  String get both => 'Both';
+
+  @override
+  String get medicationsToAvoid => 'Medications to Avoid';
+
+  @override
+  String get preferredTreatments => 'Preferred Treatments';
+
+  @override
+  String get previousSurgeries => 'Previous Surgeries';
+
+  @override
+  String get smokingHabit => 'Smoking Habit';
+
+  @override
+  String get formerSmoker => 'Former Smoker';
+
+  @override
+  String get lightSmoker => 'Light Smoker';
+
+  @override
+  String get moderateSmoker => 'Moderate Smoker';
+
+  @override
+  String get heavySmoker => 'Heavy Smoker';
+
+  @override
+  String get alcoholConsumption => 'Alcohol Consumption';
+
+  @override
+  String get occasional => 'Occasional';
+
+  @override
+  String get frequent => 'Frequent';
+
+  @override
+  String get daily => 'Daily';
+
+  @override
+  String get exerciseFrequency => 'Exercise Frequency';
+
+  @override
+  String get intense => 'Intense';
+
+  @override
+  String get dietType => 'Diet Type';
+
+  @override
+  String get omnivore => 'Omnivore';
+
+  @override
+  String get vegetarian => 'Vegetarian';
+
+  @override
+  String get vegan => 'Vegan';
+
+  @override
+  String get pescatarian => 'Pescatarian';
+
+  @override
+  String get keto => 'Keto';
+
+  @override
+  String get mediterranean => 'Mediterranean';
+
+  @override
+  String get emergencyContact => 'Emergency Contact';
+
+  @override
+  String get contactName => 'Contact Name';
+
+  @override
+  String get emergencyPhone => 'Emergency Phone';
+
+  @override
+  String get additionalPreferences => 'Additional Preferences';
+
+  @override
+  String get preferredLanguage => 'Preferred Language';
+
+  @override
+  String get spanish => 'Spanish';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get catalan => 'Catalan';
+
+  @override
+  String get french => 'French';
+
+  @override
+  String get german => 'German';
+
+  @override
+  String get communicationStyle => 'Communication Style';
+
+  @override
+  String get direct => 'Direct';
+
+  @override
+  String get detailed => 'Detailed';
+
+  @override
+  String get gentle => 'Gentle';
+
+  @override
+  String get other => 'Other';
+
+  @override
+  String get lifestyle => 'Lifestyle';
+
+  @override
+  String get moderate => 'Moderate';
+
+  @override
+  String get none => 'None';
+
+  @override
+  String get light => 'Light';
+
+  @override
+  String get balanced => 'Balanced';
 }

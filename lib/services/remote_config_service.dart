@@ -50,21 +50,27 @@ class RemoteConfigService {
   
   static Future<List<ModelProfile>> getAvailableModels() async {
     await _fetchAndActivate();
-    
+
     if (_remoteConfig == null) {
+      print('[DEBUG] RemoteConfigService: _remoteConfig is null');
       return [];
     }
-    
+
     try {
       final modelsJson = _remoteConfig!.getString('available_models');
+      print('[DEBUG] RemoteConfigService: modelsJson = $modelsJson');
       if (modelsJson.isEmpty) {
+        print('[DEBUG] RemoteConfigService: modelsJson is empty');
         return [];
       }
-      
+
       final List<dynamic> modelsList = jsonDecode(modelsJson);
+      print('[DEBUG] RemoteConfigService: modelsList length = ${modelsList.length}');
       final models = modelsList.map((json) => _parseModelFromJson(json)).toList();
+      print('[DEBUG] RemoteConfigService: parsed models count = ${models.length}');
       return models.isEmpty ? [] : models;
     } catch (e) {
+      print('[DEBUG] RemoteConfigService: Error getting available models: $e');
       return [];
     }
   }

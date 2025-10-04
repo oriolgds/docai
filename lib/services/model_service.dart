@@ -13,10 +13,15 @@ class ModelService {
   }
   
   static Future<ModelProfile?> getModelById(String id) async {
+    print('[DEBUG] ModelService.getModelById: Searching for model with id = $id');
     final models = await getAvailableModels();
+    print('[DEBUG] ModelService.getModelById: Available models count = ${models.length}');
     try {
-      return models.firstWhere((model) => model.id == id);
+      final model = models.firstWhere((model) => model.id == id);
+      print('[DEBUG] ModelService.getModelById: Found model = ${model.displayName}');
+      return model;
     } catch (e) {
+      print('[DEBUG] ModelService.getModelById: Model with id $id not found');
       return null;
     }
   }
