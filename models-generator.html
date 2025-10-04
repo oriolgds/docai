@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Editor - Doky Models</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 15px 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 400px 1fr 450px;
+            gap: 0;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
+
+        .column {
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .column:last-child {
+            border-right: none;
+        }
+
+        .column-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #fafafa;
+            flex-shrink: 0;
+        }
+
+        .column-header h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .column-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .json-input {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid #d0d0d0;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+            background: white;
+            margin-bottom: 10px;
+        }
+
+        .json-input:focus {
+            outline: none;
+            border-color: #4285f4;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 8px;
+        }
+
+        .btn-primary {
+            background: #4285f4;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3367d6;
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #d0d0d0;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+
+        .btn-success {
+            background: #34a853;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #2d8e47;
+        }
+
+        .btn-block {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .models-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .model-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 15px;
+            background: #fafafa;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .model-item:hover {
+            border-color: #4285f4;
+            background: #f8f9fa;
+        }
+
+        .model-item.editing {
+            border-color: #4285f4;
+            background: #e8f0fe;
+            border-width: 2px;
+        }
+
+        .model-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .model-id {
+            font-size: 11px;
+            color: #666;
+            font-family: monospace;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+
+        .model-description {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .model-api {
+            font-size: 11px;
+            color: #888;
+            font-family: monospace;
+        }
+
+        .model-colors {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .color-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid #d0d0d0;
+        }
+
+        .model-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: #ea4335;
+            color: white;
+            font-weight: 500;
+            margin-left: 6px;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            border: 1px solid #d0d0d0;
+            color: #666;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #ea4335;
+            color: white;
+            border-color: #ea4335;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #d0d0d0;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4285f4;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+
+        .color-picker-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .color-picker-group input[type="color"] {
+            width: 45px;
+            height: 36px;
+            border: 1px solid #d0d0d0;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .color-picker-group input[type="text"] {
+            flex: 1;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper label {
+            margin: 0;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .json-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre;
+            border: 1px solid #333;
+            height: 100%;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+
+        .empty-state p {
+            font-size: 13px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #323232;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            animation: slideUp 0.3s ease;
+            font-size: 13px;
+        }
+
+        .toast.success {
+            background: #34a853;
+        }
+
+        .toast.error {
+            background: #ea4335;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .editor-placeholder {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .editor-placeholder p {
+            font-size: 14px;
+        }
+
+        .model-count {
+            font-size: 12px;
+            color: #666;
+            font-weight: normal;
+        }
+
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                overflow-y: auto;
+            }
+            
+            .column {
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>JSON Model Editor</h1>
+            <button class="btn btn-success" onclick="copyOutput()">Copiar JSON</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- COLUMNA IZQUIERDA: Lista de Modelos -->
+        <div class="column">
+            <div class="column-header">
+                <h2>MODELOS <span class="model-count" id="modelCount">(0)</span></h2>
+                <button class="btn btn-primary btn-block" onclick="addNewModel()">+ Nuevo Modelo</button>
+            </div>
+            <div class="column-content">
+                <div class="models-grid" id="modelsList">
+                    <div class="empty-state">
+                        <p>No hay modelos cargados.<br>Importa un JSON o crea uno nuevo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA CENTRAL: Editor -->
+        <div class="column">
+            <div class="column-header">
+                <h2>IMPORTAR JSON</h2>
+                <textarea class="json-input" id="jsonInput" placeholder="Pega tu JSON aquí y haz clic en Cargar..."></textarea>
+                <button class="btn btn-primary" onclick="loadJson()">Cargar JSON</button>
+                <button class="btn btn-secondary" onclick="clearInput()">Limpiar</button>
+            </div>
+            <div class="column-content" id="editorContent">
+                <div class="editor-placeholder" id="editorPlaceholder">
+                    <p>Selecciona un modelo de la lista para editarlo</p>
+                </div>
+                
+                <div id="editorForm" style="display: none;">
+                    <h2 style="font-size: 14px; font-weight: 600; margin-bottom: 20px; color: #333;">EDITAR MODELO</h2>
+                    
+                    <div class="form-group">
+                        <label>ID del Modelo *</label>
+                        <input type="text" id="editId" placeholder="doky_instant">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Marca *</label>
+                        <input type="text" id="editBrand" placeholder="doky">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nombre para Mostrar *</label>
+                        <input type="text" id="editDisplayName" placeholder="Doky Instant">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Model ID (API) *</label>
+                        <input type="text" id="editModelId" placeholder="google/gemini-2.0-flash-exp:free">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Descripción *</label>
+                        <textarea id="editDescription" placeholder="Describe las características del modelo"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Color 1</label>
+                        <div class="color-picker-group">
+                            <input type="color" id="editColor1" value="#4CAF50">
+                            <input type="text" id="editColor1Text" value="#4CAF50" placeholder="#4CAF50">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Color 2</label>
+                        <div class="color-picker-group">
+                            <input type="color" id="editColor2" value="#8BC34A">
+                            <input type="text" id="editColor2Text" value="#8BC34A" placeholder="#8BC34A">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="editDisabled">
+                            <label for="editDisabled">Modelo deshabilitado</label>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-success btn-block" onclick="saveModel()">Guardar Cambios</button>
+                    <button class="btn btn-secondary btn-block" onclick="closeEditor()">Cerrar Editor</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: JSON Output -->
+        <div class="column">
+            <div class="column-header">
+                <h2>JSON RESULTANTE</h2>
+                <button class="btn btn-primary btn-block" onclick="copyOutput()">📋 Copiar JSON</button>
+            </div>
+            <div class="column-content">
+                <div class="json-output" id="jsonOutput">[]</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let models = [];
+        let editingIndex = null;
+
+        function loadJson() {
+            const input = document.getElementById('jsonInput').value.trim();
+            if (!input) {
+                showToast('Por favor, pega un JSON primero', 'error');
+                return;
+            }
+
+            try {
+                models = JSON.parse(input);
+                if (!Array.isArray(models)) {
+                    throw new Error('El JSON debe ser un array');
+                }
+                renderModels();
+                updateOutput();
+                showToast('JSON cargado correctamente', 'success');
+            } catch (e) {
+                showToast('JSON inválido: ' + e.message, 'error');
+            }
+        }
+
+        function clearInput() {
+            document.getElementById('jsonInput').value = '';
+        }
+
+        function renderModels() {
+            const container = document.getElementById('modelsList');
+            document.getElementById('modelCount').textContent = '(' + models.length + ')';
+
+            if (models.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>No hay modelos cargados.<br>Importa un JSON o crea uno nuevo.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            models.forEach((model, index) => {
+                const item = document.createElement('div');
+                item.className = 'model-item' + (editingIndex === index ? ' editing' : '');
+                item.innerHTML = `
+                    <button class="delete-btn" onclick="deleteModel(${index}, event)">×</button>
+                    <div class="model-title">${model.displayName || 'Sin nombre'}${model.disabled ? '<span class="model-badge">OFF</span>' : ''}</div>
+                    <span class="model-id">${model.id || 'sin-id'}</span>
+                    <div class="model-description">${model.description || 'Sin descripción'}</div>
+                    <div class="model-api">${model.modelId || 'Sin API ID'}</div>
+                    <div class="model-colors">
+                        <div class="color-box" style="background: ${model.color1 || '#ccc'}"></div>
+                        <div class="color-box" style="background: ${model.color2 || '#ccc'}"></div>
+                    </div>
+                `;
+                item.onclick = (e) => {
+                    if (!e.target.classList.contains('delete-btn')) {
+                        editModel(index);
+                    }
+                };
+                container.appendChild(item);
+            });
+        }
+
+        function addNewModel() {
+            const newModel = {
+                id: "nuevo_modelo_" + Date.now(),
+                brand: "doky",
+                displayName: "Nuevo Modelo",
+                modelId: "provider/model:free",
+                description: "Descripción del nuevo modelo",
+                color1: "#4285f4",
+                color2: "#34a853"
+            };
+            models.push(newModel);
+            editModel(models.length - 1);
+            renderModels();
+            updateOutput();
+        }
+
+        function editModel(index) {
+            editingIndex = index;
+            const model = models[index];
+
+            document.getElementById('editId').value = model.id || '';
+            document.getElementById('editBrand').value = model.brand || '';
+            document.getElementById('editDisplayName').value = model.displayName || '';
+            document.getElementById('editModelId').value = model.modelId || '';
+            document.getElementById('editDescription').value = model.description || '';
+            document.getElementById('editColor1').value = model.color1 || '#4CAF50';
+            document.getElementById('editColor1Text').value = model.color1 || '#4CAF50';
+            document.getElementById('editColor2').value = model.color2 || '#8BC34A';
+            document.getElementById('editColor2Text').value = model.color2 || '#8BC34A';
+            document.getElementById('editDisabled').checked = model.disabled || false;
+
+            document.getElementById('editorPlaceholder').style.display = 'none';
+            document.getElementById('editorForm').style.display = 'block';
+            renderModels();
+        }
+
+        function saveModel() {
+            if (editingIndex === null) return;
+
+            const model = {
+                id: document.getElementById('editId').value.trim(),
+                brand: document.getElementById('editBrand').value.trim(),
+                displayName: document.getElementById('editDisplayName').value.trim(),
+                modelId: document.getElementById('editModelId').value.trim(),
+                description: document.getElementById('editDescription').value.trim(),
+                color1: document.getElementById('editColor1').value,
+                color2: document.getElementById('editColor2').value
+            };
+
+            if (!model.id || !model.displayName || !model.modelId) {
+                showToast('Completa todos los campos obligatorios', 'error');
+                return;
+            }
+
+            if (document.getElementById('editDisabled').checked) {
+                model.disabled = true;
+            }
+
+            models[editingIndex] = model;
+            renderModels();
+            updateOutput();
+            showToast('Modelo guardado', 'success');
+        }
+
+        function deleteModel(index, event) {
+            event.stopPropagation();
+            if (confirm('¿Eliminar este modelo?')) {
+                models.splice(index, 1);
+                if (editingIndex === index) {
+                    closeEditor();
+                }
+                renderModels();
+                updateOutput();
+                showToast('Modelo eliminado', 'success');
+            }
+        }
+
+        function closeEditor() {
+            editingIndex = null;
+            document.getElementById('editorPlaceholder').style.display = 'block';
+            document.getElementById('editorForm').style.display = 'none';
+            renderModels();
+        }
+
+        function updateOutput() {
+            document.getElementById('jsonOutput').textContent = JSON.stringify(models, null, 2);
+        }
+
+        function copyOutput() {
+            const json = JSON.stringify(models, null, 2);
+            navigator.clipboard.writeText(json).then(() => {
+                showToast('JSON copiado al portapapeles', 'success');
+            }).catch(() => {
+                showToast('Error al copiar', 'error');
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        document.getElementById('editColor1').addEventListener('input', (e) => {
+            document.getElementById('editColor1Text').value = e.target.value.toUpperCase();
+        });
+
+        document.getElementById('editColor1Text').addEventListener('input', (e) => {
+            const value = e.target.value;
+            if (/^#[0-9A-F]{6}$/i.test(value)) {
+                document.getElementById('editColor1').value = value;
+            }
+        });
+
+        document.getElementById('editColor2').addEventListener('input', (e) => {
+            document.getElementById('editColor2Text').value = e.target.value.toUpperCase();
+        });
+
+        document.getElementById('editColor2Text').addEventListener('input', (e) => {
+            const value = e.target.value;
+            if (/^#[0-9A-F]{6}$/i.test(value)) {
+                document.getElementById('editColor2').value = value;
+            }
+        });
+
+        updateOutput();
+    </script>
+</body>
+</html>

@@ -69,8 +69,8 @@ class RemoteConfigService {
       final List<dynamic> modelsList = jsonDecode(modelsJson);
       print('[DEBUG] RemoteConfigService: modelsList length = ${modelsList.length}');
       final models = modelsList.map((json) => _parseModelFromJson(json)).toList();
-      // Filter out disabled models
-      final enabledModels = models.where((model) => !model.disabled).toList();
+      // Filter out disabled models and non-free models
+      final enabledModels = models.where((model) => !model.disabled && model.modelId.endsWith(':free')).toList();
       print('[DEBUG] RemoteConfigService: parsed models count = ${models.length}, enabled models count = ${enabledModels.length}');
       return enabledModels.isEmpty ? [] : enabledModels;
     } catch (e) {
