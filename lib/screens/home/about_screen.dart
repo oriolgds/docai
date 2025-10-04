@@ -216,17 +216,6 @@ class AboutScreen extends StatelessWidget {
               child: Column(
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.code_outlined, color: Colors.black87),
-                    title: const Text(
-                      'Código Fuente',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: const Text('Ver en GitHub'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () => _launchUrl(githubUrl),
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
                     leading: const Icon(Icons.store_outlined, color: Colors.black87),
                     title: const Text(
                       'Google Play Store',
