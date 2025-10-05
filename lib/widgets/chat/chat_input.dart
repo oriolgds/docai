@@ -344,9 +344,40 @@ class _ModelDisplayState extends State<_ModelDisplay> {
             ...widget.allProfiles.map((profile) =>
               ListTile(
                 leading: _buildGradientCircle(profile),
-                title: Text(
-                  '${profile.displayName} BYOK',
-                  style: const TextStyle(fontWeight: FontWeight.w500),
+                title: Row(
+                  children: [
+                    Text(
+                      profile.displayName,
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF00B894), Color(0xFF00CEC9)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF00B894).withOpacity(0.3),
+                            blurRadius: 3,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: const Text(
+                        'BYOK',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 subtitle: Text(
                   profile.description,
@@ -413,9 +444,40 @@ class _ModelDisplayState extends State<_ModelDisplay> {
             _buildGradientCircle(widget.selected),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(
-                '${widget.selected.displayName} BYOK',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              child: Row(
+                children: [
+                  Text(
+                    widget.selected.displayName,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF00B894), Color(0xFF00CEC9)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF00B894).withOpacity(0.3),
+                          blurRadius: 2,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'BYOK',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const Icon(Icons.arrow_drop_down, size: 20),
