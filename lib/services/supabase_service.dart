@@ -618,20 +618,31 @@ class SupabaseService {
     if (user == null) return null;
 
     try {
+      // First, get the encrypted API key from the database
       final result = await client
+          .from('user_api_keys')
+          .select('api_key')
+          .eq('user_id', user.id)
+          .eq('provider', provider)
+          .maybeSingle(); // Use maybeSingle to avoid throwing if no record found
+
+      // If no API key found, return null
+      if (result == null || result['api_key'] == null) {
+        return null;
+      }
+
+      final encryptedKey = result['api_key'] as String;
+
+      // Now decrypt the API key using the RPC function
+      final decryptedKey = await client
           .rpc('decrypt_api_key', params: {
-            'encrypted_key': await client
-                .from('user_api_keys')
-                .select('api_key')
-                .eq('user_id', user.id)
-                .eq('provider', provider)
-                .single()
-                .then((data) => data['api_key'])
+            'encrypted_key': encryptedKey
           });
 
-      return result as String?;
+      return decryptedKey as String?;
     } catch (e) {
       // Key not found or decryption failed
+      print('Error getting API key for provider $provider: $e');
       return null;
     }
   }
@@ -642,12 +653,17 @@ class SupabaseService {
     if (user == null) throw Exception('User not authenticated');
 
     try {
+      // First encrypt the API key
+      final encryptedKey = await client.rpc('encrypt_api_key', params: {'plain_key': apiKey});
+
+      // Then store it in the database
       await client
           .from('user_api_keys')
           .upsert({
             'user_id': user.id,
             'provider': provider,
-            'api_key': await client.rpc('encrypt_api_key', params: {'plain_key': apiKey}),
+            'api_key': encryptedKey,
+            'updated_at': DateTime.now().toIso8601String(),
           });
     } catch (e) {
       throw Exception('Error saving API key: $e');
@@ -681,10 +697,11 @@ class SupabaseService {
           .select('user_id')
           .eq('user_id', user.id)
           .eq('provider', provider)
-          .single();
+          .maybeSingle(); // Use maybeSingle instead of single to avoid throwing
 
       return result != null;
     } catch (e) {
+      print('Error checking API key for provider $provider: $e');
       return false;
     }
   }
@@ -702,6 +719,7 @@ class SupabaseService {
 
       return List<Map<String, dynamic>>.from(result);
     } catch (e) {
+      print('Error getting user API keys: $e');
       return [];
     }
   }
