@@ -2,7 +2,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/user_preferences.dart';
 import '../models/chat_conversation.dart';
 import '../models/chat_message.dart';
 
@@ -281,74 +280,6 @@ class SupabaseService {
     }
   }
 
-  // User Preferences methods
-  static Future<UserPreferences?> getUserPreferences() async {
-    final user = currentUser;
-    if (user == null) return null;
-
-    try {
-      final response = await client
-          .from('user_preferences')
-          .select()
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-      if (response == null) return null;
-      return UserPreferences.fromJson(response);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  static Future<UserPreferences> createUserPreferences(UserPreferences preferences) async {
-    final response = await client
-        .from('user_preferences')
-        .insert(preferences.toJson())
-        .select()
-        .single();
-
-    return UserPreferences.fromJson(response);
-  }
-
-  static Future<UserPreferences> updateUserPreferences(UserPreferences preferences) async {
-    final response = await client
-        .from('user_preferences')
-        .update(preferences.toJson())
-        .eq('user_id', preferences.userId)
-        .select()
-        .single();
-
-    return UserPreferences.fromJson(response);
-  }
-
-  static Future<UserPreferences> upsertUserPreferences(UserPreferences preferences) async {
-    final existing = await getUserPreferences();
-    if (existing == null) {
-      return await createUserPreferences(preferences);
-    } else {
-      return await updateUserPreferences(preferences.copyWith(id: existing.id));
-    }
-  }
-
-  static Future<bool> isFirstTimeUser() async {
-    final preferences = await getUserPreferences();
-    return preferences?.isFirstTime ?? true;
-  }
-
-  static Future<void> markAsNotFirstTime() async {
-    final user = currentUser;
-    if (user == null) return;
-
-    final existing = await getUserPreferences();
-    if (existing != null) {
-      await updateUserPreferences(existing.copyWith(isFirstTime: false));
-    } else {
-      await createUserPreferences(UserPreferences(
-        userId: user.id,
-        isFirstTime: false,
-      ));
-    }
-  }
 
   // Chat History methods
   static Future<List<ChatConversation>> getUserConversations() async {
@@ -527,11 +458,6 @@ class SupabaseService {
   static Future<void> _deleteUserPreferences(String userId) async {
     try {
       await client
-          .from('user_preferences')
-          .delete()
-          .eq('user_id', userId);
-
-      await client
           .from('user_medical_preferences')
           .delete()
           .eq('user_id', userId);
@@ -572,19 +498,25 @@ class SupabaseService {
     try {
       // Delete from any other user-related tables
       // Add more tables here as needed
-      
+
+      // Delete user API keys
+      await client
+          .from('user_api_keys')
+          .delete()
+          .eq('user_id', userId);
+
       // Example: Delete user feedback
       await client
           .from('user_feedback')
           .delete()
           .eq('user_id', userId);
-          
+
       // Example: Delete user activities
       await client
           .from('user_activities')
           .delete()
           .eq('user_id', userId);
-          
+
     } catch (e) {
       print('Warning: Error deleting user metadata: $e');
       // Don't throw - continue with deletion process
@@ -635,9 +567,9 @@ class SupabaseService {
   static Future<Map<String, int>> getDataDeletionSummary() async {
     final user = currentUser;
     if (user == null) return {};
-    
+
     final summary = <String, int>{};
-    
+
     try {
       // Count conversations
       final conversations = await client
@@ -645,7 +577,7 @@ class SupabaseService {
           .select('id')
           .eq('user_id', user.id);
       summary['conversations'] = conversations.length;
-      
+
       // Count messages
       int totalMessages = 0;
       for (final conv in conversations) {
@@ -656,25 +588,121 @@ class SupabaseService {
         totalMessages += messages.length;
       }
       summary['messages'] = totalMessages;
-      
+
       // Count preferences
       final preferences = await client
           .from('user_preferences')
           .select('id')
           .eq('user_id', user.id);
       summary['preferences'] = preferences.length;
-      
+
       // Count subscriptions
       final subscriptions = await client
           .from('subscriptions')
           .select('id')
           .eq('user_id', user.id);
       summary['subscriptions'] = subscriptions.length;
-      
+
     } catch (e) {
       print('Error getting deletion summary: $e');
     }
-    
+
     return summary;
+  }
+
+  // ==== BYOK API KEYS METHODS ====
+
+  /// Get user's API key for a specific provider (decrypted)
+  static Future<String?> getUserApiKey(String provider) async {
+    final user = currentUser;
+    if (user == null) return null;
+
+    try {
+      final result = await client
+          .rpc('decrypt_api_key', params: {
+            'encrypted_key': await client
+                .from('user_api_keys')
+                .select('api_key')
+                .eq('user_id', user.id)
+                .eq('provider', provider)
+                .single()
+                .then((data) => data['api_key'])
+          });
+
+      return result as String?;
+    } catch (e) {
+      // Key not found or decryption failed
+      return null;
+    }
+  }
+
+  /// Set user's API key for a specific provider (encrypted)
+  static Future<void> setUserApiKey(String provider, String apiKey) async {
+    final user = currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    try {
+      await client
+          .from('user_api_keys')
+          .upsert({
+            'user_id': user.id,
+            'provider': provider,
+            'api_key': await client.rpc('encrypt_api_key', params: {'plain_key': apiKey}),
+          });
+    } catch (e) {
+      throw Exception('Error saving API key: $e');
+    }
+  }
+
+  /// Delete user's API key for a specific provider
+  static Future<void> deleteUserApiKey(String provider) async {
+    final user = currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    try {
+      await client
+          .from('user_api_keys')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('provider', provider);
+    } catch (e) {
+      throw Exception('Error deleting API key: $e');
+    }
+  }
+
+  /// Check if user has an API key for a specific provider
+  static Future<bool> hasUserApiKey(String provider) async {
+    final user = currentUser;
+    if (user == null) return false;
+
+    try {
+      final result = await client
+          .from('user_api_keys')
+          .select('user_id')
+          .eq('user_id', user.id)
+          .eq('provider', provider)
+          .single();
+
+      return result != null;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Get all user's API keys (without decrypting, for management)
+  static Future<List<Map<String, dynamic>>> getUserApiKeys() async {
+    final user = currentUser;
+    if (user == null) return [];
+
+    try {
+      final result = await client
+          .from('user_api_keys')
+          .select('provider, created_at, updated_at')
+          .eq('user_id', user.id);
+
+      return List<Map<String, dynamic>>.from(result);
+    } catch (e) {
+      return [];
+    }
   }
 }

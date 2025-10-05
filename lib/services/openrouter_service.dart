@@ -6,13 +6,31 @@ import '../models/chat_message.dart';
 import '../models/model_profile.dart';
 import '../exceptions/model_exceptions.dart';
 import 'remote_config_service.dart';
+import 'supabase_service.dart';
 
 class OpenRouterService {
   final http.Client _client;
   StreamSubscription? _currentSubscription;
   StreamController<String>? _currentController;
-  
+
   OpenRouterService({http.Client? client}) : _client = client ?? http.Client();
+
+  /// Get the API key to use for requests (BYOK only - no shared key)
+  Future<String> _getApiKey() async {
+    try {
+      // Get user's BYOK - required
+      final userKey = await SupabaseService.getUserApiKey('openrouter');
+      if (userKey != null && userKey.isNotEmpty) {
+        print('[DEBUG] OpenRouterService: Using user BYOK');
+        return userKey;
+      }
+    } catch (e) {
+      print('[DEBUG] OpenRouterService: Error getting user BYOK: $e');
+    }
+
+    // No fallback - throw exception if no BYOK
+    throw Exception('No API key configured. Please set up your OpenRouter API key in Profile > API Key Settings.');
+  }
 
   Future<String> chatCompletion({
     required List<ChatMessage> messages,
@@ -22,7 +40,8 @@ class OpenRouterService {
     bool useReasoning = false,
   }) async {
     print('[DEBUG] OpenRouterService.chatCompletion: Using modelId = ${profile.modelId}');
-    final headers = OpenRouterConfig.defaultHeaders();
+    final apiKey = await _getApiKey();
+    final headers = OpenRouterConfig.defaultHeaders(customApiKey: apiKey);
 
     final payload = <String, dynamic>{
       'model': profile.modelId,
@@ -100,7 +119,8 @@ class OpenRouterService {
     // Cancel any existing stream
     await cancelCurrentStream();
 
-    final headers = OpenRouterConfig.defaultHeaders();
+    final apiKey = await _getApiKey();
+    final headers = OpenRouterConfig.defaultHeaders(customApiKey: apiKey);
     final payload = <String, dynamic>{
       'model': profile.modelId,
       'messages': [
@@ -259,7 +279,8 @@ class OpenRouterService {
   // Generar título usando un modelo específico con timeout
   Future<String?> _generateTitleWithModel(String firstUserMessage, String model) async {
     try {
-      final headers = OpenRouterConfig.defaultHeaders();
+      final apiKey = await _getApiKey();
+      final headers = OpenRouterConfig.defaultHeaders(customApiKey: apiKey);
 
       final payload = <String, dynamic>{
         'model': model,

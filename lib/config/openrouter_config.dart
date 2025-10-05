@@ -6,10 +6,10 @@ class OpenRouterConfig {
   static String get apiKey => (dotenv.env['OPENROUTER_API_KEY'] ?? '').trim();
   static String get siteUrl => (dotenv.env['OPENROUTER_SITE_URL'] ?? 'https://docai.app').trim();
 
-  static Map<String, String> defaultHeaders() {
-    final key = apiKey;
+  static Map<String, String> defaultHeaders({String? customApiKey}) {
+    final key = customApiKey ?? apiKey;
     if (key.isEmpty) {
-      throw Exception('OpenRouter API key missing. Add OPENROUTER_API_KEY to .env');
+      throw Exception('OpenRouter API key missing. Provide customApiKey or add OPENROUTER_API_KEY to .env');
     }
     return {
       'Content-Type': 'application/json',

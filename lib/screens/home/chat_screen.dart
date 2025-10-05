@@ -11,14 +11,16 @@ import '../../models/model_profile.dart';
 import '../../exceptions/model_exceptions.dart';
 import '../../models/chat_message.dart';
 import '../../models/chat_conversation.dart';
-import '../../models/user_preferences.dart';
+import '../../models/user_medical_preferences.dart';
 import '../../config/openrouter_config.dart';
 import '../../services/supabase_service.dart';
 import '../../theme/app_theme.dart';
 import '../../services/medical_data_bridge_service.dart';
+import '../../services/medical_preferences_service.dart';
 
 import '../medical_preferences_screen.dart';
 import 'history_screen.dart';
+import 'profile_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatConversation? existingConversation;
@@ -47,7 +49,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _shouldScroll = false;
   bool _useReasoning = false;
   bool _showFirstTimeWarning = false;
-  UserPreferences? _userPreferences;
+  UserMedicalPreferences? _userMedicalPreferences;
   bool _isInitialized = false; // Flag to track initialization
   StreamSubscription<String>? _currentStreamSubscription; // Track current stream
   
@@ -186,7 +188,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _checkFirstTimeUser() async {
     try {
-      final isFirstTime = await SupabaseService.isFirstTimeUser();
+      final medicalService = MedicalPreferencesService();
+      final medicalPrefs = await medicalService.getUserMedicalPreferences();
+      final isFirstTime = medicalPrefs == null;
       if (mounted) {
         setState(() {
           _showFirstTimeWarning = isFirstTime && _messages.length <= 1;
@@ -199,14 +203,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _loadUserPreferences() async {
     try {
-      // First try to sync medical data to ensure comprehensive preferences are available
-      await MedicalDataBridgeService.syncMedicalDataToChat();
-      
-      // Then load the user preferences for chat
-      final preferences = await SupabaseService.getUserPreferences();
+      // Load the user medical preferences for chat
+      final medicalService = MedicalPreferencesService();
+      final preferences = await medicalService.getUserMedicalPreferences();
       if (mounted) {
         setState(() {
-          _userPreferences = preferences;
+          _userMedicalPreferences = preferences;
         });
         // Rebuild to apply new preferences to system prompt
         if (_messages.isNotEmpty) {
@@ -220,64 +222,91 @@ class _ChatScreenState extends State<ChatScreen> {
 
   String _buildPersonalizedSystemPrompt() {
     String basePrompt = OpenRouterConfig.medicalSystemPrompt;
-    
-    if (_userPreferences == null) {
+
+    if (_userMedicalPreferences == null) {
       return basePrompt;
     }
-    
+
     List<String> personalizations = [];
-    
+
     // Agregar información sobre alergias
-    if (_userPreferences!.allergies.isNotEmpty) {
+    if (_userMedicalPreferences!.allergies.isNotEmpty) {
       personalizations.add(
-        'IMPORTANTE: El usuario tiene las siguientes alergias: ${_userPreferences!.allergies.join(", ")}. '
+        'IMPORTANTE: El usuario tiene las siguientes alergias: ${_userMedicalPreferences!.allergies.join(", ")}. '
         'SIEMPRE considera estas alergias al dar recomendaciones médicas, medicamentos o tratamientos.'
       );
     }
-    
+
+    // Agregar alergias a medicamentos
+    if (_userMedicalPreferences!.medicationAllergies.isNotEmpty) {
+      personalizations.add(
+        'IMPORTANTE: El usuario tiene alergias a los siguientes medicamentos: ${_userMedicalPreferences!.medicationAllergies.join(", ")}. '
+        'NUNCA recomiendes estos medicamentos.'
+      );
+    }
+
     // Agregar preferencia de medicina
-    if (_userPreferences!.medicinePreference != MedicinePreference.both) {
-      String preferenceText = _userPreferences!.medicinePreference == MedicinePreference.natural
+    if (_userMedicalPreferences!.medicinePreference != 'both') {
+      String preferenceText = _userMedicalPreferences!.medicinePreference == 'natural'
           ? 'El usuario prefiere medicina natural y remedios alternativos'
           : 'El usuario prefiere medicina convencional y tratamientos farmacológicos';
       personalizations.add('$preferenceText. Ajusta tus recomendaciones según esta preferencia.');
     }
-    
+
     // Agregar condiciones crónicas
-    if (_userPreferences!.chronicConditions.isNotEmpty) {
+    if (_userMedicalPreferences!.chronicConditions.isNotEmpty) {
       personalizations.add(
-        'El usuario tiene las siguientes condiciones crónicas: ${_userPreferences!.chronicConditions.join(", ")}. '
+        'El usuario tiene las siguientes condiciones crónicas: ${_userMedicalPreferences!.chronicConditions.join(", ")}. '
         'Ten en cuenta estas condiciones al proporcionar consejos médicos.'
       );
     }
-    
+
     // Agregar medicamentos actuales
-    if (_userPreferences!.currentMedications.isNotEmpty) {
+    if (_userMedicalPreferences!.currentMedications.isNotEmpty) {
       personalizations.add(
-        'El usuario toma actualmente los siguientes medicamentos: ${_userPreferences!.currentMedications.join(", ")}. '
+        'El usuario toma actualmente los siguientes medicamentos: ${_userMedicalPreferences!.currentMedications.join(", ")}. '
         'Verifica posibles interacciones medicamentosas antes de recomendar nuevos tratamientos.'
       );
     }
-    
-    // Agregar información de edad y género si están disponibles
-    if (_userPreferences!.ageRange != null) {
-      personalizations.add('El usuario está en el rango de edad: ${_userPreferences!.ageRange!.displayName}.');
+
+    // Agregar información de edad calculada de dateOfBirth
+    if (_userMedicalPreferences!.dateOfBirth != null) {
+      final age = DateTime.now().difference(_userMedicalPreferences!.dateOfBirth!).inDays ~/ 365;
+      String ageRange;
+      if (age < 18) ageRange = 'menor de 18 años';
+      else if (age < 36) ageRange = '18-35 años';
+      else if (age < 56) ageRange = '36-55 años';
+      else if (age < 76) ageRange = '56-75 años';
+      else ageRange = 'más de 75 años';
+      personalizations.add('El usuario tiene $age años (rango: $ageRange).');
     }
-    
-    if (_userPreferences!.gender != null && _userPreferences!.gender != Gender.preferNotToSay) {
-      personalizations.add('Género del usuario: ${_userPreferences!.gender!.displayName}.');
+
+    // Agregar género
+    if (_userMedicalPreferences!.gender != null && _userMedicalPreferences!.gender != 'prefer_not_to_say') {
+      String genderText;
+      switch (_userMedicalPreferences!.gender) {
+        case 'male': genderText = 'Masculino'; break;
+        case 'female': genderText = 'Femenino'; break;
+        case 'other': genderText = 'Otro'; break;
+        default: genderText = _userMedicalPreferences!.gender!;
+      }
+      personalizations.add('Género del usuario: $genderText.');
     }
-    
-    // Agregar notas adicionales
-    if (_userPreferences!.additionalNotes != null && _userPreferences!.additionalNotes!.isNotEmpty) {
-      personalizations.add('Notas adicionales del usuario: ${_userPreferences!.additionalNotes}');
+
+    // Agregar información adicional si está disponible
+    if (_userMedicalPreferences!.smokingStatus != 'never') {
+      personalizations.add('Hábitos de tabaquismo: ${_userMedicalPreferences!.smokingStatus}.');
     }
-    
+
+    if (_userMedicalPreferences!.alcoholConsumption != 'never') {
+      personalizations.add('Consumo de alcohol: ${_userMedicalPreferences!.alcoholConsumption}.');
+    }
+
     // Construir el prompt personalizado
     if (personalizations.isNotEmpty) {
       return '$basePrompt\n\nINFORMACIÓN PERSONALIZADA DEL USUARIO:\n${personalizations.join("\n\n")}';
     }
-    
+
     return basePrompt;
   }
 
@@ -493,6 +522,182 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       );
     }
+  
+  }
+
+  Widget _buildFeatureItem(String text, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, color: const Color(0xFF6C5CE7), size: 16),
+          const SizedBox(width: 8),
+          Text(text, style: const TextStyle(fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
+  // Modal para configurar clave API BYOK
+  Future<void> _showApiKeySetupModal() async {
+    final l10n = AppLocalizations.of(context)!;
+    bool isLoading = false;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false, // No permitir cerrar tocando fuera
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C5CE7).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.key,
+                  color: Color(0xFF6C5CE7),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Configura tu clave API',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Para usar DocAI, necesitas configurar tu propia clave API de OpenRouter:',
+                style: TextStyle(fontSize: 14, color: Color(0xFF6C757D)),
+              ),
+              const SizedBox(height: 12),
+              _buildFeatureItem('Acceso completo a DocAI', Icons.check_circle),
+              _buildFeatureItem('Sin límites de uso', Icons.all_inclusive),
+              _buildFeatureItem('Mejor rendimiento', Icons.speed),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEB3B).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFFFFEB3B).withOpacity(0.5),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.warning_amber,
+                      color: Color(0xFFFF9800),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Es obligatorio configurar una clave API personal.',
+                        style: TextStyle(
+                          color: Color(0xFF6C757D),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      Navigator.pop(context); // Cerrar modal actual
+                      if (mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProfileScreen(scrollToApiKey: true),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.arrow_forward, size: 16),
+                    label: const Text('Ir al Perfil'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF6C5CE7),
+                      side: const BorderSide(color: Color(0xFF6C5CE7)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            setState(() => isLoading = true);
+
+                            try {
+                              // Navegar directamente al perfil
+                              Navigator.pop(context); // Cerrar modal actual
+                              if (mounted) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const ProfileScreen(),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: $e'),
+                                    backgroundColor: const Color(0xFFE74C3C),
+                                  ),
+                                );
+                              }
+                            } finally {
+                              if (mounted) {
+                                setState(() => isLoading = false);
+                              }
+                            }
+                          },
+                    icon: isLoading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.settings, size: 16),
+                    label: const Text('Configurar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6C5CE7),
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _sendMessage(
@@ -501,6 +706,13 @@ class _ChatScreenState extends State<ChatScreen> {
     ModelProfile? overrideProfile,
     bool? overrideReasoning,
   }) async {
+    // Verificar si el usuario tiene BYOK configurado
+    final hasApiKey = await SupabaseService.hasUserApiKey('openrouter');
+    if (!hasApiKey) {
+      await _showApiKeySetupModal();
+      return; // No continuar con el envío del mensaje
+    }
+
     final userMessage = ChatMessage.user(text);
     
     setState(() {
@@ -609,34 +821,40 @@ class _ChatScreenState extends State<ChatScreen> {
         },
         onError: (e) {
           _currentStreamSubscription = null;
-          
+
           if (mounted) {
-            String errorMessage;
-            if (e is ModelUnavailableException) {
-              errorMessage = e.toString();
+            // Check if it's a BYOK error
+            if (e.toString().contains('No API key configured')) {
+              // Show BYOK setup modal
+              _showApiKeySetupModal();
             } else {
-              errorMessage = 'Error: ${e.toString()}';
+              String errorMessage;
+              if (e is ModelUnavailableException) {
+                errorMessage = e.toString();
+              } else {
+                errorMessage = 'Error: ${e.toString()}';
+              }
+
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(errorMessage),
+                behavior: SnackBarBehavior.floating,
+              ));
+
+              // Show error in the assistant bubble if placeholder exists
+              if (_streamingIndex != null && _streamingIndex! < _messages.length) {
+                setState(() {
+                  _messages[_streamingIndex!] = ChatMessage(
+                    id: _messages[_streamingIndex!].id,
+                    role: ChatRole.assistant,
+                    content: e is ModelUnavailableException
+                      ? 'El modelo seleccionado no está disponible. Por favor, selecciona otro modelo e inténtalo de nuevo.'
+                      : 'Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.',
+                    createdAt: DateTime.now(),
+                  );
+                });
+              }
             }
-            
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(errorMessage),
-              behavior: SnackBarBehavior.floating,
-            ));
-            
-            // Show error in the assistant bubble if placeholder exists
-            if (_streamingIndex != null && _streamingIndex! < _messages.length) {
-              setState(() {
-                _messages[_streamingIndex!] = ChatMessage(
-                  id: _messages[_streamingIndex!].id,
-                  role: ChatRole.assistant,
-                  content: e is ModelUnavailableException 
-                    ? 'El modelo seleccionado no está disponible. Por favor, selecciona otro modelo e inténtalo de nuevo.'
-                    : 'Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.',
-                  createdAt: DateTime.now(),
-                );
-              });
-            }
-            
+
             setState(() {
               _isSending = false;
               _streamingIndex = null;
@@ -647,31 +865,37 @@ class _ChatScreenState extends State<ChatScreen> {
 
     } catch (e) {
       if (mounted) {
-        String errorMessage;
-        if (e is ModelUnavailableException) {
-          errorMessage = e.toString();
+        // Check if it's a BYOK error
+        if (e.toString().contains('No API key configured')) {
+          // Show BYOK setup modal
+          await _showApiKeySetupModal();
         } else {
-          errorMessage = 'Error: ${e.toString()}';
+          String errorMessage;
+          if (e is ModelUnavailableException) {
+            errorMessage = e.toString();
+          } else {
+            errorMessage = 'Error: ${e.toString()}';
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(errorMessage),
+            behavior: SnackBarBehavior.floating,
+          ));
+          // Show error in the assistant bubble if placeholder exists
+          if (_streamingIndex != null && _streamingIndex! < _messages.length) {
+            setState(() {
+              _messages[_streamingIndex!] = ChatMessage(
+                id: _messages[_streamingIndex!].id,
+                role: ChatRole.assistant,
+                content: e is ModelUnavailableException
+                  ? 'El modelo seleccionado no está disponible. Por favor, selecciona otro modelo e inténtalo de nuevo.'
+                  : 'Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.',
+                createdAt: DateTime.now(),
+              );
+            });
+          }
         }
-        
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(errorMessage),
-          behavior: SnackBarBehavior.floating,
-        ));
-        // Show error in the assistant bubble if placeholder exists
-        if (_streamingIndex != null && _streamingIndex! < _messages.length) {
-          setState(() {
-            _messages[_streamingIndex!] = ChatMessage(
-              id: _messages[_streamingIndex!].id,
-              role: ChatRole.assistant,
-              content: e is ModelUnavailableException 
-                ? 'El modelo seleccionado no está disponible. Por favor, selecciona otro modelo e inténtalo de nuevo.'
-                : 'Lo siento, ha ocurrido un error. Por favor, inténtalo de nuevo.',
-              createdAt: DateTime.now(),
-            );
-          });
-        }
-        
+
         setState(() {
           _isSending = false;
           _streamingIndex = null;
@@ -976,10 +1200,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                   ),
                                   const Spacer(),
                                   InkWell(
-                                    onTap: () async {
-                                      await SupabaseService.markAsNotFirstTime();
-                                      setState(() => _showFirstTimeWarning = false);
-                                    },
+                                    onTap: () => setState(() => _showFirstTimeWarning = false),
                                     borderRadius: BorderRadius.circular(16),
                                     child: const Padding(
                                       padding: EdgeInsets.all(4),
@@ -1001,10 +1222,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   TextButton(
-                                    onPressed: () async {
-                                      await SupabaseService.markAsNotFirstTime();
-                                      setState(() => _showFirstTimeWarning = false);
-                                    },
+                                    onPressed: () => setState(() => _showFirstTimeWarning = false),
                                     child: Text(
                                       l10n.notNow,
                                       style: TextStyle(
@@ -1016,7 +1234,6 @@ class _ChatScreenState extends State<ChatScreen> {
                                   const SizedBox(width: 6),
                                   ElevatedButton(
                                     onPressed: () async {
-                                      await SupabaseService.markAsNotFirstTime();
                                       setState(() => _showFirstTimeWarning = false);
                                       if (mounted) {
                                         await Navigator.push(

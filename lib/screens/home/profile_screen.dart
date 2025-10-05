@@ -21,11 +21,13 @@ import 'history_screen.dart';
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onNavigateToHistory;
   final VoidCallback? onNavigateToBackup;
-  
+  final bool scrollToApiKey;
+
   const ProfileScreen({
     super.key,
     this.onNavigateToHistory,
     this.onNavigateToBackup,
+    this.scrollToApiKey = false,
   });
 
   @override
@@ -43,6 +45,14 @@ class _ProfileScreenState extends State<ProfileScreen>
   final UserStatsService _statsService = UserStatsService();
   UserStats? _userStats;
   bool _isLoadingStats = true;
+
+  // BYOK state
+  bool _hasApiKey = false;
+  bool _isVerifyingApiKey = false;
+  String? _apiKeyLastUpdated;
+
+  // Scroll key for API key section
+  final GlobalKey _apiKeySectionKey = GlobalKey();
 
   @override
   void initState() {
@@ -75,6 +85,14 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     _animationController.forward();
     _loadUserStats();
+    _loadApiKeyStatus();
+
+    // Scroll to API key section if requested
+    if (widget.scrollToApiKey) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToApiKeySection();
+      });
+    }
   }
 
   Future<void> _loadUserStats() async {
@@ -100,6 +118,42 @@ class _ProfileScreenState extends State<ProfileScreen>
         });
         _statsAnimationController.forward();
       }
+    }
+  }
+
+  Future<void> _loadApiKeyStatus() async {
+    try {
+      final hasKey = await SupabaseService.hasUserApiKey('openrouter');
+      final keys = await SupabaseService.getUserApiKeys();
+      final openRouterKey = keys
+          .where((k) => k['provider'] == 'openrouter')
+          .firstOrNull;
+
+      if (mounted) {
+        setState(() {
+          _hasApiKey = hasKey;
+          _apiKeyLastUpdated = openRouterKey?['updated_at'];
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _hasApiKey = false;
+          _apiKeyLastUpdated = null;
+        });
+      }
+    }
+  }
+
+  void _scrollToApiKeySection() {
+    final context = _apiKeySectionKey.currentContext;
+    if (context != null) {
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+        alignment: 0.1, // Align slightly below the top
+      );
     }
   }
 
@@ -186,13 +240,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                       _buildQuickActionsGrid(l10n),
                       const SizedBox(height: 20),
 
+                      // API Key Section (BYOK)
+                      _buildApiKeySection(l10n),
+                      const SizedBox(height: 16),
+
                       // Medical Section (separada)
                       _buildMedicalSection(l10n),
                       const SizedBox(height: 16),
 
+                      
+
                       // Subscription Section (separada)
-                      _buildSubscriptionSection(l10n),
-                      const SizedBox(height: 20),
+                      //_buildSubscriptionSection(l10n),
+                      //const SizedBox(height: 20),
 
                       // Responsive Menu Items (más compactos) - UPDATED
                       _buildCompactMenuItems(l10n, localeProvider),
@@ -594,6 +654,185 @@ class _ProfileScreenState extends State<ProfileScreen>
               },
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildApiKeySection(AppLocalizations l10n) {
+    return Container(
+      key: _apiKeySectionKey,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C5CE7).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.key,
+                  color: Color(0xFF6C5CE7),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Clave API de OpenRouter',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2D3436),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _hasApiKey
+                          ? 'Tu clave API está configurada y lista para usar'
+                          : 'Configura tu clave API para acceder a DocAI',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6C757D),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_hasApiKey) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00B894).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFF00B894).withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle,
+                    color: Color(0xFF00B894),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Clave API configurada',
+                      style: const TextStyle(
+                        color: Color(0xFF00B894),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  if (_apiKeyLastUpdated != null)
+                    Text(
+                      'Actualizada: ${_formatDate(_apiKeyLastUpdated!)}',
+                      style: const TextStyle(
+                        color: Color(0xFF6C757D),
+                        fontSize: 10,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _isVerifyingApiKey ? null : _verifyApiKey,
+                    icon: _isVerifyingApiKey
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.verified, size: 16),
+                    label: Text(
+                      _isVerifyingApiKey ? 'Verificando...' : 'Verificar',
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF00B894),
+                      side: const BorderSide(color: Color(0xFF00B894)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _showApiKeyDialog,
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('Cambiar'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF6C5CE7),
+                      side: const BorderSide(color: Color(0xFF6C5CE7)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _removeApiKey,
+                    icon: const Icon(Icons.delete, size: 16),
+                    label: const Text('Eliminar'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFE74C3C),
+                      side: const BorderSide(color: Color(0xFFE74C3C)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _showApiKeyDialog,
+                icon: const Icon(Icons.vpn_key),
+                label: const Text('Configurar Clave API'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6C5CE7),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1417,6 +1656,248 @@ class _ProfileScreenState extends State<ProfileScreen>
         ],
       ),
     );
+  }
+
+  // BYOK methods
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      final now = DateTime.now();
+      final difference = now.difference(date);
+
+      if (difference.inDays == 0) {
+        return 'hoy';
+      } else if (difference.inDays == 1) {
+        return 'ayer';
+      } else if (difference.inDays < 7) {
+        return 'hace ${difference.inDays} días';
+      } else {
+        return '${date.day}/${date.month}/${date.year}';
+      }
+    } catch (e) {
+      return 'desconocido';
+    }
+  }
+
+  Future<void> _verifyApiKey() async {
+    setState(() => _isVerifyingApiKey = true);
+
+    try {
+      final result = await SupabaseService.client.functions.invoke(
+        'verify-api-key',
+        body: {
+          'apiKey': await SupabaseService.getUserApiKey('openrouter'),
+          'provider': 'openrouter',
+        },
+      );
+
+      if (result.status == 200 && result.data?['valid'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Clave API verificada correctamente'),
+            backgroundColor: Color(0xFF00B894),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('La clave API no es válida'),
+            backgroundColor: Color(0xFFE74C3C),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al verificar clave: $e'),
+          backgroundColor: Color(0xFFE74C3C),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isVerifyingApiKey = false);
+      }
+    }
+  }
+
+  void _showApiKeyDialog() {
+    final controller = TextEditingController();
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C5CE7).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.vpn_key,
+                  color: Color(0xFF6C5CE7),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Configurar Clave API de OpenRouter',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Para usar DocAI, necesitas configurar tu propia clave API de OpenRouter. Esta se almacenará de forma segura y encriptada.',
+                style: TextStyle(fontSize: 14, color: Color(0xFF6C757D)),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                decoration: InputDecoration(
+                  labelText: 'Clave API',
+                  hintText: 'sk-or-v1-...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                obscureText: true,
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () async {
+                  final url = Uri.parse('https://openrouter.ai/keys');
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  }
+                },
+                child: Text(
+                  '¿No tienes clave? Obtén una en OpenRouter',
+                  style: TextStyle(
+                    color: Theme.of(context).primaryColor,
+                    fontSize: 12,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      final apiKey = controller.text.trim();
+                      if (apiKey.isEmpty) return;
+
+                      setState(() => isLoading = true);
+
+                      try {
+                        await SupabaseService.setUserApiKey(
+                          'openrouter',
+                          apiKey,
+                        );
+                        await _loadApiKeyStatus();
+
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Clave API configurada correctamente',
+                              ),
+                              backgroundColor: Color(0xFF00B894),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error al guardar clave: $e'),
+                              backgroundColor: Color(0xFFE74C3C),
+                            ),
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() => isLoading = false);
+                        }
+                      }
+                    },
+              child: isLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Guardar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _removeApiKey() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Eliminar clave API'),
+        content: const Text(
+          '¿Estás seguro de que quieres eliminar tu clave API? Ya no podrás usar DocAI hasta que configures una nueva clave.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE74C3C),
+            ),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await SupabaseService.deleteUserApiKey('openrouter');
+        await _loadApiKeyStatus();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Clave API eliminada'),
+            backgroundColor: Color(0xFF00B894),
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al eliminar clave: $e'),
+            backgroundColor: Color(0xFFE74C3C),
+          ),
+        );
+      }
+    }
   }
 }
 
