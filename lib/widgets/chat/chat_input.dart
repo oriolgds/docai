@@ -341,11 +341,11 @@ class _ModelDisplayState extends State<_ModelDisplay> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
             ),
-            ...widget.allProfiles.map((profile) => 
+            ...widget.allProfiles.map((profile) =>
               ListTile(
                 leading: _buildGradientCircle(profile),
                 title: Text(
-                  profile.displayName,
+                  '${profile.displayName} BYOK',
                   style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
                 subtitle: Text(
@@ -414,7 +414,7 @@ class _ModelDisplayState extends State<_ModelDisplay> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                widget.selected.displayName,
+                '${widget.selected.displayName} BYOK',
                 style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               ),
             ),

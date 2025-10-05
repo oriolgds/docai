@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/model_profile.dart';
 import '../../services/model_service.dart';
+import '../../services/supabase_service.dart';
 
 class ModelSelector extends StatefulWidget {
   final ModelProfile selected;
@@ -18,6 +19,7 @@ class _ModelSelectorState extends State<ModelSelector> {
   Map<BrandName, List<ModelProfile>> _byBrand = {};
   bool _isLoading = true;
   String? _errorMessage;
+  bool _hasByok = false;
 
   @override
   void initState() {
@@ -25,6 +27,7 @@ class _ModelSelectorState extends State<ModelSelector> {
     _profile = widget.selected;
     _brand = _profile.brand;
     _loadModels();
+    _checkByokStatus();
   }
   
   Future<void> _loadModels() async {
@@ -37,17 +40,17 @@ class _ModelSelectorState extends State<ModelSelector> {
         });
         return;
       }
-      
+
       final grouped = <BrandName, List<ModelProfile>>{};
       for (final model in models) {
         grouped.putIfAbsent(model.brand, () => []).add(model);
       }
-      
+
       setState(() {
         _byBrand = grouped;
         _isLoading = false;
         _errorMessage = null;
-        
+
         // Verificar si el modelo actual sigue disponible
         final currentModelExists = models.any((m) => m.id == _profile.id);
         if (!currentModelExists && models.isNotEmpty) {
@@ -62,6 +65,24 @@ class _ModelSelectorState extends State<ModelSelector> {
         _isLoading = false;
         _byBrand = ModelProfile.groupedByBrand(); // Fallback
       });
+    }
+  }
+
+  Future<void> _checkByokStatus() async {
+    try {
+      final hasByok = await SupabaseService.hasUserApiKey('openrouter');
+      if (mounted) {
+        setState(() {
+          _hasByok = hasByok;
+        });
+      }
+    } catch (e) {
+      // Silently fail - not critical
+      if (mounted) {
+        setState(() {
+          _hasByok = false;
+        });
+      }
     }
   }
 
@@ -167,13 +188,34 @@ class _ModelSelectorState extends State<ModelSelector> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: FilterChip(
-                  label: Text(p.displayName),
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_hasByok ? p.displayName : '${p.displayName} (Requiere API Key)'),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00B894),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'BYOK',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   selected: _profile.id == p.id,
                   onSelected: (_) => _selectProfile(p),
                   selectedColor: Colors.transparent,
                   checkmarkColor: p.primaryColor,
                   labelStyle: TextStyle(
-                    color: _profile.id == p.id ? p.primaryColor : Colors.black,
+                    color: _profile.id == p.id ? p.primaryColor : (_hasByok ? Colors.black : Colors.grey),
                     fontWeight: _profile.id == p.id ? FontWeight.bold : FontWeight.normal,
                   ),
                   shape: RoundedRectangleBorder(
