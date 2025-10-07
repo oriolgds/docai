@@ -1,0 +1,240 @@
+name: Build Android APK and AAB
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Tipo de build'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+        - release
+        - debug
+
+# Permisos necesarios
+permissions:
+  contents: read
+  actions: write
+
+# Cancela workflows anteriores
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        build-type: [apk, aab]
+    
+    steps:
+    - name: Cancel Previous Workflow Runs
+      uses: styfle/cancel-workflow-action@0.12.0
+      with:
+        access_token: ${{ github.token }}
+    
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    # Cache para Flutter SDK
+    - name: Cache Flutter SDK
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ runner.tool_cache }}/flutter
+        key: flutter-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}-3.35.4
+        restore-keys: |
+          flutter-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}-
+          flutter-${{ runner.os }}-
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.35.4'
+        channel: 'stable'
+        cache: true
+    
+    # Cache para dependencias
+    - name: Cache pub dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.pub-cache
+          ${{ github.workspace }}/.packages
+          ${{ github.workspace }}/.flutter-plugins
+          ${{ github.workspace }}/.flutter-plugin-dependencies
+          ${{ github.workspace }}/.dart_tool/package_config.json
+        key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          pub-${{ runner.os }}-
+    
+    # Crear firebase_options.dart desde secret
+    - name: Create firebase_options.dart from secret
+      run: |
+        mkdir -p lib
+        cat > lib/firebase_options.dart << 'EOF'
+        ${{ secrets.FIREBASE_OPTIONS_DART }}
+        EOF
+        
+        # Verificar archivo
+        if [ ! -s lib/firebase_options.dart ]; then
+          echo "Error: firebase_options.dart file is empty"
+          exit 1
+        fi
+        
+        echo "✓ Firebase options file created successfully"
+        echo "File size: $(wc -c < lib/firebase_options.dart) bytes"
+    
+    # Crear .env desde secret
+    - name: Create .env file from secret
+      run: |
+        cat > .env << 'EOF'
+        ${{ secrets.DOT_ENV }}
+        EOF
+        
+        echo "✓ .env file created successfully"
+        echo "File size: $(wc -c < .env) bytes"
+    
+    # Método 1: Decodificar keystore desde secret (más simple)
+    - name: Decode keystore from secret
+      if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+      run: |
+        mkdir -p android/app
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
+        echo "✓ Keystore decoded from secret successfully"
+        ls -la android/app/upload-keystore.jks
+    
+    # Método 2: Descargar keystore desde Google Drive (alternativo)
+    - name: Download keystore from Google Drive
+      if: ${{ secrets.KEYSTORE_BASE64 == '' && secrets.GDRIVE_CREDENTIALS != '' }}
+      uses: Jumbo810/Upload_Github_Artifacts_TO_GDrive@v2.3.1
+      with:
+        credentials: ${{ secrets.GDRIVE_CREDENTIALS }}
+        parent_folder_id: ${{ secrets.GDRIVE_FOLDER_ID }}
+        target: "android/app/upload-keystore.jks"
+        download_mode: true
+    
+    # Crear key.properties
+    - name: Create key.properties
+      run: |
+        mkdir -p android
+        cat > android/key.properties << 'EOF'
+        storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+        keyPassword=${{ secrets.KEY_PASSWORD }}
+        keyAlias=${{ secrets.KEY_ALIAS }}
+        storeFile=upload-keystore.jks
+        EOF
+        
+        echo "✓ key.properties created successfully"
+    
+    # Verificar archivos críticos
+    - name: Verify critical files
+      run: |
+        echo "Checking generated files..."
+        ls -la lib/firebase_options.dart .env android/key.properties android/app/upload-keystore.jks
+        
+        # Verificar firebase_options.dart
+        if grep -q "DefaultFirebaseOptions" lib/firebase_options.dart; then
+          echo "✓ firebase_options.dart contains DefaultFirebaseOptions class"
+        else
+          echo "✗ firebase_options.dart does not contain DefaultFirebaseOptions class"
+          exit 1
+        fi
+        
+        # Verificar keystore
+        if [ -f "android/app/upload-keystore.jks" ]; then
+          echo "✓ Keystore file exists"
+          echo "Keystore size: $(wc -c < android/app/upload-keystore.jks) bytes"
+        else
+          echo "✗ Keystore file not found"
+          exit 1
+        fi
+    
+    # Obtener dependencias
+    - name: Get dependencies
+      run: flutter pub get
+    
+    # Análisis de código
+    - name: Analyze code
+      run: flutter analyze --fatal-infos
+    
+    # Build APK
+    - name: Build APK
+      if: matrix.build-type == 'apk'
+      run: |
+        flutter build apk --release \
+          --dart-define=FLUTTER_WEB_AUTO_DETECT=true \
+          --split-per-abi
+        
+        echo "✓ APK build completed"
+        ls -la build/app/outputs/flutter-apk/
+    
+    # Build AAB (App Bundle)
+    - name: Build AAB
+      if: matrix.build-type == 'aab'
+      run: |
+        flutter build appbundle --release \
+          --dart-define=FLUTTER_WEB_AUTO_DETECT=true
+        
+        echo "✓ AAB build completed"
+        ls -la build/app/outputs/bundle/release/
+    
+    # Subir artifacts APK
+    - name: Upload APK artifacts
+      if: matrix.build-type == 'apk'
+      uses: actions/upload-artifact@v4
+      with:
+        name: docai-apk-${{ github.run_number }}
+        path: |
+          build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+          build/app/outputs/flutter-apk/app-x86_64-release.apk
+        retention-days: 30
+    
+    # Subir artifacts AAB
+    - name: Upload AAB artifacts
+      if: matrix.build-type == 'aab'
+      uses: actions/upload-artifact@v4
+      with:
+        name: docai-aab-${{ github.run_number }}
+        path: build/app/outputs/bundle/release/app-release.aab
+        retention-days: 30
+    
+    # Limpiar archivos sensibles
+    - name: Cleanup sensitive files
+      if: always()
+      run: |
+        rm -f android/app/upload-keystore.jks
+        rm -f android/key.properties
+        rm -f lib/firebase_options.dart
+        rm -f .env
+        echo "✓ Sensitive files cleaned up"
+
+  # Job de resumen
+  build-summary:
+    runs-on: ubuntu-latest
+    needs: build-android
+    if: always()
+    
+    steps:
+    - name: Build Summary
+      run: |
+        echo "## 🏗️ Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Build Type | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| APK | ${{ needs.build-android.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| AAB | ${{ needs.build-android.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "📱 **Artifacts generados:**" >> $GITHUB_STEP_SUMMARY
+        echo "- APK files (arm64-v8a, armeabi-v7a, x86_64)" >> $GITHUB_STEP_SUMMARY
+        echo "- AAB file para Google Play Store" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "🔗 **Download:** Ve a la pestaña Actions > Artifacts" >> $GITHUB_STEP_SUMMARY
