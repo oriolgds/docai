@@ -6,6 +6,7 @@ import '../../l10n/generated/app_localizations.dart';
 
 import '../../services/openrouter_service.dart';
 import '../../services/chat_state_manager.dart';
+import '../../services/chat_history_service.dart';
 import '../../services/model_service.dart';
 import '../../models/model_profile.dart';
 import '../../exceptions/model_exceptions.dart';
@@ -39,6 +40,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final ChatStateManager _stateManager = ChatStateManager();
+  final ChatHistoryService _historyService = ChatHistoryService();
   late List<ChatMessage> _messages;
   ModelProfile _selectedProfile = ModelProfile.defaultProfile;
   bool _isSending = false;
@@ -160,13 +162,13 @@ class _ChatScreenState extends State<ChatScreen> {
     // Verificar si hay una conversación pendiente o si se debe limpiar
     final currentConversation = _stateManager.currentConversation;
     final shouldClearConversation = _stateManager.shouldClearCurrentConversation;
-    
+
     if (shouldClearConversation) {
       // Limpiar la conversación actual
       _startNewConversation();
       _stateManager.clearShouldClearFlag(); // Limpiar la bandera
-    } else if (currentConversation != null && 
-               currentConversation.id != _conversationId) {
+    } else if (currentConversation != null &&
+              currentConversation.id != _conversationId) {
       // Cargar la nueva conversación
       setState(() {
         _currentConversation = currentConversation;
@@ -178,11 +180,24 @@ class _ChatScreenState extends State<ChatScreen> {
           _addInitialAssistantMessage();
         }
       });
-      
+
       // Scroll al final después de cargar los mensajes
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollToBottom(force: true);
       });
+    }
+
+    // Verificar si la conversación actual ha sido actualizada (ej. título cambió)
+    if (_conversationId != null) {
+      final updatedConversation = _stateManager.getConversationById(_conversationId!);
+      if (updatedConversation != null && 
+          (updatedConversation.title != _currentConversation?.title || 
+           updatedConversation.updatedAt != _currentConversation?.updatedAt)) {
+        debugPrint('[DEBUG] ChatScreen: Conversation updated - Title: ${updatedConversation.title}');
+        setState(() {
+          _currentConversation = updatedConversation;
+        });
+      }
     }
   }
 
@@ -345,25 +360,43 @@ class _ChatScreenState extends State<ChatScreen> {
       // Crear nueva conversación usando el state manager
       _currentConversation = await _stateManager.createConversation(firstUserMessage);
       _conversationId = _currentConversation!.id;
-      
-      // Actualizar el título en el AppBar inmediatamente
-      if (mounted) {
-        setState(() {
-          // Forzar reconstrucción del AppBar con el nuevo título
-        });
-      }
     }
     
     // Solo actualizar y guardar la conversación si tenemos mensajes
     if (_messages.isNotEmpty && _currentConversation != null) {
       // Actualizar la conversación con los mensajes actuales
       final updatedConversation = _currentConversation!.copyWith(
-        messages: List.from(_messages), // Crear nueva lista para evitar referencias
+        messages: List.from(_messages),
         updatedAt: DateTime.now(),
       );
       
       await _stateManager.saveConversation(updatedConversation);
       _currentConversation = updatedConversation;
+    }
+  }
+
+  Future<void> _generateAndUpdateTitle(String firstUserMessage) async {
+    if (_currentConversation == null) return;
+    
+    try {
+      debugPrint('[DEBUG] ChatScreen: Generating title for conversation ${_currentConversation!.id}');
+      final newTitle = await _historyService.generateConversationTitle(firstUserMessage);
+      
+      final updatedConversation = _currentConversation!.copyWith(
+        title: newTitle,
+        updatedAt: DateTime.now(),
+      );
+      
+      await _stateManager.saveConversation(updatedConversation);
+      
+      if (mounted) {
+        setState(() {
+          _currentConversation = updatedConversation;
+        });
+        debugPrint('[DEBUG] ChatScreen: Title updated in UI: $newTitle');
+      }
+    } catch (e) {
+      debugPrint('[DEBUG] ChatScreen: Failed to generate title: $e');
     }
   }
 
@@ -806,17 +839,22 @@ class _ChatScreenState extends State<ChatScreen> {
         onDone: () async {
           // Stream completed successfully
           _currentStreamSubscription = null;
-          
+
           if (mounted) {
             setState(() {
               _isSending = false;
               _streamingIndex = null;
             });
           }
-          
+
           // Save the conversation after completion
           if (_currentConversation != null) {
             await _createOrUpdateConversation(text);
+            
+            // Generar título síncrono si es el primer mensaje del usuario
+            if (!_hasFirstMessage || _currentConversation!.title == 'Nueva conversación') {
+              await _generateAndUpdateTitle(text);
+            }
           }
         },
         onError: (e) {

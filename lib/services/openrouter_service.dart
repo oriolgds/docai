@@ -121,6 +121,7 @@ class OpenRouterService {
 
     final apiKey = await _getApiKey();
     final headers = OpenRouterConfig.defaultHeaders(customApiKey: apiKey);
+
     final payload = <String, dynamic>{
       'model': profile.modelId,
       'messages': [
@@ -368,6 +369,7 @@ class OpenRouterService {
     // Si es muy largo, truncar
     return '${cleanMessage.substring(0, 47)}...';
   }
+
 
   void dispose() {
     cancelCurrentStream();
