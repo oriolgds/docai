@@ -113,24 +113,8 @@ jobs:
           echo "✓ Keystore decoded from secret successfully"
           ls -la android/app/upload-keystore.jks
         else
-          echo "⚠️ KEYSTORE_BASE64 secret not found, will try alternative method"
-        fi
-    
-    # Método alternativo: Descargar keystore desde Google Drive
-    - name: Download keystore from Google Drive
-      if: env.KEYSTORE_BASE64 == ''
-      env:
-        GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
-        GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
-      run: |
-        if [ -n "$GDRIVE_CREDENTIALS" ] && [ -n "$GDRIVE_FOLDER_ID" ]; then
-          echo "Attempting to download keystore from Google Drive..."
-          # Aquí puedes usar una acción o script para descargar desde Google Drive
-          # Por ahora, crear un keystore temporal para testing
-          keytool -genkey -v -keystore android/app/upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass temp123 -keypass temp123 -dname "CN=Test, OU=Test, O=Test, L=Test, S=Test, C=ES"
-          echo "⚠️ Using temporary keystore for testing"
-        else
-          echo "❌ No keystore method available. Please configure KEYSTORE_BASE64 or Google Drive credentials"
+          echo "❌ KEYSTORE_BASE64 secret not found"
+          echo "Please configure the KEYSTORE_BASE64 secret with your keystore file encoded in base64"
           exit 1
         fi
     
@@ -139,9 +123,9 @@ jobs:
       run: |
         mkdir -p android
         cat > android/key.properties << 'EOF'
-        storePassword=${{ secrets.KEYSTORE_PASSWORD || 'temp123' }}
-        keyPassword=${{ secrets.KEY_PASSWORD || 'temp123' }}
-        keyAlias=${{ secrets.KEY_ALIAS || 'upload' }}
+        storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+        keyPassword=${{ secrets.KEY_PASSWORD }}
+        keyAlias=${{ secrets.KEY_ALIAS }}
         storeFile=upload-keystore.jks
         EOF
         
@@ -242,7 +226,7 @@ jobs:
         echo "## 🏗️ Build Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "| Build Type | Status |" >> $GITHUB_STEP_SUMMARY
-        echo "|------------|--------|">>${GITHUB_STEP_SUMMARY
+        echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
         echo "| APK | ${{ needs.build-android.result }} |" >> $GITHUB_STEP_SUMMARY
         echo "| AAB | ${{ needs.build-android.result }} |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
