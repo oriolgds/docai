@@ -1683,10 +1683,23 @@ class _ProfileScreenState extends State<ProfileScreen>
     setState(() => _isVerifyingApiKey = true);
 
     try {
+      // First, get the API key and validate it's not null
+      final apiKey = await SupabaseService.getUserApiKey('openrouter');
+      
+      if (apiKey == null || apiKey.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No hay clave API configurada'),
+            backgroundColor: Color(0xFFE74C3C),
+          ),
+        );
+        return;
+      }
+
       final result = await SupabaseService.client.functions.invoke(
         'verify-api-key',
         body: {
-          'apiKey': await SupabaseService.getUserApiKey('openrouter'),
+          'apiKey': apiKey.trim(),
           'provider': 'openrouter',
         },
       );
@@ -1699,10 +1712,11 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         );
       } else {
+        final errorMessage = result.data?['error'] ?? 'La clave API no es válida';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('La clave API no es válida'),
-            backgroundColor: Color(0xFFE74C3C),
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: const Color(0xFFE74C3C),
           ),
         );
       }
@@ -1710,7 +1724,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al verificar clave: $e'),
-          backgroundColor: Color(0xFFE74C3C),
+          backgroundColor: const Color(0xFFE74C3C),
         ),
       );
     } finally {
@@ -1829,7 +1843,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('Error al guardar clave: $e'),
-                              backgroundColor: Color(0xFFE74C3C),
+                              backgroundColor: const Color(0xFFE74C3C),
                             ),
                           );
                         }
@@ -1893,7 +1907,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al eliminar clave: $e'),
-            backgroundColor: Color(0xFFE74C3C),
+            backgroundColor: const Color(0xFFE74C3C),
           ),
         );
       }
