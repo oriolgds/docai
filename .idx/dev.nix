@@ -4,30 +4,18 @@
   packages = [
     pkgs.python311
     pkgs.python311Packages.pip
+    pkgs.python311Packages.requests
     pkgs.jdk17
     pkgs.unzip
     pkgs.sudo
+    pkgs.android-tools
+    pkgs.android-studio-tools
   ];
 
   idx = {
     extensions = [ ];
 
     workspace = {
-      onCreate = {
-        create-venv = ''
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install --upgrade pip
-          # Option A: explicit packages
-          pip install requests
-          # Option B: requirements file (uncomment if present)
-          # test -f requirements.txt && pip install -r requirements.txt || true
-        '';
-      };
-      onStart = {
-        
-        auto-activate = ''echo "source .venv/bin/activate" >> ~/.bashrc'';
-      };
     };
 
     previews = {
