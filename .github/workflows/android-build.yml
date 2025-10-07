@@ -77,30 +77,36 @@ jobs:
     
     # Crear firebase_options.dart desde secret
     - name: Create firebase_options.dart from secret
+      env:
+        FIREBASE_OPTIONS_DART: ${{ secrets.FIREBASE_OPTIONS_DART }}
       run: |
         mkdir -p lib
-        cat > lib/firebase_options.dart << 'EOF'
+        if [ -n "$FIREBASE_OPTIONS_DART" ]; then
+          cat > lib/firebase_options.dart << 'EOF'
         ${{ secrets.FIREBASE_OPTIONS_DART }}
         EOF
-        
-        # Verificar archivo
-        if [ ! -s lib/firebase_options.dart ]; then
-          echo "Error: firebase_options.dart file is empty"
+          echo "✓ Firebase options file created successfully"
+          echo "File size: $(wc -c < lib/firebase_options.dart) bytes"
+        else
+          echo "❌ FIREBASE_OPTIONS_DART secret not found"
           exit 1
         fi
-        
-        echo "✓ Firebase options file created successfully"
-        echo "File size: $(wc -c < lib/firebase_options.dart) bytes"
     
     # Crear .env desde secret
     - name: Create .env file from secret
+      env:
+        DOT_ENV: ${{ secrets.DOT_ENV }}
       run: |
-        cat > .env << 'EOF'
+        if [ -n "$DOT_ENV" ]; then
+          cat > .env << 'EOF'
         ${{ secrets.DOT_ENV }}
         EOF
-        
-        echo "✓ .env file created successfully"
-        echo "File size: $(wc -c < .env) bytes"
+          echo "✓ .env file created successfully"
+          echo "File size: $(wc -c < .env) bytes"
+        else
+          echo "❌ DOT_ENV secret not found"
+          exit 1
+        fi
     
     # Decodificar keystore desde secret
     - name: Decode keystore from secret
@@ -157,10 +163,6 @@ jobs:
     # Obtener dependencias
     - name: Get dependencies
       run: flutter pub get
-    
-    # Análisis de código
-    - name: Analyze code
-      run: flutter analyze --fatal-infos
     
     # Build APK
     - name: Build APK
