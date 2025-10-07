@@ -6,16 +6,23 @@ import '../models/chat_conversation.dart';
 import '../models/chat_message.dart';
 import 'supabase_service.dart';
 import 'openrouter_service.dart';
+import 'chat_state_manager.dart';
 
 class ChatHistoryService {
   static const String _localChatsKey = 'local_chats';
   static const String _cloudSyncEnabledKey = 'cloud_sync_enabled';
   static const String _lastSyncKey = 'last_sync_timestamp';
-  
+
   // Singleton
   static final ChatHistoryService _instance = ChatHistoryService._internal();
   factory ChatHistoryService() => _instance;
   ChatHistoryService._internal();
+
+  // Reference to state manager for notifications
+  static ChatStateManager? _stateManager;
+  static void setStateManager(ChatStateManager manager) {
+    _stateManager = manager;
+  }
 
   SharedPreferences? _prefs;
   final OpenRouterService _openRouterService = OpenRouterService();
@@ -328,55 +335,55 @@ class ChatHistoryService {
       updatedAt: DateTime.now(),
     );
 
-    // Generar título de forma asíncrona en background
-    _generateTitleAsync(conversation.id, firstMessage);
+    // Guardar la conversación localmente
+    await saveLocalConversation(conversation);
 
     return conversation;
   }
 
-  // Generar título de forma asíncrona sin bloquear la UI
-  void _generateTitleAsync(String conversationId, String firstMessage) {
-    Future.microtask(() async {
-      try {
-        debugPrint('[DEBUG] ChatHistoryService._generateTitleAsync: Starting title generation for conversation $conversationId');
-        final generatedTitle = await _openRouterService.generateConversationTitle(firstMessage);
-
-        // Actualizar el título de la conversación
-        await updateConversationTitle(conversationId, generatedTitle);
-        debugPrint('[DEBUG] ChatHistoryService._generateTitleAsync: Title updated successfully for conversation $conversationId: $generatedTitle');
-      } catch (e) {
-        debugPrint('[DEBUG] ChatHistoryService._generateTitleAsync: Failed to generate title for conversation $conversationId: $e');
-        // Mantener el título temporal o usar fallback
-        try {
-          final fallbackTitle = ChatConversation.generateTitle(firstMessage);
-          await updateConversationTitle(conversationId, fallbackTitle);
-          debugPrint('[DEBUG] ChatHistoryService._generateTitleAsync: Applied fallback title for conversation $conversationId: $fallbackTitle');
-        } catch (fallbackError) {
-          debugPrint('[DEBUG] ChatHistoryService._generateTitleAsync: Failed to apply fallback title: $fallbackError');
-        }
-      }
-    });
+  // Generar título de forma síncrona
+  Future<String> generateConversationTitle(String firstMessage) async {
+    try {
+      debugPrint('[DEBUG] ChatHistoryService.generateConversationTitle: Starting title generation');
+      final generatedTitle = await _openRouterService.generateConversationTitle(firstMessage);
+      debugPrint('[DEBUG] ChatHistoryService.generateConversationTitle: Generated title: $generatedTitle');
+      return generatedTitle;
+    } catch (e) {
+      debugPrint('[DEBUG] ChatHistoryService.generateConversationTitle: Failed to generate title: $e');
+      // Usar fallback
+      final fallbackTitle = ChatConversation.generateTitle(firstMessage);
+      debugPrint('[DEBUG] ChatHistoryService.generateConversationTitle: Using fallback title: $fallbackTitle');
+      return fallbackTitle;
+    }
   }
 
   // Actualizar el título de una conversación existente
   Future<void> updateConversationTitle(String conversationId, String newTitle) async {
     try {
-      final conversations = await getAllConversations();
-      final conversationIndex = conversations.indexWhere((c) => c.id == conversationId);
-
-      if (conversationIndex == -1) {
-        debugPrint('[DEBUG] ChatHistoryService.updateConversationTitle: Conversation $conversationId not found');
+      debugPrint('[DEBUG] ChatHistoryService.updateConversationTitle: Updating title for conversation $conversationId to: $newTitle');
+      
+      // Primero intentar obtener de conversaciones locales
+      final localConversations = await getLocalConversations(forceRefresh: true);
+      final localIndex = localConversations.indexWhere((c) => c.id == conversationId);
+      
+      if (localIndex == -1) {
+        debugPrint('[DEBUG] ChatHistoryService.updateConversationTitle: Conversation $conversationId not found in local storage');
         return;
       }
 
-      final conversation = conversations[conversationIndex];
+      final conversation = localConversations[localIndex];
       final updatedConversation = conversation.copyWith(
         title: newTitle,
         updatedAt: DateTime.now(),
       );
 
+      debugPrint('[DEBUG] ChatHistoryService.updateConversationTitle: Saving updated conversation with title: ${updatedConversation.title}');
       await saveConversation(updatedConversation);
-      debugPrint('[DEBUG] ChatHistoryService.updateConversationTitle: Title updated for conversation $conversationId');
+
+      // Notificar al state manager si está disponible
+      _stateManager?.notifyConversationChanged(updatedConversation);
+
+      debugPrint('[DEBUG] ChatHistoryService.updateConversationTitle: Title updated successfully for conversation $conversationId');
     } catch (e) {
       debugPrint('[DEBUG] ChatHistoryService.updateConversationTitle: Error updating title: $e');
       rethrow;

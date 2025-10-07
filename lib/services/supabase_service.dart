@@ -612,31 +612,27 @@ class SupabaseService {
 
   // ==== BYOK API KEYS METHODS ====
 
-  /// Get user's API key for a specific provider (decrypted)
+  /// Get user's API key for a specific provider
   static Future<String?> getUserApiKey(String provider) async {
     final user = currentUser;
     if (user == null) return null;
 
     try {
       final result = await client
-          .rpc('decrypt_api_key', params: {
-            'encrypted_key': await client
-                .from('user_api_keys')
-                .select('api_key')
-                .eq('user_id', user.id)
-                .eq('provider', provider)
-                .single()
-                .then((data) => data['api_key'])
-          });
+          .from('user_api_keys')
+          .select('api_key')
+          .eq('user_id', user.id)
+          .eq('provider', provider)
+          .single();
 
-      return result as String?;
+      return result['api_key'] as String?;
     } catch (e) {
-      // Key not found or decryption failed
+      // Key not found
       return null;
     }
   }
 
-  /// Set user's API key for a specific provider (encrypted)
+  /// Set user's API key for a specific provider
   static Future<void> setUserApiKey(String provider, String apiKey) async {
     final user = currentUser;
     if (user == null) throw Exception('User not authenticated');
@@ -647,7 +643,7 @@ class SupabaseService {
           .upsert({
             'user_id': user.id,
             'provider': provider,
-            'api_key': await client.rpc('encrypt_api_key', params: {'plain_key': apiKey}),
+            'api_key': apiKey,
           });
     } catch (e) {
       throw Exception('Error saving API key: $e');

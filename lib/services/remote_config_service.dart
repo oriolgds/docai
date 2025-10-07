@@ -6,6 +6,7 @@ class RemoteConfigService {
   static FirebaseRemoteConfig? _remoteConfig;
   static DateTime? _lastFetch;
   static const Duration _cacheDuration = Duration(minutes: 5);
+  static Future<List<ModelProfile>>? _cachedModelsFuture;
   
   static Future<void> initialize() async {
     try {
@@ -51,30 +52,30 @@ class RemoteConfigService {
   }
   
   static Future<List<ModelProfile>> getAvailableModels() async {
+    if (_cachedModelsFuture != null) return _cachedModelsFuture!;
+    _cachedModelsFuture = _doGetAvailableModels();
+    return _cachedModelsFuture!;
+  }
+
+  static Future<List<ModelProfile>> _doGetAvailableModels() async {
     await _fetchAndActivate();
 
     if (_remoteConfig == null) {
-      print('[DEBUG] RemoteConfigService: _remoteConfig is null');
       return [];
     }
 
     try {
       final modelsJson = _remoteConfig!.getString('available_models');
-      print('[DEBUG] RemoteConfigService: modelsJson = $modelsJson');
       if (modelsJson.isEmpty) {
-        print('[DEBUG] RemoteConfigService: modelsJson is empty');
         return [];
       }
 
       final List<dynamic> modelsList = jsonDecode(modelsJson);
-      print('[DEBUG] RemoteConfigService: modelsList length = ${modelsList.length}');
       final models = modelsList.map((json) => _parseModelFromJson(json)).toList();
       // Filter out disabled models and non-free models
       final enabledModels = models.where((model) => !model.disabled && model.modelId.endsWith(':free')).toList();
-      print('[DEBUG] RemoteConfigService: parsed models count = ${models.length}, enabled models count = ${enabledModels.length}');
       return enabledModels.isEmpty ? [] : enabledModels;
     } catch (e) {
-      print('[DEBUG] RemoteConfigService: Error getting available models: $e');
       return [];
     }
   }
@@ -98,30 +99,24 @@ class RemoteConfigService {
     await _fetchAndActivate();
 
     if (_remoteConfig == null) {
-      print('[DEBUG] RemoteConfigService: _remoteConfig is null, using defaults');
       return ['openai/gpt-3.5-turbo', 'openai/gpt-4o-mini', 'x-ai/grok-2-1212'];
     }
 
     try {
       final modelsStr = _remoteConfig!.getString('title_generation_models');
-      print('[DEBUG] RemoteConfigService: title_generation_models = $modelsStr');
 
       // Check if title generation is disabled
       if (modelsStr.trim().toLowerCase() == 'disabled') {
-        print('[DEBUG] RemoteConfigService: title generation is disabled');
         return []; // Return empty list to disable AI title generation
       }
 
       if (modelsStr.isEmpty) {
-        print('[DEBUG] RemoteConfigService: title_generation_models is empty, using defaults');
         return ['openai/gpt-3.5-turbo', 'openai/gpt-4o-mini', 'x-ai/grok-2-1212'];
       }
 
       final models = modelsStr.split(',').map((m) => m.trim()).where((m) => m.isNotEmpty).toList();
-      print('[DEBUG] RemoteConfigService: parsed title generation models = $models');
       return models.isEmpty ? ['openai/gpt-3.5-turbo', 'openai/gpt-4o-mini', 'x-ai/grok-2-1212'] : models;
     } catch (e) {
-      print('[DEBUG] RemoteConfigService: Error getting title generation models: $e');
       return ['openai/gpt-3.5-turbo', 'openai/gpt-4o-mini', 'x-ai/grok-2-1212'];
     }
   }
