@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 import '../models/chat_conversation.dart';
 import '../models/chat_message.dart';
 
@@ -618,6 +619,10 @@ class SupabaseService {
     if (user == null) return null;
 
     try {
+      if (kDebugMode) {
+        print('[DEBUG] SupabaseService.getUserApiKey: Getting API key for provider: $provider');
+      }
+      
       // First, get the encrypted API key from the database
       final result = await client
           .from('user_api_keys')
@@ -628,21 +633,68 @@ class SupabaseService {
 
       // If no API key found, return null
       if (result == null || result['api_key'] == null) {
+        if (kDebugMode) {
+          print('[DEBUG] SupabaseService.getUserApiKey: No API key found for provider: $provider');
+        }
         return null;
       }
 
       final encryptedKey = result['api_key'] as String;
+      if (kDebugMode) {
+        print('[DEBUG] SupabaseService.getUserApiKey: Found encrypted key (length: ${encryptedKey.length})');
+      }
 
-      // Now decrypt the API key using the RPC function
-      final decryptedKey = await client
-          .rpc('decrypt_api_key', params: {
-            'encrypted_key': encryptedKey
-          });
+      // Now decrypt the API key using the RPC function with better error handling
+      try {
+        final decryptedKey = await client
+            .rpc('decrypt_api_key', params: {
+              'encrypted_key': encryptedKey
+            });
 
-      return decryptedKey as String?;
+        if (decryptedKey == null) {
+          if (kDebugMode) {
+            print('[ERROR] SupabaseService.getUserApiKey: Decryption returned null');
+          }
+          throw Exception('Decryption failed: returned null');
+        }
+
+        final apiKey = decryptedKey as String;
+        if (apiKey.trim().isEmpty) {
+          if (kDebugMode) {
+            print('[ERROR] SupabaseService.getUserApiKey: Decrypted key is empty');
+          }
+          throw Exception('Decryption failed: empty result');
+        }
+
+        if (kDebugMode) {
+          print('[DEBUG] SupabaseService.getUserApiKey: Successfully decrypted API key (length: ${apiKey.length})');
+        }
+
+        return apiKey;
+      } catch (rpcError) {
+        if (kDebugMode) {
+          print('[ERROR] SupabaseService.getUserApiKey: RPC decryption failed: $rpcError');
+        }
+        
+        // Try to get more details about the RPC error
+        if (rpcError.toString().contains('function decrypt_api_key(text) does not exist')) {
+          throw Exception('Database encryption functions not properly configured. Please contact support.');
+        }
+        
+        throw Exception('Failed to decrypt API key: $rpcError');
+      }
+
     } catch (e) {
       // Key not found or decryption failed
-      print('Error getting API key for provider $provider: $e');
+      if (kDebugMode) {
+        print('[ERROR] SupabaseService.getUserApiKey: Error getting API key for provider $provider: $e');
+      }
+      
+      // Don't expose internal errors to UI
+      if (e.toString().contains('Database encryption') || e.toString().contains('contact support')) {
+        rethrow;
+      }
+      
       return null;
     }
   }
@@ -653,8 +705,25 @@ class SupabaseService {
     if (user == null) throw Exception('User not authenticated');
 
     try {
+      if (kDebugMode) {
+        print('[DEBUG] SupabaseService.setUserApiKey: Encrypting API key for provider: $provider (length: ${apiKey.length})');
+      }
+      
+      // Validate API key before encryption
+      if (apiKey.trim().isEmpty) {
+        throw Exception('API key cannot be empty');
+      }
+
       // First encrypt the API key
-      final encryptedKey = await client.rpc('encrypt_api_key', params: {'plain_key': apiKey});
+      final encryptedKey = await client.rpc('encrypt_api_key', params: {'plain_key': apiKey.trim()});
+      
+      if (encryptedKey == null) {
+        throw Exception('Encryption failed: returned null');
+      }
+      
+      if (kDebugMode) {
+        print('[DEBUG] SupabaseService.setUserApiKey: Successfully encrypted API key (encrypted length: ${encryptedKey.toString().length})');
+      }
 
       // Then store it in the database
       await client
@@ -665,7 +734,21 @@ class SupabaseService {
             'api_key': encryptedKey,
             'updated_at': DateTime.now().toIso8601String(),
           });
+          
+      if (kDebugMode) {
+        print('[DEBUG] SupabaseService.setUserApiKey: Successfully stored encrypted API key');
+      }
+      
     } catch (e) {
+      if (kDebugMode) {
+        print('[ERROR] SupabaseService.setUserApiKey: Error saving API key: $e');
+      }
+      
+      // Provide more specific error messages
+      if (e.toString().contains('encrypt_api_key')) {
+        throw Exception('Failed to encrypt API key. Database encryption may not be configured properly.');
+      }
+      
       throw Exception('Error saving API key: $e');
     }
   }
@@ -701,7 +784,9 @@ class SupabaseService {
 
       return result != null;
     } catch (e) {
-      print('Error checking API key for provider $provider: $e');
+      if (kDebugMode) {
+        print('Error checking API key for provider $provider: $e');
+      }
       return false;
     }
   }
@@ -719,8 +804,79 @@ class SupabaseService {
 
       return List<Map<String, dynamic>>.from(result);
     } catch (e) {
-      print('Error getting user API keys: $e');
+      if (kDebugMode) {
+        print('Error getting user API keys: $e');
+      }
       return [];
+    }
+  }
+
+  /// Test encryption/decryption functionality
+  static Future<Map<String, dynamic>> testApiKeyEncryption() async {
+    try {
+      if (kDebugMode) {
+        print('[DEBUG] SupabaseService.testApiKeyEncryption: Testing encryption functionality');
+      }
+      
+      final result = await client.rpc('test_api_key_encryption');
+      
+      if (result is Map<String, dynamic>) {
+        if (kDebugMode) {
+          print('[DEBUG] SupabaseService.testApiKeyEncryption: Test result: $result');
+        }
+        return result;
+      }
+      
+      return {'success': false, 'error': 'Unexpected response format'};
+    } catch (e) {
+      if (kDebugMode) {
+        print('[ERROR] SupabaseService.testApiKeyEncryption: $e');
+      }
+      
+      return {
+        'success': false,
+        'error': e.toString(),
+        'step': 'rpc_call'
+      };
+    }
+  }
+
+  /// Validate that an API key can be properly encrypted and decrypted
+  static Future<bool> validateApiKeyEncryption(String testKey) async {
+    try {
+      if (kDebugMode) {
+        print('[DEBUG] SupabaseService.validateApiKeyEncryption: Testing with key length: ${testKey.length}');
+      }
+      
+      // Test encryption
+      final encrypted = await client.rpc('encrypt_api_key', params: {'plain_key': testKey});
+      if (encrypted == null) {
+        if (kDebugMode) {
+          print('[ERROR] SupabaseService.validateApiKeyEncryption: Encryption returned null');
+        }
+        return false;
+      }
+      
+      // Test decryption
+      final decrypted = await client.rpc('decrypt_api_key', params: {'encrypted_key': encrypted});
+      if (decrypted == null) {
+        if (kDebugMode) {
+          print('[ERROR] SupabaseService.validateApiKeyEncryption: Decryption returned null');
+        }
+        return false;
+      }
+      
+      final isValid = decrypted.toString().trim() == testKey.trim();
+      if (kDebugMode) {
+        print('[DEBUG] SupabaseService.validateApiKeyEncryption: Validation result: $isValid');
+      }
+      
+      return isValid;
+    } catch (e) {
+      if (kDebugMode) {
+        print('[ERROR] SupabaseService.validateApiKeyEncryption: $e');
+      }
+      return false;
     }
   }
 }
