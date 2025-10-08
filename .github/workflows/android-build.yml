@@ -26,6 +26,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  FLUTTER_VERSION: '3.35.4'
+  GRADLE_OPTS: '-Dorg.gradle.daemon=true -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true -Dorg.gradle.caching=true'
+  GRADLE_USER_HOME: ${{ github.workspace }}/.gradle
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
@@ -43,37 +48,90 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
     
-    # Cache para Flutter SDK
+    # Cache para Flutter SDK - Más específico y persistente
     - name: Cache Flutter SDK
+      id: flutter-cache
       uses: actions/cache@v4
       with:
         path: |
           ${{ runner.tool_cache }}/flutter
-        key: flutter-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}-3.35.4
+          ~/.flutter
+        key: flutter-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.yaml', 'pubspec.lock') }}
         restore-keys: |
-          flutter-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}-
+          flutter-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-
           flutter-${{ runner.os }}-
     
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.35.4'
+        flutter-version: ${{ env.FLUTTER_VERSION }}
         channel: 'stable'
         cache: true
     
-    # Cache para dependencias
-    - name: Cache pub dependencies
+    # Cache para dependencias de Dart/Flutter - Mejorado
+    - name: Cache Dart/Flutter dependencies
       uses: actions/cache@v4
       with:
         path: |
           ~/.pub-cache
+          ${{ github.workspace }}/.dart_tool
           ${{ github.workspace }}/.packages
           ${{ github.workspace }}/.flutter-plugins
           ${{ github.workspace }}/.flutter-plugin-dependencies
-          ${{ github.workspace }}/.dart_tool/package_config.json
-        key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+        key: dart-deps-${{ runner.os }}-${{ hashFiles('**/pubspec.lock', '**/pubspec.yaml') }}
         restore-keys: |
-          pub-${{ runner.os }}-
+          dart-deps-${{ runner.os }}-
+    
+    # Cache para Android SDK y herramientas
+    - name: Cache Android SDK
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ env.ANDROID_SDK_ROOT }}
+          ${{ env.ANDROID_HOME }}
+          ~/.android
+        key: android-sdk-${{ runner.os }}-${{ hashFiles('android/app/build.gradle', 'android/build.gradle', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+        restore-keys: |
+          android-sdk-${{ runner.os }}-
+    
+    # Cache para Gradle wrapper y distribución
+    - name: Cache Gradle Wrapper
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/wrapper
+          android/gradle/wrapper
+        key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties') }}
+        restore-keys: |
+          gradle-wrapper-${{ runner.os }}-
+    
+    # Cache para Gradle build cache y dependencias
+    - name: Cache Gradle Build
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/native
+          android/.gradle
+          android/build
+          android/app/build
+        key: gradle-build-${{ runner.os }}-${{ matrix.build-type }}-${{ hashFiles('android/**/*.gradle*', 'android/**/gradle-wrapper.properties', 'pubspec.lock') }}
+        restore-keys: |
+          gradle-build-${{ runner.os }}-${{ matrix.build-type }}-
+          gradle-build-${{ runner.os }}-
+    
+    # Cache para archivos compilados de Kotlin/Java
+    - name: Cache Kotlin Compilation
+      uses: actions/cache@v4
+      with:
+        path: |
+          android/app/build/tmp/kotlin-classes
+          android/app/build/intermediates
+          ~/.konan
+        key: kotlin-${{ runner.os }}-${{ matrix.build-type }}-${{ hashFiles('android/**/*.kt', 'android/**/*.java', 'android/**/*.gradle*') }}
+        restore-keys: |
+          kotlin-${{ runner.os }}-${{ matrix.build-type }}-
+          kotlin-${{ runner.os }}-
     
     # Crear firebase_options.dart desde secret
     - name: Create firebase_options.dart from secret
@@ -160,30 +218,122 @@ jobs:
           exit 1
         fi
     
-    # Obtener dependencias
+    # Obtener dependencias con cache warming
     - name: Get dependencies
-      run: flutter pub get
+      run: |
+        echo "📦 Installing Flutter dependencies..."
+        flutter pub get
+        
+        # Pre-compile para warming del cache
+        echo "🔥 Warming up build cache..."
+        flutter pub deps
+        flutter analyze --no-fatal-infos || true
     
-    # Build APK
+    # Configurar Gradle para builds optimizadas
+    - name: Configure Gradle properties
+      run: |
+        mkdir -p ~/.gradle android/.gradle
+        
+        # Global gradle.properties
+        cat > ~/.gradle/gradle.properties << 'EOF'
+        org.gradle.daemon=true
+        org.gradle.parallel=true
+        org.gradle.configureondemand=true
+        org.gradle.caching=true
+        org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError
+        android.useAndroidX=true
+        android.enableJetifier=true
+        android.enableR8.fullMode=true
+        android.experimental.enableSourceSetPathsMap=true
+        kotlin.compiler.execution.strategy=in-process
+        EOF
+        
+        # Local gradle.properties para el proyecto
+        cat > android/gradle.properties << 'EOF'
+        org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g
+        android.useAndroidX=true
+        android.enableJetifier=true
+        android.enableR8.fullMode=true
+        kotlin.code.style=official
+        EOF
+        
+        echo "✓ Gradle configuration optimized"
+    
+    # Build APK con cache optimizado
     - name: Build APK
       if: matrix.build-type == 'apk'
       run: |
+        echo "🔨 Building APK with optimizations..."
+        
+        # Habilitar cache de Gradle
+        export GRADLE_OPTS="$GRADLE_OPTS -Dorg.gradle.build-cache=true"
+        
         flutter build apk --release \
           --dart-define=FLUTTER_WEB_AUTO_DETECT=true \
-          --split-per-abi
+          --split-per-abi \
+          --tree-shake-icons \
+          --shrink
         
         echo "✓ APK build completed"
         ls -la build/app/outputs/flutter-apk/
+        
+        # Mostrar tamaños de archivos
+        echo "📊 APK sizes:"
+        for apk in build/app/outputs/flutter-apk/*.apk; do
+          if [ -f "$apk" ]; then
+            size=$(du -h "$apk" | cut -f1)
+            echo "  $(basename "$apk"): $size"
+          fi
+        done
     
-    # Build AAB (App Bundle)
+    # Build AAB (App Bundle) con cache optimizado
     - name: Build AAB
       if: matrix.build-type == 'aab'
       run: |
+        echo "🔨 Building AAB with optimizations..."
+        
+        # Habilitar cache de Gradle
+        export GRADLE_OPTS="$GRADLE_OPTS -Dorg.gradle.build-cache=true"
+        
         flutter build appbundle --release \
-          --dart-define=FLUTTER_WEB_AUTO_DETECT=true
+          --dart-define=FLUTTER_WEB_AUTO_DETECT=true \
+          --tree-shake-icons \
+          --shrink
         
         echo "✓ AAB build completed"
         ls -la build/app/outputs/bundle/release/
+        
+        # Mostrar tamaño del archivo
+        if [ -f "build/app/outputs/bundle/release/app-release.aab" ]; then
+          size=$(du -h build/app/outputs/bundle/release/app-release.aab | cut -f1)
+          echo "📊 AAB size: $size"
+        fi
+    
+    # Cache de outputs para futuras builds
+    - name: Cache build outputs
+      if: success()
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          build/app/outputs
+          android/app/build/outputs
+          .dart_tool/build
+        key: build-outputs-${{ runner.os }}-${{ matrix.build-type }}-${{ github.sha }}
+    
+    # Reportar estadísticas de cache
+    - name: Cache Statistics
+      run: |
+        echo "## 📊 Cache Statistics" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Cache | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Flutter SDK | ${{ steps.flutter-cache.outputs.cache-hit && '✅ HIT' || '❌ MISS' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Dart Dependencies | Cache configured |" >> $GITHUB_STEP_SUMMARY
+        echo "| Android SDK | Cache configured |" >> $GITHUB_STEP_SUMMARY
+        echo "| Gradle Wrapper | Cache configured |" >> $GITHUB_STEP_SUMMARY
+        echo "| Gradle Build | Cache configured |" >> $GITHUB_STEP_SUMMARY
+        echo "| Kotlin Compilation | Cache configured |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
     
     # Subir artifacts APK
     - name: Upload APK artifacts
@@ -196,6 +346,7 @@ jobs:
           build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
           build/app/outputs/flutter-apk/app-x86_64-release.apk
         retention-days: 30
+        compression-level: 1  # Menor compresión para subida más rápida
     
     # Subir artifacts AAB
     - name: Upload AAB artifacts
@@ -205,6 +356,7 @@ jobs:
         name: docai-aab-${{ github.run_number }}
         path: build/app/outputs/bundle/release/app-release.aab
         retention-days: 30
+        compression-level: 1  # Menor compresión para subida más rápida
     
     # Limpiar archivos sensibles
     - name: Cleanup sensitive files
@@ -216,7 +368,7 @@ jobs:
         rm -f .env
         echo "✓ Sensitive files cleaned up"
 
-  # Job de resumen
+  # Job de resumen con métricas de performance
   build-summary:
     runs-on: ubuntu-latest
     needs: build-android
@@ -235,5 +387,16 @@ jobs:
         echo "📱 **Artifacts generados:**" >> $GITHUB_STEP_SUMMARY
         echo "- APK files (arm64-v8a, armeabi-v7a, x86_64)" >> $GITHUB_STEP_SUMMARY
         echo "- AAB file para Google Play Store" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "🚀 **Optimizaciones aplicadas:**" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Flutter SDK caching" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Dart dependencies caching" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Android SDK caching" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Gradle build caching" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Kotlin compilation caching" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Build outputs caching" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Gradle daemon & parallel builds" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ R8 full mode optimization" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Tree shaking & shrinking" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "🔗 **Download:** Ve a la pestaña Actions > Artifacts" >> $GITHUB_STEP_SUMMARY
