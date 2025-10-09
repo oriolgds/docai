@@ -4,12 +4,13 @@ import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/chat_input.dart';
 import '../../l10n/generated/app_localizations.dart';
 
-import '../../services/openrouter_service.dart';
+import '../../services/model_service.dart';
 import '../../services/chat_state_manager.dart';
 import '../../services/chat_history_service.dart';
 import '../../services/model_service.dart';
 import '../../models/model_profile.dart';
 import '../../exceptions/model_exceptions.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/chat_message.dart';
 import '../../models/chat_conversation.dart';
 import '../../models/user_medical_preferences.dart';
@@ -44,7 +45,6 @@ class _ChatScreenState extends State<ChatScreen> {
   late List<ChatMessage> _messages;
   ModelProfile _selectedProfile = ModelProfile.defaultProfile;
   bool _isSending = false;
-  late OpenRouterService _service;
   bool _showDisclaimer = true;
   int? _streamingIndex;
   Timer? _scrollTimer;
@@ -70,7 +70,6 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _service = OpenRouterService();
     _initializeDefaultModel();
     
     // Configurar listener del scroll controller
@@ -332,7 +331,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _currentStreamSubscription?.cancel();
     _scrollController.removeListener(_onScrollChanged);
     _scrollController.dispose();
-    _service.dispose();
+    ModelService.dispose();
     _stateManager.removeListener(_onStateManagerChanged);
     super.dispose();
   }
@@ -527,9 +526,9 @@ class _ChatScreenState extends State<ChatScreen> {
     // Cancel the current stream
     await _currentStreamSubscription?.cancel();
     _currentStreamSubscription = null;
-    
+
     // Cancel stream in service
-    await _service.cancelCurrentStream();
+    await ModelService.cancelCurrentStream(_selectedProfile);
     
     // Update UI state
     if (mounted) {
@@ -733,17 +732,132 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  // Modal para configurar permisos de política de datos en OpenRouter
+  Future<void> _showDataPolicyModal(String message, String configUrl) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false, // No permitir cerrar tocando fuera
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF9800).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.settings,
+                color: Color(0xFFFF9800),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Configuración requerida',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message,
+              style: const TextStyle(fontSize: 14, color: Color(0xFF6C757D)),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Para usar este modelo, necesitas conceder permisos específicos en la página de configuración de privacidad de OpenRouter.',
+              style: TextStyle(fontSize: 14, color: Color(0xFF6C757D)),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2196F3).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFF2196F3).withOpacity(0.5),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.link,
+                    color: Color(0xFF2196F3),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Se abrirá la página de configuración en tu navegador.',
+                      style: TextStyle(
+                        color: Color(0xFF6C757D),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              Navigator.pop(context); // Cerrar modal
+              if (await canLaunchUrl(Uri.parse(configUrl))) {
+                await launchUrl(Uri.parse(configUrl), mode: LaunchMode.externalApplication);
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('No se pudo abrir el navegador. Copia este enlace: https://openrouter.ai/settings/privacy'),
+                    ),
+                  );
+                }
+              }
+            },
+            icon: const Icon(Icons.open_in_browser, size: 16),
+            label: const Text('Abrir configuración'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2196F3),
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _sendMessage(
     String text, {
     int? regenerateIndex,
     ModelProfile? overrideProfile,
     bool? overrideReasoning,
   }) async {
-    // Verificar si el usuario tiene BYOK configurado
-    final hasApiKey = await SupabaseService.hasUserApiKey('openrouter');
-    if (!hasApiKey) {
-      await _showApiKeySetupModal();
-      return; // No continuar con el envío del mensaje
+    final profile = overrideProfile ?? _selectedProfile;
+
+    // Verificar si el modelo requiere BYOK
+    if (profile.provider == ModelProvider.byok || profile.provider == ModelProvider.openrouter) {
+      final hasApiKey = await SupabaseService.hasUserApiKey('openrouter');
+      if (!hasApiKey) {
+        await _showApiKeySetupModal();
+        return; // No continuar con el envío del mensaje
+      }
     }
 
     final userMessage = ChatMessage.user(text);
@@ -789,7 +903,7 @@ class _ChatScreenState extends State<ChatScreen> {
       await Future.delayed(Duration.zero);
       await _scrollToBottom(force: true);
 
-      final stream = _service.streamChatCompletion(
+      final stream = ModelService.streamChatCompletion(
         messages: history,
         profile: overrideProfile ?? _selectedProfile,
         systemPromptOverride: _buildPersonalizedSystemPrompt(),
@@ -861,8 +975,13 @@ class _ChatScreenState extends State<ChatScreen> {
           _currentStreamSubscription = null;
 
           if (mounted) {
+            // Check if it's a data policy configuration error
+            if (e is DataPolicyConfigurationException) {
+              _showDataPolicyModal(e.message, e.configUrl);
+            }
             // Check if it's a BYOK error
-            if (e.toString().contains('No API key configured')) {
+            else if (e.toString().contains('No API key configured') &&
+                (profile.provider == ModelProvider.byok || profile.provider == ModelProvider.openrouter)) {
               // Show BYOK setup modal
               _showApiKeySetupModal();
             } else {
@@ -903,8 +1022,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
     } catch (e) {
       if (mounted) {
+        // Check if it's a data policy configuration error
+        if (e is DataPolicyConfigurationException) {
+          _showDataPolicyModal(e.message, e.configUrl);
+        }
         // Check if it's a BYOK error
-        if (e.toString().contains('No API key configured')) {
+        else if (e.toString().contains('No API key configured') &&
+            (profile.provider == ModelProvider.byok || profile.provider == ModelProvider.openrouter)) {
           // Show BYOK setup modal
           await _showApiKeySetupModal();
         } else {

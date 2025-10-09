@@ -20,15 +20,16 @@ class RemoteConfigService {
       await _remoteConfig!.setDefaults({
         'available_models': jsonEncode([
           {
-            'id': 'doky',
+            'id': 'doky-hf',
             'brand': 'doky',
-            'displayName': 'Doky 1.0',
-            'modelId': 'deepseek/deepseek-chat-v3.1:free',
-            'description': 'Asistente médico inteligente con razonamiento opcional.',
+            'displayName': 'Doky MedGemma',
+            'modelId': 'https://warshanks-medgemma-27b-it.hf.space/gradio_api/call/chat',
+            'description': 'Asistente médico inteligente con razonamiento opcional usando Hugging Face.',
             'reasoning': false,
             'color1': '#3F51B5',
             'color2': '#2196F3',
-            'disabled': false
+            'disabled': false,
+            'provider': 'huggingface'
           }
         ]),
         'title_generation_models': 'deepseek/deepseek-chat-v3.1:free'
@@ -72,8 +73,8 @@ class RemoteConfigService {
 
       final List<dynamic> modelsList = jsonDecode(modelsJson);
       final models = modelsList.map((json) => _parseModelFromJson(json)).toList();
-      // Filter out disabled models and non-free models
-      final enabledModels = models.where((model) => !model.disabled && model.modelId.endsWith(':free')).toList();
+      // Filter out disabled models and non-free models (except HF models)
+      final enabledModels = models.where((model) => !model.disabled && (model.modelId.endsWith(':free') || model.provider == ModelProvider.huggingface)).toList();
       return enabledModels.isEmpty ? [] : enabledModels;
     } catch (e) {
       return [];
@@ -92,6 +93,7 @@ class RemoteConfigService {
       color1: json['color1'] ?? '#3F51B5',
       color2: json['color2'] ?? '#2196F3',
       disabled: json['disabled'] ?? false,
+      provider: _parseProvider(json['provider']),
     );
   }
   
@@ -127,6 +129,18 @@ class RemoteConfigService {
         return BrandName.doky;
       default:
         return BrandName.doky;
+    }
+  }
+
+  static ModelProvider _parseProvider(String? providerStr) {
+    switch (providerStr?.toLowerCase()) {
+      case 'byok':
+        return ModelProvider.byok;
+      case 'huggingface':
+        return ModelProvider.huggingface;
+      case 'openrouter':
+      default:
+        return ModelProvider.openrouter;
     }
   }
 }

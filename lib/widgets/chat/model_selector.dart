@@ -90,7 +90,9 @@ class _ModelSelectorState extends State<ModelSelector> {
     setState(() => _brand = b);
     final list = _byBrand[b] ?? [];
     if (list.isNotEmpty) {
-      final p = list.first;
+      // Priorizar modelos HF Doky
+      final hfDokyModels = list.where((m) => m.provider == ModelProvider.huggingface);
+      final p = hfDokyModels.isNotEmpty ? hfDokyModels.first : list.first;
       setState(() => _profile = p);
       widget.onSelected(p);
     }
@@ -141,114 +143,149 @@ class _ModelSelectorState extends State<ModelSelector> {
     }
     
     final brands = _byBrand.keys.toList();
+    final dokyModels = _byBrand[BrandName.doky]?.where((p) => p.provider != ModelProvider.byok) ?? [];
+    final byokModels = _byBrand.values.expand((models) => models.where((p) => p.provider == ModelProvider.byok)).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
+        // Modelos Doky principales
+        if (dokyModels.isNotEmpty) ...[
+          const Text(
+            'Modelos Doky',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              const SizedBox(width: 4),
-              for (final b in brands)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: ChoiceChip(
-                    selected: _brand == b,
-                    label: Text(brandDisplayName(b)),
-                    selectedColor: brandColor(b).withOpacity(0.15),
+              for (final p in dokyModels)
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: _profile.id == p.id ? LinearGradient(
+                      colors: [p.primaryColor.withOpacity(0.1), p.secondaryColor.withOpacity(0.1)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ) : null,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: FilterChip(
+                    label: Text(p.displayName),
+                    selected: _profile.id == p.id,
+                    onSelected: (_) => _selectProfile(p),
+                    selectedColor: Colors.transparent,
+                    checkmarkColor: p.primaryColor,
                     labelStyle: TextStyle(
-                      color: _brand == b ? brandColor(b) : Colors.black,
-                      fontWeight: _brand == b ? FontWeight.w700 : FontWeight.w500,
+                      color: _profile.id == p.id ? p.primaryColor : Colors.black,
+                      fontWeight: _profile.id == p.id ? FontWeight.bold : FontWeight.normal,
                     ),
-                    onSelected: (_) => _selectBrand(b),
                     shape: RoundedRectangleBorder(
-                      side: BorderSide(color: brandColor(b).withOpacity(0.35)),
+                      side: BorderSide(color: p.primaryColor.withOpacity(0.35)),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),
-              const SizedBox(width: 4),
             ],
           ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final p in (_byBrand[_brand] ?? []))
-              Container(
-                decoration: BoxDecoration(
-                  gradient: _profile.id == p.id ? LinearGradient(
-                    colors: [p.primaryColor.withOpacity(0.1), p.secondaryColor.withOpacity(0.1)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ) : null,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: FilterChip(
-                  label: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_hasByok ? p.displayName : '${p.displayName} (Requiere API Key)'),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF00B894), Color(0xFF00CEC9)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF00B894).withOpacity(0.3),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
+        ],
+
+        // Modelos BYOK en accordion
+        if (byokModels.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          ExpansionTile(
+            title: const Text(
+              'Modelos BYOK',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final p in byokModels)
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: _profile.id == p.id ? LinearGradient(
+                          colors: [p.primaryColor.withOpacity(0.1), p.secondaryColor.withOpacity(0.1)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ) : null,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: FilterChip(
+                        label: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.vpn_key,
-                              size: 12,
-                              color: Colors.white.withOpacity(0.9),
-                            ),
-                            const SizedBox(width: 4),
-                            const Text(
-                              'BYOK',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.5,
+                            Text(p.displayName),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF00B894), Color(0xFF00CEC9)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF00B894).withOpacity(0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.vpn_key,
+                                    size: 12,
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Text(
+                                    'BYOK',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
+                        selected: _profile.id == p.id,
+                        onSelected: (_) => _selectProfile(p),
+                        selectedColor: Colors.transparent,
+                        checkmarkColor: p.primaryColor,
+                        labelStyle: TextStyle(
+                          color: _profile.id == p.id ? p.primaryColor : Colors.black,
+                          fontWeight: _profile.id == p.id ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(color: p.primaryColor.withOpacity(0.35)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                    ],
-                  ),
-                  selected: _profile.id == p.id,
-                  onSelected: (_) => _selectProfile(p),
-                  selectedColor: Colors.transparent,
-                  checkmarkColor: p.primaryColor,
-                  labelStyle: TextStyle(
-                    color: _profile.id == p.id ? p.primaryColor : (_hasByok ? Colors.black : Colors.grey),
-                    fontWeight: _profile.id == p.id ? FontWeight.bold : FontWeight.normal,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    side: BorderSide(color: p.primaryColor.withOpacity(0.35)),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
+                    ),
+                ],
               ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ],
     );
   }

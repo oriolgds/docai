@@ -5,6 +5,7 @@ import '../config/openrouter_config.dart';
 import '../models/chat_message.dart';
 import '../models/model_profile.dart';
 import '../exceptions/model_exceptions.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'remote_config_service.dart';
 import 'supabase_service.dart';
 
@@ -78,6 +79,14 @@ class OpenRouterService {
         if (data is Map && data['error'] != null) {
           final errorMessage = data['error']['message']?.toString() ?? message;
           print('[DEBUG] OpenRouterService.chatCompletion: API error message: $errorMessage');
+          // Detectar errores específicos de OpenRouter
+          if (errorMessage.contains('No endpoints found matching your data policy')) {
+            print('[DEBUG] OpenRouterService.chatCompletion: Data policy configuration required');
+            throw DataPolicyConfigurationException(
+              'Este modelo requiere configuración especial en OpenRouter.',
+              'https://openrouter.ai/settings/privacy'
+            );
+          }
           // Detectar errores de modelo no disponible
           if (errorMessage.contains('No endpoints found') ||
               errorMessage.contains('not found') ||
@@ -158,6 +167,14 @@ class OpenRouterService {
         if (data is Map && data['error'] != null) {
           final errorMessage = data['error']['message']?.toString() ?? message;
           print('[DEBUG] OpenRouterService.streamChatCompletion: API error message: $errorMessage');
+          // Detectar errores específicos de OpenRouter
+          if (errorMessage.contains('No endpoints found matching your data policy')) {
+            print('[DEBUG] OpenRouterService.streamChatCompletion: Data policy configuration required');
+            throw DataPolicyConfigurationException(
+              'Este modelo requiere configuración especial en OpenRouter.',
+              'https://openrouter.ai/settings/privacy'
+            );
+          }
           // Detectar errores de modelo no disponible
           if (errorMessage.contains('No endpoints found') ||
               errorMessage.contains('not found') ||

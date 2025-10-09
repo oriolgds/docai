@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 enum BrandName { doky }
 
+enum ModelProvider { openrouter, byok, huggingface }
+
 String brandDisplayName(BrandName b) {
   switch (b) {
     case BrandName.doky:
@@ -21,12 +23,13 @@ class ModelProfile {
   final BrandName brand;
   final String tier; // Ya no se usa pero se mantiene para compatibilidad
   final String displayName; // e.g., 'Doky 1'
-  final String modelId; // OpenRouter model string
+  final String modelId; // OpenRouter model string or HF endpoint
   final String description;
   final bool reasoning;
   final String color1; // Color primario del degradado
   final String color2; // Color secundario del degradado
   final bool disabled; // Si el modelo está deshabilitado
+  final ModelProvider provider; // Provider del modelo
 
   const ModelProfile({
     required this.id,
@@ -39,6 +42,7 @@ class ModelProfile {
     this.color1 = '#3F51B5',
     this.color2 = '#2196F3',
     this.disabled = false,
+    this.provider = ModelProvider.openrouter,
   });
   
   Color get primaryColor => Color(int.parse(color1.replaceFirst('#', '0xFF')));
