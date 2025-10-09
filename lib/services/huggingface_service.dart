@@ -23,15 +23,24 @@ class HuggingFaceService {
     final payload = <String, dynamic>{
       'data': [
         {
-          'text': messages.last.content, // Último mensaje del usuario
-          'files': [] // Para archivos multimedia si es necesario
+          'text': messages.last.content,
+          'files': [{
+            'path': 'https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png',
+            'url': 'https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png',
+            'orig_name': 'bus.png',
+            'size': null,
+            'mime_type': 'image/png',
+            'is_stream': false,
+            'meta': {'_type': 'gradio.FileData'}
+          }]
         },
-        systemPromptOverride ?? 'You are a helpful medical assistant.',
-        100 // Max new tokens
+        [],
+        systemPromptOverride ?? 'You are a helpful medical expert.',
+        2048
       ]
     };
 
-    final uri = Uri.parse(profile.modelId);
+    final uri = Uri.parse('${profile.modelId}/gradio_api/call/chat');
     final resp = await _client.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -72,27 +81,35 @@ class HuggingFaceService {
       throw Exception(message);
     }
 
-    // Parse the response - HuggingFace returns the event ID
-    final eventId = resp.body.trim().replaceAll('"', '');
+    final data = jsonDecode(resp.body);
+    final eventId = data['event_id'];
     print('[DEBUG] HuggingFaceService.chatCompletion: Event ID = $eventId');
 
-    // Now poll for the result
     return _pollForResult(profile.modelId, eventId);
   }
 
   Future<String> _pollForResult(String baseUrl, String eventId) async {
-    final resultUri = Uri.parse('$baseUrl/$eventId');
+    final resultUri = Uri.parse('$baseUrl/gradio_api/call/chat/$eventId');
 
-    for (int i = 0; i < 30; i++) { // Poll for up to 30 seconds
+    for (int i = 0; i < 30; i++) {
       await Future.delayed(const Duration(seconds: 1));
 
       final resp = await _client.get(resultUri);
       if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body);
-        if (data['data'] != null && data['data'].isNotEmpty) {
-          final result = data['data'][0];
-          if (result is String && result.isNotEmpty) {
-            return result;
+        final lines = resp.body.split('\n');
+        for (final line in lines) {
+          if (line.startsWith('data: ')) {
+            final jsonStr = line.substring(6);
+            if (jsonStr.trim() != '[DONE]') {
+              try {
+                final data = jsonDecode(jsonStr);
+                if (data is List && data.isNotEmpty && data[0] is String) {
+                  return data[0];
+                }
+              } catch (e) {
+                continue;
+              }
+            }
           }
         }
       }
@@ -118,14 +135,23 @@ class HuggingFaceService {
       'data': [
         {
           'text': messages.last.content,
-          'files': []
+          'files': [{
+            'path': 'https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png',
+            'url': 'https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png',
+            'orig_name': 'bus.png',
+            'size': null,
+            'mime_type': 'image/png',
+            'is_stream': false,
+            'meta': {'_type': 'gradio.FileData'}
+          }]
         },
-        systemPromptOverride ?? 'You are a helpful medical assistant.',
-        100
+        [],
+        systemPromptOverride ?? 'You are a helpful medical expert.',
+        2048
       ]
     };
 
-    final uri = Uri.parse(profile.modelId);
+    final uri = Uri.parse('${profile.modelId}/gradio_api/call/chat');
     final resp = await _client.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -166,47 +192,50 @@ class HuggingFaceService {
       throw Exception(message);
     }
 
-    final eventId = resp.body.trim().replaceAll('"', '');
+    final data = jsonDecode(resp.body);
+    final eventId = data['event_id'];
     print('[DEBUG] HuggingFaceService.streamChatCompletion: Event ID = $eventId');
 
-    // Poll for result and yield chunks
     final controller = StreamController<String>();
     _currentController = controller;
 
-    Timer.periodic(const Duration(milliseconds: 500), (timer) async {
-      if (controller.isClosed) {
-        timer.cancel();
-        return;
-      }
+    final resultUri = Uri.parse('${profile.modelId}/gradio_api/call/chat/$eventId');
+    final request = http.Request('GET', resultUri);
+    final streamedResponse = await _client.send(request);
 
-      try {
-        final resultUri = Uri.parse('$uri/$eventId');
-        final resultResp = await _client.get(resultUri);
-
-        if (resultResp.statusCode == 200) {
-          final data = jsonDecode(resultResp.body);
-          if (data['data'] != null && data['data'].isNotEmpty) {
-            final result = data['data'][0];
-            if (result is String && result.isNotEmpty) {
-              if (!controller.isClosed) {
-                controller.add(result);
-                controller.close();
-              }
-              timer.cancel();
-              _currentController = null;
-              return;
+    _currentSubscription = streamedResponse.stream
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .listen(
+      (line) {
+        if (line.startsWith('data: ')) {
+          final jsonStr = line.substring(6);
+          if (jsonStr.trim() == '[DONE]') {
+            if (!controller.isClosed) controller.close();
+            return;
+          }
+          try {
+            final data = jsonDecode(jsonStr);
+            if (data is List && data.isNotEmpty && data[0] is String) {
+              if (!controller.isClosed) controller.add(data[0]);
             }
+          } catch (e) {
+            // Ignore parsing errors
           }
         }
-      } catch (e) {
+      },
+      onError: (error) {
         if (!controller.isClosed) {
-          controller.addError(e);
+          controller.addError(error);
           controller.close();
         }
-        timer.cancel();
+      },
+      onDone: () {
+        if (!controller.isClosed) controller.close();
+        _currentSubscription = null;
         _currentController = null;
-      }
-    });
+      },
+    );
 
     yield* controller.stream;
   }
