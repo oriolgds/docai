@@ -10,8 +10,6 @@ class ChatInput extends StatefulWidget {
   final List<ModelProfile> allProfiles;
   final ValueChanged<ModelProfile> onProfileChanged;
   final VoidCallback onRequestPro;
-  final bool useReasoning;
-  final ValueChanged<bool> onReasoningChanged;
   final VoidCallback? onScrollToBottom; // New callback for scroll to bottom
   final bool showScrollButton; // New property to control scroll button visibility
 
@@ -24,8 +22,6 @@ class ChatInput extends StatefulWidget {
     required this.allProfiles,
     required this.onProfileChanged,
     required this.onRequestPro,
-    this.useReasoning = false,
-    required this.onReasoningChanged,
     this.onScrollToBottom, // Optional scroll callback
     this.showScrollButton = false, // Default to hidden
   });
@@ -104,27 +100,13 @@ class _ChatInputState extends State<ChatInput> with SingleTickerProviderStateMix
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Model selector row with reasoning toggle
+            // Model selector row
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _ModelDisplay(
-                      selected: current,
-                      allProfiles: widget.allProfiles,
-                      onChanged: widget.onProfileChanged,
-                    ),
-                  ),
-                  if (current.reasoning || widget.useReasoning) ...[
-                    const SizedBox(width: 12),
-                    _ReasoningToggle(
-                      useReasoning: widget.useReasoning,
-                      onChanged: widget.onReasoningChanged,
-                      accentColor: current.primaryColor,
-                    ),
-                  ],
-                ],
+              child: _ModelDisplay(
+                selected: current,
+                allProfiles: widget.allProfiles,
+                onChanged: widget.onProfileChanged,
               ),
             ),
 
@@ -221,76 +203,8 @@ class _ChatInputState extends State<ChatInput> with SingleTickerProviderStateMix
   }
 }
 
-class _ReasoningToggle extends StatelessWidget {
-  final bool useReasoning;
-  final ValueChanged<bool> onChanged;
-  final Color accentColor;
 
-  const _ReasoningToggle({
-    required this.useReasoning,
-    required this.onChanged,
-    required this.accentColor,
-  });
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-        borderRadius: BorderRadius.circular(10),
-        color: useReasoning ? accentColor.withOpacity(0.1) : Colors.white,
-      ),
-      child: InkWell(
-        onTap: () => onChanged(!useReasoning),
-        borderRadius: BorderRadius.circular(10),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.psychology,
-              size: 20,
-              color: useReasoning ? accentColor : Colors.grey,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              AppLocalizations.of(context)!.reasoning,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: useReasoning ? accentColor : Colors.grey[700],
-              ),
-            ),
-            const SizedBox(width: 6),
-            Container(
-              width: 32,
-              height: 18,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(9),
-                color: useReasoning ? accentColor : Colors.grey[300],
-              ),
-              child: AnimatedAlign(
-                duration: const Duration(milliseconds: 200),
-                alignment: useReasoning
-                    ? Alignment.centerRight
-                    : Alignment.centerLeft,
-                child: Container(
-                  width: 14,
-                  height: 14,
-                  margin: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _ModelDisplay extends StatefulWidget {
   final ModelProfile selected;
@@ -452,6 +366,14 @@ class _ModelDisplayState extends State<_ModelDisplay> {
                     widget.selected.displayName,
                     style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                   ),
+                  if (widget.selected.reasoning) ...[
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.psychology,
+                      size: 16,
+                      color: widget.selected.primaryColor,
+                    ),
+                  ],
                   if (widget.selected.provider == ModelProvider.byok) ...[
                     const SizedBox(width: 6),
                     Container(

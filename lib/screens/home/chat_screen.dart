@@ -736,7 +736,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _showDataPolicyModal(String message, String configUrl) async {
     await showDialog(
       context: context,
-      barrierDismissible: false, // No permitir cerrar tocando fuera
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
@@ -748,7 +748,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(
-                Icons.settings,
+                Icons.privacy_tip_outlined,
                 color: Color(0xFFFF9800),
                 size: 24,
               ),
@@ -756,60 +756,97 @@ class _ChatScreenState extends State<ChatScreen> {
             const SizedBox(width: 12),
             const Expanded(
               child: Text(
-                'Configuración requerida',
+                'Configuración de privacidad requerida',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 17,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              message,
-              style: const TextStyle(fontSize: 14, color: Color(0xFF6C757D)),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Para usar este modelo, necesitas conceder permisos específicos en la página de configuración de privacidad de OpenRouter.',
-              style: TextStyle(fontSize: 14, color: Color(0xFF6C757D)),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2196F3).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: const Color(0xFF2196F3).withOpacity(0.5),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.link,
-                    color: Color(0xFF2196F3),
-                    size: 20,
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEB3B).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFFFF9800).withOpacity(0.3),
                   ),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Se abrirá la página de configuración en tu navegador.',
-                      style: TextStyle(
-                        color: Color(0xFF6C757D),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      color: Color(0xFFFF9800),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        message,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF6C757D),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              const Text(
+                'Pasos a seguir:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildStep('1', 'Abre la configuración de privacidad de OpenRouter', Icons.open_in_browser),
+              _buildStep('2', 'Busca la sección "Data Policy" o "Política de datos"', Icons.search),
+              _buildStep('3', 'Activa la opción "Allow free model publication" o similar', Icons.toggle_on),
+              _buildStep('4', 'Guarda los cambios y vuelve a intentar', Icons.check_circle),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2196F3).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFF2196F3).withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.lightbulb_outline,
+                      color: Color(0xFF2196F3),
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Esta configuración solo necesitas hacerla una vez.',
+                        style: TextStyle(
+                          color: Color(0xFF6C757D),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -818,7 +855,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           ElevatedButton.icon(
             onPressed: () async {
-              Navigator.pop(context); // Cerrar modal
+              Navigator.pop(context);
               if (await canLaunchUrl(Uri.parse(configUrl))) {
                 await launchUrl(Uri.parse(configUrl), mode: LaunchMode.externalApplication);
               } else {
@@ -826,6 +863,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('No se pudo abrir el navegador. Copia este enlace: https://openrouter.ai/settings/privacy'),
+                      duration: Duration(seconds: 5),
                     ),
                   );
                 }
@@ -836,6 +874,59 @@ class _ChatScreenState extends State<ChatScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2196F3),
               foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep(String number, String text, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: const Color(0xFF6C5CE7),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                number,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(icon, size: 16, color: const Color(0xFF6C5CE7)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        text,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -1471,15 +1562,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     isSending: _isSending,
                     selectedProfile: _selectedProfile,
                     allProfiles: profiles,
-                    useReasoning: _useReasoning,
                     onProfileChanged: (p) {
                       setState(() {
                         _selectedProfile = p;
-                      });
-                    },
-                    onReasoningChanged: (enabled) {
-                      setState(() {
-                        _useReasoning = enabled;
                       });
                     },
                     onRequestPro: () {},
