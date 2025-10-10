@@ -1622,5 +1622,13 @@
   "balanced": "Balanced",
   "@balanced": {
     "description": "Balanced communication style option"
+  },
+  "maintenanceMode": "Maintenance Mode",
+  "@maintenanceMode": {
+    "description": "Maintenance mode title"
+  },
+  "maintenanceModeMessage": "Chat is temporarily disabled for maintenance. Please try again later.",
+  "@maintenanceModeMessage": {
+    "description": "Maintenance mode message"
   }
 }

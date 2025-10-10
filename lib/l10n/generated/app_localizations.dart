@@ -2437,6 +2437,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Balanced'**
   String get balanced;
+
+  /// Maintenance mode title
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance Mode'**
+  String get maintenanceMode;
+
+  /// Maintenance mode message
+  ///
+  /// In en, this message translates to:
+  /// **'Chat is temporarily disabled for maintenance. Please try again later.'**
+  String get maintenanceModeMessage;
 }
 
 class _AppLocalizationsDelegate

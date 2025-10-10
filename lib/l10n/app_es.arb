@@ -390,5 +390,7 @@
   "moderate": "Moderado",
   "none": "Ninguno",
   "light": "Ligero",
-  "balanced": "Balanceado"
+  "balanced": "Balanceado",
+  "maintenanceMode": "Modo de mantenimiento",
+  "maintenanceModeMessage": "El chat está temporalmente deshabilitado por mantenimiento. Por favor, inténtalo más tarde."
 }

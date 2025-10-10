@@ -32,7 +32,8 @@ class RemoteConfigService {
             'provider': 'doky'
           }
         ]),
-        'title_generation_models': 'deepseek/deepseek-chat-v3.1:free'
+        'title_generation_models': 'deepseek/deepseek-chat-v3.1:free',
+        'maintenance': false
       });
       
       await _fetchAndActivate();
@@ -141,6 +142,16 @@ class RemoteConfigService {
       case 'openrouter':
       default:
         return ModelProvider.openrouter;
+    }
+  }
+
+  static Future<bool> isMaintenanceMode() async {
+    await _fetchAndActivate();
+    if (_remoteConfig == null) return false;
+    try {
+      return _remoteConfig!.getBool('maintenance');
+    } catch (e) {
+      return false;
     }
   }
 }

@@ -19,6 +19,7 @@ import '../../services/supabase_service.dart';
 import '../../theme/app_theme.dart';
 import '../../services/medical_data_bridge_service.dart';
 import '../../services/medical_preferences_service.dart';
+import '../../services/remote_config_service.dart';
 
 import '../medical_preferences_screen.dart';
 import 'history_screen.dart';
@@ -54,6 +55,7 @@ class _ChatScreenState extends State<ChatScreen> {
   UserMedicalPreferences? _userMedicalPreferences;
   bool _isInitialized = false; // Flag to track initialization
   StreamSubscription<String>? _currentStreamSubscription; // Track current stream
+  bool _isMaintenanceMode = false;
   
   // Variables para el historial
   ChatConversation? _currentConversation;
@@ -71,6 +73,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _initializeDefaultModel();
+    _checkMaintenanceMode();
     
     // Configurar listener del scroll controller
     _scrollController.addListener(_onScrollChanged);
@@ -112,6 +115,19 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } catch (e) {
       // Ya tiene el valor por defecto
+    }
+  }
+
+  Future<void> _checkMaintenanceMode() async {
+    try {
+      final isMaintenanceMode = await RemoteConfigService.isMaintenanceMode();
+      if (mounted) {
+        setState(() {
+          _isMaintenanceMode = isMaintenanceMode;
+        });
+      }
+    } catch (e) {
+      // Silently fail
     }
   }
   
@@ -940,6 +956,8 @@ class _ChatScreenState extends State<ChatScreen> {
     ModelProfile? overrideProfile,
     bool? overrideReasoning,
   }) async {
+    if (_isMaintenanceMode) return;
+    
     final profile = overrideProfile ?? _selectedProfile;
 
     // Verificar si el modelo requiere BYOK
@@ -1552,28 +1570,65 @@ class _ChatScreenState extends State<ChatScreen> {
                   },
                 ),
               ),
-              FutureBuilder<List<ModelProfile>>(
-                future: ModelService.getAvailableModels(),
-                builder: (context, snapshot) {
-                  final profiles = snapshot.data ?? [];
-                  return ChatInput(
-                    onSend: (text) => _sendMessage(text),
-                    onCancel: _cancelGeneration,
-                    isSending: _isSending,
-                    selectedProfile: _selectedProfile,
-                    allProfiles: profiles,
-                    onProfileChanged: (p) {
-                      setState(() {
-                        _selectedProfile = p;
-                      });
-                    },
-                    onRequestPro: () {},
-                    // Add new scroll button properties
-                    showScrollButton: _showScrollToBottomButton,
-                    onScrollToBottom: _scrollToBottomButtonPressed,
-                  );
-                },
-              ),
+              if (_isMaintenanceMode)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.construction, color: Colors.orange, size: 24),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              l10n.maintenanceMode ?? 'Modo de mantenimiento',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              l10n.maintenanceModeMessage ?? 'El chat está temporalmente deshabilitado por mantenimiento. Por favor, inténtalo más tarde.',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                FutureBuilder<List<ModelProfile>>(
+                  future: ModelService.getAvailableModels(),
+                  builder: (context, snapshot) {
+                    final profiles = snapshot.data ?? [];
+                    return ChatInput(
+                      onSend: (text) => _sendMessage(text),
+                      onCancel: _cancelGeneration,
+                      isSending: _isSending,
+                      selectedProfile: _selectedProfile,
+                      allProfiles: profiles,
+                      onProfileChanged: (p) {
+                        setState(() {
+                          _selectedProfile = p;
+                        });
+                      },
+                      onRequestPro: () {},
+                      // Add new scroll button properties
+                      showScrollButton: _showScrollToBottomButton,
+                      onScrollToBottom: _scrollToBottomButtonPressed,
+                    );
+                  },
+                ),
             ],
           ),
           // Remove the floating button since we've moved it to the ChatInput
