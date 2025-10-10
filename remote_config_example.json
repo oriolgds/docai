@@ -6,7 +6,6 @@
     "displayName": "Doky 1.0",
     "modelId": "https://warshanks-medgemma-27b-it.hf.space",
     "description": "Nuestro modelo creado y entrenado por nosotros mismos",
-    "reasoning": false,
     "color1": "#3F51B5",
     "color2": "#2196F3",
     "disabled": false,
@@ -21,20 +20,18 @@
     "color1": "#505DA0",
     "color2": "#1FB1CF",
     "type": "openrouter",
-    "disabled": false,
-    "reasoning": false
+    "disabled": false
   },
   {
     "id": "doky_reasoning",
     "brand": "byok",
     "displayName": "Deepseek R1",
     "modelId": "deepseek/deepseek-r1-0528:free",
-    "description": "Análisis médico profundo con razonamiento avanzado",
+    "description": "Análisis médico profundo con capacidades avanzadas",
     "color1": "#BC1B68",
     "color2": "#D3989B",
     "type": "openrouter",
-    "disabled": false,
-    "reasoning": true
+    "disabled": false
   },
   {
     "id": "doky_instant",
@@ -45,8 +42,7 @@
     "color1": "#348756",
     "color2": "#54B6CA",
     "type": "openrouter",
-    "disabled": false,
-    "reasoning": false
+    "disabled": false
   },
   {
     "id": "doky_research",
@@ -57,8 +53,7 @@
     "color1": "#FF0F7B",
     "color2": "#F89B29",
     "type": "openrouter",
-    "disabled": false,
-    "reasoning": false
+    "disabled": false
   },
   {
     "id": "doky_pro",
@@ -69,8 +64,7 @@
     "color1": "#F9655B",
     "color2": "#EE821A",
     "type": "openrouter",
-    "disabled": false,
-    "reasoning": false
+    "disabled": false
   },
   {
     "id": "doky_2",
@@ -81,8 +75,7 @@
     "color1": "#CAF2EF",
     "color2": "#F2BBF1",
     "type": "openrouter",
-    "disabled": false,
-    "reasoning": false
+    "disabled": false
   }
 ]
 }
