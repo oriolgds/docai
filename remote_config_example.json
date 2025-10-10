@@ -1,44 +1,83 @@
 {
   "available_models": [
-    {
-      "id": "doky_instant",
-      "brand": "doky",
-      "displayName": "Doky Instant",
-      "modelId": "google/gemini-2.0-flash-exp:free",
-      "description": "Respuestas rápidas para consultas médicas básicas",
-      "reasoning": false,
-      "color1": "#4CAF50",
-      "color2": "#8BC34A"
-    },
-    {
-      "id": "doky_balanced",
-      "brand": "doky",
-      "displayName": "Doky Balanced",
-      "modelId": "deepseek/deepseek-chat-v3.1:free",
-      "description": "Balance perfecto entre velocidad y precisión médica",
-      "reasoning": false,
-      "color1": "#2196F3",
-      "color2": "#03DAC6"
-    },
-    {
-      "id": "doky_reasoning",
-      "brand": "doky",
-      "displayName": "Doky Reasoning",
-      "modelId": "deepseek/deepseek-reasoner:free",
-      "description": "Análisis médico profundo con razonamiento avanzado",
-      "reasoning": true,
-      "color1": "#9C27B0",
-      "color2": "#E91E63"
-    },
-    {
-      "id": "doky_pro",
-      "brand": "doky",
-      "displayName": "Doky Pro",
-      "modelId": "x-ai/grok-4-fast:free",
-      "description": "Máxima precisión para casos médicos complejos",
-      "reasoning": false,
-      "color1": "#FF9800",
-      "color2": "#FF5722"
-    }
-  ]
+  {
+    "id": "medgemma",
+    "brand": "doky",
+    "displayName": "Doky 1.0",
+    "modelId": "https://warshanks-medgemma-27b-it.hf.space/gradio_api/call/chat",
+    "description": "Nuestro modelos creado y entrenado por nosotros mismos",
+    "reasoning": false,
+    "color1": "#3F51B5",
+    "color2": "#2196F3",
+    "disabled": false,
+    "provider": "huggingface"
+  },
+  {
+    "id": "doky_balanced",
+    "brand": "byok",
+    "displayName": "Deepseek V3.1",
+    "modelId": "deepseek/deepseek-chat-v3.1:free",
+    "description": "Balance perfecto entre velocidad y precisión médica",
+    "color1": "#505DA0",
+    "color2": "#1FB1CF",
+    "type": "openrouter",
+    "disabled": false
+  },
+  {
+    "id": "doky_reasoning",
+    "brand": "byok",
+    "displayName": "Deepseek R1",
+    "modelId": "deepseek/deepseek-r1-0528:free",
+    "description": "Análisis médico profundo con razonamiento avanzado",
+    "color1": "#BC1B68",
+    "color2": "#D3989B",
+    "type": "openrouter",
+    "disabled": false,
+    "reasoning": true
+  },
+  {
+    "id": "doky_instant",
+    "brand": "byok",
+    "displayName": "Gemini 2.0 Flash",
+    "modelId": "google/gemini-2.0-flash-exp:free",
+    "description": "Respuestas rápidas para consultas médicas básicas",
+    "color1": "#348756",
+    "color2": "#54B6CA",
+    "type": "openrouter",
+    "disabled": false
+  },
+  {
+    "id": "doky_research",
+    "brand": "byok",
+    "displayName": "Tongyi DeepResearch 30B",
+    "modelId": "alibaba/tongyi-deepresearch-30b-a3b:free",
+    "description": "Investigación avanzada con los mejores informes médicos",
+    "color1": "#FF0F7B",
+    "color2": "#F89B29",
+    "type": "openrouter",
+    "disabled": false
+  },
+  {
+    "id": "doky_pro",
+    "brand": "byok",
+    "displayName": "Llama 4 Maverick",
+    "modelId": "meta-llama/llama-4-maverick:free",
+    "description": "Máxima precisión para casos médicos complejos",
+    "color1": "#F9655B",
+    "color2": "#EE821A",
+    "type": "openrouter",
+    "disabled": false
+  },
+  {
+    "id": "doky_2",
+    "brand": "byok",
+    "displayName": "GPT-OSS 20B",
+    "modelId": "openai/gpt-oss-20b:free",
+    "description": "Nuevo modelo en fase de pruebas",
+    "color1": "#CAF2EF",
+    "color2": "#F2BBF1",
+    "type": "openrouter",
+    "disabled": false
+  }
+]
 }
