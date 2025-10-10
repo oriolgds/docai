@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 enum BrandName { doky }
 
-enum ModelProvider { openrouter, byok, huggingface }
+enum ModelProvider { openrouter, byok, doky }
 
 String brandDisplayName(BrandName b) {
   switch (b) {

@@ -90,9 +90,9 @@ class _ModelSelectorState extends State<ModelSelector> {
     setState(() => _brand = b);
     final list = _byBrand[b] ?? [];
     if (list.isNotEmpty) {
-      // Priorizar modelos HF Doky
-      final hfDokyModels = list.where((m) => m.provider == ModelProvider.huggingface);
-      final p = hfDokyModels.isNotEmpty ? hfDokyModels.first : list.first;
+      // Priorizar modelo Doky
+      final dokyModels = list.where((m) => m.provider == ModelProvider.doky);
+      final p = dokyModels.isNotEmpty ? dokyModels.first : list.first;
       setState(() => _profile = p);
       widget.onSelected(p);
     }

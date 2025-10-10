@@ -2,14 +2,14 @@ import '../models/model_profile.dart';
 import '../models/chat_message.dart';
 import 'remote_config_service.dart';
 import 'openrouter_service.dart';
-import 'huggingface_service.dart';
+import 'doky_service.dart';
 
 class ModelService {
   static OpenRouterService? _openRouterService;
-  static HuggingFaceService? _huggingFaceService;
+  static DokyService? _dokyService;
 
   static OpenRouterService get _openRouter => _openRouterService ??= OpenRouterService();
-  static HuggingFaceService get _huggingFace => _huggingFaceService ??= HuggingFaceService();
+  static DokyService get _doky => _dokyService ??= DokyService();
 
   static Future<List<ModelProfile>> getAvailableModels() async {
     try {
@@ -40,10 +40,10 @@ class ModelService {
     if (models.isEmpty) {
       return null;
     }
-    // Priorizar modelos Doky HF
-    final dokyHfModels = models.where((m) => m.provider == ModelProvider.huggingface && m.brand == BrandName.doky);
-    if (dokyHfModels.isNotEmpty) {
-      return dokyHfModels.first;
+    // Priorizar modelo Doky
+    final dokyModels = models.where((m) => m.provider == ModelProvider.doky && m.brand == BrandName.doky);
+    if (dokyModels.isNotEmpty) {
+      return dokyModels.first;
     }
     return models.first;
   }
@@ -65,8 +65,8 @@ class ModelService {
           temperature: temperature,
           useReasoning: useReasoning,
         );
-      case ModelProvider.huggingface:
-        return _huggingFace.chatCompletion(
+      case ModelProvider.doky:
+        return _doky.chatCompletion(
           messages: messages,
           profile: profile,
           systemPromptOverride: systemPromptOverride,
@@ -94,8 +94,8 @@ class ModelService {
           useReasoning: useReasoning,
         );
         break;
-      case ModelProvider.huggingface:
-        yield* _huggingFace.streamChatCompletion(
+      case ModelProvider.doky:
+        yield* _doky.streamChatCompletion(
           messages: messages,
           profile: profile,
           systemPromptOverride: systemPromptOverride,
@@ -112,8 +112,8 @@ class ModelService {
       case ModelProvider.byok:
         await _openRouter.cancelCurrentStream();
         break;
-      case ModelProvider.huggingface:
-        await _huggingFace.cancelCurrentStream();
+      case ModelProvider.doky:
+        await _doky.cancelCurrentStream();
         break;
     }
   }
@@ -123,8 +123,8 @@ class ModelService {
       case ModelProvider.openrouter:
       case ModelProvider.byok:
         return _openRouter.isStreaming;
-      case ModelProvider.huggingface:
-        return _huggingFace.isStreaming;
+      case ModelProvider.doky:
+        return _doky.isStreaming;
     }
   }
 
@@ -139,8 +139,8 @@ class ModelService {
 
   static void dispose() {
     _openRouterService?.dispose();
-    _huggingFaceService?.dispose();
+    _dokyService?.dispose();
     _openRouterService = null;
-    _huggingFaceService = null;
+    _dokyService = null;
   }
 }

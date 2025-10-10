@@ -20,16 +20,16 @@ class RemoteConfigService {
       await _remoteConfig!.setDefaults({
         'available_models': jsonEncode([
           {
-            'id': 'doky-hf',
+            'id': 'doky',
             'brand': 'doky',
-            'displayName': 'Doky MedGemma',
-            'modelId': 'https://warshanks-medgemma-27b-it.hf.space/gradio_api/call/chat',
-            'description': 'Asistente médico inteligente con razonamiento opcional usando Hugging Face.',
+            'displayName': 'Doky',
+            'modelId': 'doky-llama',
+            'description': 'Asistente médico inteligente especializado.',
             'reasoning': false,
             'color1': '#3F51B5',
             'color2': '#2196F3',
             'disabled': false,
-            'provider': 'huggingface'
+            'provider': 'doky'
           }
         ]),
         'title_generation_models': 'deepseek/deepseek-chat-v3.1:free'
@@ -73,8 +73,8 @@ class RemoteConfigService {
 
       final List<dynamic> modelsList = jsonDecode(modelsJson);
       final models = modelsList.map((json) => _parseModelFromJson(json)).toList();
-      // Filter out disabled models and non-free models (except HF models)
-      final enabledModels = models.where((model) => !model.disabled && (model.modelId.endsWith(':free') || model.provider == ModelProvider.huggingface)).toList();
+      // Filter out disabled models and non-free models (except Doky models)
+      final enabledModels = models.where((model) => !model.disabled && (model.modelId.endsWith(':free') || model.provider == ModelProvider.doky)).toList();
       return enabledModels.isEmpty ? [] : enabledModels;
     } catch (e) {
       return [];
@@ -136,8 +136,8 @@ class RemoteConfigService {
     switch (providerStr?.toLowerCase()) {
       case 'byok':
         return ModelProvider.byok;
-      case 'huggingface':
-        return ModelProvider.huggingface;
+      case 'doky':
+        return ModelProvider.doky;
       case 'openrouter':
       default:
         return ModelProvider.openrouter;
