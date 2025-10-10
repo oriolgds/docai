@@ -4,7 +4,7 @@
     "id": "medgemma",
     "brand": "doky",
     "displayName": "Doky 1.0",
-    "modelId": "https://warshanks-medgemma-27b-it.hf.space/gradio_api/call/chat",
+    "modelId": "https://warshanks-medgemma-27b-it.hf.space",
     "description": "Nuestro modelos creado y entrenado por nosotros mismos",
     "reasoning": false,
     "color1": "#3F51B5",
