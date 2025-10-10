@@ -24,9 +24,9 @@ class HuggingFaceService {
     String conversationText = '';
     for (int i = 0; i < messages.length; i++) {
       final message = messages[i];
-      if (message.isUser) {
+      if (message.role == ChatRole.user) {
         conversationText += 'User: ${message.content}\n';
-      } else {
+      } else if (message.role == ChatRole.assistant) {
         conversationText += 'Assistant: ${message.content}\n';
       }
     }
@@ -197,7 +197,7 @@ class HuggingFaceService {
         profile: profile,
         systemPromptOverride: systemPromptOverride,
         temperature: temperature,
-        useReasoning: useReasioning,
+        useReasoning: useReasoning,
       );
 
       // Simulate streaming by splitting response into words
