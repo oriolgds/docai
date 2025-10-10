@@ -20,44 +20,61 @@ class HuggingFaceService {
   }) async {
     print('[DEBUG] HuggingFaceService.chatCompletion: Using modelId = ${profile.modelId}');
 
-    final payload = <String, dynamic>{
+    // Construct conversation text from messages
+    String conversationText = '';
+    for (int i = 0; i < messages.length; i++) {
+      final message = messages[i];
+      if (message.isUser) {
+        conversationText += 'User: ${message.content}\n';
+      } else {
+        conversationText += 'Assistant: ${message.content}\n';
+      }
+    }
+
+    // Add the latest user message if not already included
+    if (messages.isNotEmpty && !conversationText.contains(messages.last.content)) {
+      conversationText += 'User: ${messages.last.content}\n';
+    }
+
+    // HuggingFace Gradio API expects specific parameter structure
+    final payload = {
       'data': [
         {
-          'text': messages.last.content,
-          'files': [{
-            'path': 'https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png',
-            'url': 'https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png',
-            'orig_name': 'bus.png',
-            'size': null,
-            'mime_type': 'image/png',
-            'is_stream': false,
-            'meta': {'_type': 'gradio.FileData'}
-          }]
+          'text': conversationText.trim(),
+          'files': [] // Empty files array for text-only chat
         },
-        [],
-        systemPromptOverride ?? 'You are a helpful medical expert.',
-        2048
+        systemPromptOverride ?? 'You are a helpful medical expert. Provide accurate, evidence-based information while being empathetic and understanding.',
+        100 // Max new tokens - keeping it reasonable for mobile
       ]
     };
 
+    print('[DEBUG] HuggingFaceService: Payload = ${jsonEncode(payload)}');
+
+    // Construct the correct API endpoint
     final uri = Uri.parse('${profile.modelId}/gradio_api/call/chat');
+    print('[DEBUG] HuggingFaceService: Calling URL = $uri');
+    
     final resp = await _client.post(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
       body: jsonEncode(payload),
     );
 
+    print('[DEBUG] HuggingFaceService: Response status = ${resp.statusCode}');
+    print('[DEBUG] HuggingFaceService: Response body = ${resp.body}');
+
     if (resp.statusCode != 200) {
       var message = 'Error de conexión con HuggingFace (${resp.statusCode})';
-      print('[DEBUG] HuggingFaceService.chatCompletion: HTTP error ${resp.statusCode}, body: ${resp.body}');
-
-      // Manejar códigos de error específicos
+      
       switch (resp.statusCode) {
         case 403:
           message = 'El modelo de HuggingFace no está disponible públicamente o requiere autenticación especial';
           break;
         case 404:
-          message = 'El endpoint del modelo no fue encontrado';
+          message = 'El endpoint del modelo no fue encontrado. Verifica que la URL del modelo sea correcta.';
           break;
         case 429:
           message = 'Demasiadas solicitudes. Inténtalo de nuevo más tarde';
@@ -71,10 +88,10 @@ class HuggingFaceService {
           try {
             final data = jsonDecode(resp.body);
             if (data is Map && data['error'] != null) {
-              message = data['error']['message']?.toString() ?? message;
+              message = data['error'].toString();
             }
           } catch (e) {
-            print('[DEBUG] HuggingFaceService.chatCompletion: Error parsing response: $e');
+            message += ' - ${resp.body}';
           }
       }
 
@@ -82,43 +99,85 @@ class HuggingFaceService {
     }
 
     final data = jsonDecode(resp.body);
+    if (data == null || data['event_id'] == null) {
+      throw Exception('Invalid response from HuggingFace API: missing event_id');
+    }
+    
     final eventId = data['event_id'];
-    print('[DEBUG] HuggingFaceService.chatCompletion: Event ID = $eventId');
+    print('[DEBUG] HuggingFaceService: Event ID = $eventId');
 
     return _pollForResult(profile.modelId, eventId);
   }
 
   Future<String> _pollForResult(String baseUrl, String eventId) async {
     final resultUri = Uri.parse('$baseUrl/gradio_api/call/chat/$eventId');
+    print('[DEBUG] HuggingFaceService: Polling URL = $resultUri');
 
-    for (int i = 0; i < 30; i++) {
-      await Future.delayed(const Duration(seconds: 1));
+    // Poll for result with timeout
+    for (int attempt = 0; attempt < 60; attempt++) {
+      await Future.delayed(Duration(milliseconds: attempt < 10 ? 500 : 1000));
 
-      final resp = await _client.get(resultUri);
-      if (resp.statusCode == 200) {
-        final lines = resp.body.split('\n');
-        for (final line in lines) {
-          if (line.startsWith('data: ')) {
-            final jsonStr = line.substring(6);
-            if (jsonStr.trim() != '[DONE]') {
+      try {
+        final resp = await _client.get(resultUri);
+        print('[DEBUG] HuggingFaceService: Poll attempt $attempt, status = ${resp.statusCode}');
+        
+        if (resp.statusCode == 200) {
+          final lines = resp.body.split('\n');
+          
+          for (final line in lines) {
+            if (line.startsWith('data: ')) {
+              final jsonStr = line.substring(6).trim();
+              
+              if (jsonStr == '[DONE]') {
+                throw Exception('Stream completed without result');
+              }
+              
               try {
                 final data = jsonDecode(jsonStr);
-                if (data is List && data.isNotEmpty && data[0] is String) {
-                  return data[0];
+                print('[DEBUG] HuggingFaceService: Parsed data = $data');
+                
+                // Handle different response formats
+                if (data is List && data.isNotEmpty) {
+                  if (data[0] is String && data[0].isNotEmpty) {
+                    return data[0];
+                  }
+                } else if (data is Map) {
+                  // Handle error responses
+                  if (data['error'] != null) {
+                    throw Exception('HuggingFace error: ${data['error']}');
+                  }
+                  
+                  // Handle success responses with different structures
+                  if (data['data'] != null && data['data'] is List && data['data'].isNotEmpty) {
+                    return data['data'][0].toString();
+                  }
+                  
+                  if (data['result'] != null) {
+                    return data['result'].toString();
+                  }
                 }
               } catch (e) {
+                print('[DEBUG] HuggingFaceService: JSON parse error: $e for line: $jsonStr');
                 continue;
               }
             }
           }
+        } else if (resp.statusCode >= 400) {
+          print('[DEBUG] HuggingFaceService: Poll error ${resp.statusCode}: ${resp.body}');
+          break;
+        }
+      } catch (e) {
+        print('[DEBUG] HuggingFaceService: Poll attempt $attempt failed: $e');
+        if (attempt > 10) {
+          // Only break on persistent errors after initial attempts
+          break;
         }
       }
     }
 
-    throw Exception('Timeout waiting for HuggingFace response');
+    throw Exception('Timeout waiting for HuggingFace response after 60 attempts');
   }
 
-  // Stream token-by-token from HuggingFace (simplified polling approach)
   Stream<String> streamChatCompletion({
     required List<ChatMessage> messages,
     required ModelProfile profile,
@@ -128,119 +187,38 @@ class HuggingFaceService {
   }) async* {
     print('[DEBUG] HuggingFaceService.streamChatCompletion: Using modelId = ${profile.modelId}');
 
-    // Cancel any existing stream
     await cancelCurrentStream();
 
-    final payload = <String, dynamic>{
-      'data': [
-        {
-          'text': messages.last.content,
-          'files': [{
-            'path': 'https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png',
-            'url': 'https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png',
-            'orig_name': 'bus.png',
-            'size': null,
-            'mime_type': 'image/png',
-            'is_stream': false,
-            'meta': {'_type': 'gradio.FileData'}
-          }]
-        },
-        [],
-        systemPromptOverride ?? 'You are a helpful medical expert.',
-        2048
-      ]
-    };
+    try {
+      // For HuggingFace, we'll simulate streaming by getting the full response
+      // and then yielding it word by word for better UX
+      final fullResponse = await chatCompletion(
+        messages: messages,
+        profile: profile,
+        systemPromptOverride: systemPromptOverride,
+        temperature: temperature,
+        useReasoning: useReasioning,
+      );
 
-    final uri = Uri.parse('${profile.modelId}/gradio_api/call/chat');
-    final resp = await _client.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(payload),
-    );
-
-    if (resp.statusCode != 200) {
-      var message = 'Error de conexión con HuggingFace (${resp.statusCode})';
-      print('[DEBUG] HuggingFaceService.streamChatCompletion: HTTP error ${resp.statusCode}, body: ${resp.body}');
-
-      // Manejar códigos de error específicos
-      switch (resp.statusCode) {
-        case 403:
-          message = 'El modelo de HuggingFace no está disponible públicamente o requiere autenticación especial';
-          break;
-        case 404:
-          message = 'El endpoint del modelo no fue encontrado';
-          break;
-        case 429:
-          message = 'Demasiadas solicitudes. Inténtalo de nuevo más tarde';
-          break;
-        case 500:
-        case 502:
-        case 503:
-          message = 'Error interno del servidor de HuggingFace. Inténtalo de nuevo más tarde';
-          break;
-        default:
-          try {
-            final data = jsonDecode(resp.body);
-            if (data is Map && data['error'] != null) {
-              message = data['error']['message']?.toString() ?? message;
-            }
-          } catch (e) {
-            print('[DEBUG] HuggingFaceService.streamChatCompletion: Error parsing response: $e');
-          }
+      // Simulate streaming by splitting response into words
+      final words = fullResponse.split(' ');
+      for (int i = 0; i < words.length; i++) {
+        if (_currentController?.isClosed == true) break;
+        
+        String chunk = words[i];
+        if (i < words.length - 1) chunk += ' ';
+        
+        yield chunk;
+        
+        // Add small delay for streaming effect
+        await Future.delayed(const Duration(milliseconds: 50));
       }
-
-      throw Exception(message);
+    } catch (e) {
+      print('[DEBUG] HuggingFaceService.streamChatCompletion: Error = $e');
+      rethrow;
     }
-
-    final data = jsonDecode(resp.body);
-    final eventId = data['event_id'];
-    print('[DEBUG] HuggingFaceService.streamChatCompletion: Event ID = $eventId');
-
-    final controller = StreamController<String>();
-    _currentController = controller;
-
-    final resultUri = Uri.parse('${profile.modelId}/gradio_api/call/chat/$eventId');
-    final request = http.Request('GET', resultUri);
-    final streamedResponse = await _client.send(request);
-
-    _currentSubscription = streamedResponse.stream
-        .transform(utf8.decoder)
-        .transform(const LineSplitter())
-        .listen(
-      (line) {
-        if (line.startsWith('data: ')) {
-          final jsonStr = line.substring(6);
-          if (jsonStr.trim() == '[DONE]') {
-            if (!controller.isClosed) controller.close();
-            return;
-          }
-          try {
-            final data = jsonDecode(jsonStr);
-            if (data is List && data.isNotEmpty && data[0] is String) {
-              if (!controller.isClosed) controller.add(data[0]);
-            }
-          } catch (e) {
-            // Ignore parsing errors
-          }
-        }
-      },
-      onError: (error) {
-        if (!controller.isClosed) {
-          controller.addError(error);
-          controller.close();
-        }
-      },
-      onDone: () {
-        if (!controller.isClosed) controller.close();
-        _currentSubscription = null;
-        _currentController = null;
-      },
-    );
-
-    yield* controller.stream;
   }
 
-  // Cancel the current streaming request
   Future<void> cancelCurrentStream() async {
     if (_currentSubscription != null) {
       await _currentSubscription!.cancel();
@@ -252,7 +230,6 @@ class HuggingFaceService {
     }
   }
 
-  // Check if there's an active stream
   bool get isStreaming => _currentSubscription != null;
 
   void dispose() {
