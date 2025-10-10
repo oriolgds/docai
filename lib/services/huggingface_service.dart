@@ -51,7 +51,15 @@ class HuggingFaceService {
     print('[DEBUG] HuggingFaceService: Payload = ${jsonEncode(payload)}');
 
     // Construct the correct API endpoint
-    final uri = Uri.parse('${profile.modelId}/gradio_api/call/chat');
+    String baseUrl = profile.modelId;
+    // Remove /gradio_api/call/chat if already present
+    if (baseUrl.contains('/gradio_api/call/chat')) {
+      baseUrl = baseUrl.split('/gradio_api/call/chat')[0];
+    }
+    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+      baseUrl = 'https://$baseUrl';
+    }
+    final uri = Uri.parse('$baseUrl/gradio_api/call/chat');
     print('[DEBUG] HuggingFaceService: Calling URL = $uri');
     
     final resp = await _client.post(
@@ -110,7 +118,15 @@ class HuggingFaceService {
   }
 
   Future<String> _pollForResult(String baseUrl, String eventId) async {
-    final resultUri = Uri.parse('$baseUrl/gradio_api/call/chat/$eventId');
+    String url = baseUrl;
+    // Remove /gradio_api/call/chat if already present
+    if (url.contains('/gradio_api/call/chat')) {
+      url = url.split('/gradio_api/call/chat')[0];
+    }
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://$url';
+    }
+    final resultUri = Uri.parse('$url/gradio_api/call/chat/$eventId');
     print('[DEBUG] HuggingFaceService: Polling URL = $resultUri');
 
     // Poll for result with timeout
