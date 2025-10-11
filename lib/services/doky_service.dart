@@ -1,19 +1,29 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:hugging_face_chat_gradio/hf_chat_gradio_client.dart';
 import '../models/chat_message.dart';
 import '../models/model_profile.dart';
 
 class DokyService {
-  // URL de tu Hugging Face Space (actualízala con la correcta)
-  static const String _baseUrl = 'https://oriolgds-docai.hf.space';
-  final http.Client _client;
+  // URLs para tu Hugging Face Space
+  static const String _baseUrl = 'https://oriolgds-llama-doky.hf.space';
+  static const String _predictEndpoint = '/call/predict';
+  
+  late final HuggingFaceChatGradioClient _client;
   StreamController<String>? _currentController;
+  bool _isDisposed = false;
   int _requestId = 0;
 
-  DokyService({http.Client? client}) : _client = client ?? http.Client();
+  DokyService() {
+    _client = HuggingFaceChatGradioClient(
+      baseUrl: _baseUrl,
+      predictEndpoint: _predictEndpoint,
+    );
+  }
 
+  /// Método principal de chat que devuelve la respuesta completa
   Future<String> chatCompletion({
     required List<ChatMessage> messages,
     required ModelProfile profile,
@@ -21,84 +31,29 @@ class DokyService {
     double temperature = 0.7,
     bool useReasoning = false,
   }) async {
+    if (_isDisposed) throw Exception('DokyService has been disposed');
+    
     try {
-      // Construir historial según el formato de tu app.py
-      final history = messages.length > 1
-          ? messages
-              .sublist(0, messages.length - 1)
-              .map((m) => [m.content, m.role == 'assistant' ? m.content : ''])
-              .toList()
-          : [];
-
-      // Paso 1: POST para iniciar predicción
-      final startPayload = {
-        'data': [
-          messages.last.content, // message
-          history, // history 
-          systemPromptOverride ?? _getDefaultSystemPrompt(), // system_prompt
-        ]
-      };
-
-      debugPrint('Sending POST to: $_baseUrl/call/predict_api');
-      debugPrint('Payload: ${jsonEncode(startPayload)}');
-
-      final startResponse = await _client.post(
-        Uri.parse('$_baseUrl/call/predict_api'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(startPayload),
+      // Construir el mensaje con contexto si es necesario
+      String finalMessage = _buildMessageWithContext(
+        messages, 
+        systemPromptOverride ?? _getDefaultSystemPrompt()
       );
 
-      if (startResponse.statusCode != 200) {
-        throw Exception('Error en POST (${startResponse.statusCode}): ${startResponse.body}');
-      }
+      debugPrint('Sending message to Hugging Face: $finalMessage');
 
-      final startResult = jsonDecode(startResponse.body);
-      final eventId = startResult['event_id'];
+      // Usar el cliente de hugging_face_chat_gradio
+      final response = await _client.sendMessage(finalMessage);
       
-      if (eventId == null) {
-        throw Exception('No se recibió event_id: ${startResponse.body}');
-      }
-
-      debugPrint('Received event_id: $eventId');
-
-      // Paso 2: GET para obtener resultados
-      final resultResponse = await _client.get(
-        Uri.parse('$_baseUrl/call/predict_api/$eventId'),
-        headers: {
-          'Accept': 'text/event-stream',
-        },
-      );
-
-      if (resultResponse.statusCode != 200) {
-        throw Exception('Error en GET (${resultResponse.statusCode}): ${resultResponse.body}');
-      }
-
-      // Parsear respuesta de servidor-sent events
-      final lines = resultResponse.body.split('\n');
-      for (String line in lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            final data = jsonDecode(line.substring(6));
-            if (data is List && data.isNotEmpty) {
-              return data[0] as String;
-            }
-          } catch (e) {
-            debugPrint('Error parsing line: $line');
-            continue;
-          }
-        }
-      }
-
-      throw Exception('No se pudo extraer respuesta válida');
-
+      debugPrint('Received response from Hugging Face: $response');
+      return response;
     } catch (e) {
-      debugPrint('Error in chatCompletion: $e');
-      rethrow;
+      debugPrint('Error in DokyService.chatCompletion: $e');
+      throw Exception('Error al consultar DocAI: $e');
     }
   }
 
+  /// Método de streaming que simula respuesta progresiva
   Stream<String> streamChatCompletion({
     required List<ChatMessage> messages,
     required ModelProfile profile,
@@ -106,101 +61,99 @@ class DokyService {
     double temperature = 0.7,
     bool useReasoning = false,
   }) async* {
+    if (_isDisposed) throw Exception('DokyService has been disposed');
+    
     await cancelCurrentStream();
 
     try {
-      final history = messages.length > 1
-          ? messages
-              .sublist(0, messages.length - 1)
-              .map((m) => [m.content, m.role == 'assistant' ? m.content : ''])
-              .toList()
-          : [];
-
-      // Paso 1: POST para streaming
-      final startPayload = {
-        'data': [
-          messages.last.content,
-          history,
-          systemPromptOverride ?? _getDefaultSystemPrompt(),
-        ],
-        'session_hash': 'session_${_requestId++}',
-      };
-
-      final startResponse = await _client.post(
-        Uri.parse('$_baseUrl/call/generate_response'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(startPayload),
+      // Construir el mensaje con contexto
+      String finalMessage = _buildMessageWithContext(
+        messages, 
+        systemPromptOverride ?? _getDefaultSystemPrompt()
       );
 
-      if (startResponse.statusCode != 200) {
-        throw Exception('Error iniciando stream (${startResponse.statusCode}): ${startResponse.body}');
-      }
-
-      final startResult = jsonDecode(startResponse.body);
-      final eventId = startResult['event_id'];
-
-      if (eventId == null) {
-        throw Exception('No event_id para streaming: ${startResponse.body}');
-      }
-
-      // Paso 2: GET streaming
-      final request = http.Request('GET', Uri.parse('$_baseUrl/call/generate_response/$eventId'));
-      request.headers['Accept'] = 'text/event-stream';
-      
-      final streamedResponse = await _client.send(request);
-
-      if (streamedResponse.statusCode != 200) {
-        throw Exception('Error en stream GET (${streamedResponse.statusCode})');
-      }
-
+      // Create a new stream controller
       final controller = StreamController<String>();
       _currentController = controller;
 
-      var buffer = '';
-      
-      final subscription = streamedResponse.stream.transform(utf8.decoder).listen(
-        (chunk) {
-          buffer += chunk;
-          final lines = buffer.split('\n');
-          buffer = lines.last;
+      // Start the streaming process
+      _startStreamingResponse(finalMessage, controller);
 
-          for (int i = 0; i < lines.length - 1; i++) {
-            final line = lines[i].trim();
-            if (!line.startsWith('data: ') || line == 'data: ') continue;
-
-            try {
-              final jsonData = jsonDecode(line.substring(6));
-              
-              if (jsonData is List && jsonData.isNotEmpty) {
-                final response = jsonData[0] as String;
-                if (!controller.isClosed) {
-                  controller.add(response);
-                }
-              }
-            } catch (e) {
-              debugPrint('Error parsing stream line: $line - $e');
-            }
-          }
-        },
-        onError: (e) {
-          if (!controller.isClosed) controller.addError(e);
-        },
-        onDone: () {
-          if (!controller.isClosed) controller.close();
-          _currentController = null;
-        },
-      );
-
+      // Yield from the controller's stream
       yield* controller.stream;
-
     } catch (e) {
-      debugPrint('Error in streamChatCompletion: $e');
-      rethrow;
+      debugPrint('Error in DokyService.streamChatCompletion: $e');
+      throw Exception('Error al consultar DocAI: $e');
     }
   }
 
+  /// Construye el mensaje con contexto del historial
+  String _buildMessageWithContext(List<ChatMessage> messages, String systemPrompt) {
+    if (messages.isEmpty) return '';
+    
+    final StringBuffer context = StringBuffer();
+    
+    // Agregar system prompt
+    context.writeln('Sistema: $systemPrompt');
+    context.writeln();
+    
+    // Agregar historial de conversación (últimos 5 mensajes para no exceder límites)
+    final recentMessages = messages.length > 5 
+        ? messages.sublist(messages.length - 5) 
+        : messages;
+    
+    for (int i = 0; i < recentMessages.length - 1; i++) {
+      final msg = recentMessages[i];
+      final role = msg.role == 'user' ? 'Usuario' : 'DocAI';
+      context.writeln('$role: ${msg.content}');
+    }
+    
+    // Agregar mensaje actual
+    context.writeln('Usuario: ${messages.last.content}');
+    context.writeln('DocAI:');
+    
+    return context.toString();
+  }
+
+  /// Maneja la respuesta de streaming simulando chunks
+  Future<void> _startStreamingResponse(
+    String message, 
+    StreamController<String> controller,
+  ) async {
+    try {
+      // Obtener la respuesta completa usando hugging_face_chat_gradio
+      final response = await _client.sendMessage(message);
+      
+      if (_isDisposed || controller.isClosed) return;
+
+      // Simular streaming dividiendo la respuesta en tokens/palabras
+      final words = response.split(' ');
+      
+      for (int i = 0; i < words.length; i++) {
+        if (_isDisposed || controller.isClosed) break;
+        
+        // Agregar palabra con espaciado apropiado
+        final chunk = i == 0 ? words[i] : ' ${words[i]}';
+        controller.add(chunk);
+        
+        // Pequeña pausa para simular streaming real
+        await Future.delayed(const Duration(milliseconds: 80));
+      }
+      
+    } catch (e) {
+      debugPrint('Error in streaming response: $e');
+      if (!controller.isClosed) {
+        controller.addError(Exception('Error al procesar respuesta: $e'));
+      }
+    } finally {
+      if (!controller.isClosed) {
+        controller.close();
+      }
+      _currentController = null;
+    }
+  }
+
+  /// Prompt del sistema por defecto para DocAI
   String _getDefaultSystemPrompt() {
     return "Eres DocAI, una inteligencia artificial médica avanzada desarrollada por Oriol Giner Díaz. "
         "Tu misión es proporcionar asistencia e información médica de alta calidad, exclusivamente sobre "
@@ -214,6 +167,7 @@ class DokyService {
         "- Si la pregunta no es médica, redirige educadamente al ámbito de la salud";
   }
 
+  /// Cancela el stream actual si existe
   Future<void> cancelCurrentStream() async {
     if (_currentController != null && !_currentController!.isClosed) {
       await _currentController!.close();
@@ -221,10 +175,58 @@ class DokyService {
     }
   }
 
+  /// Verifica si actualmente está transmitiendo
   bool get isStreaming => _currentController != null && !_currentController!.isClosed;
 
+  /// Libera recursos del servicio
   void dispose() {
+    _isDisposed = true;
     cancelCurrentStream();
-    _client.close();
   }
+}
+
+/// Implementación alternativa usando huggingface_client para más funcionalidades
+/// (Para futuras mejoras cuando se necesiten más características)
+class DokyServiceAdvanced {
+  static const String _modelId = 'meta-llama/Llama-3.2-3B-Instruct';
+  
+  // Esta implementación requeriría el paquete huggingface_client
+  // Se mantiene como referencia para implementación futura
+  
+  /*
+  late final HuggingFaceClient _client;
+  
+  DokyServiceAdvanced() {
+    final token = dotenv.env['HUGGINGFACE_TOKEN'];
+    _client = HuggingFaceClient(
+      apiKey: token ?? '',
+      baseUrl: 'https://api-inference.huggingface.co',
+    );
+  }
+  
+  Future<String> chatCompletion({
+    required List<ChatMessage> messages,
+    required ModelProfile profile,
+    String? systemPromptOverride,
+    double temperature = 0.7,
+    bool useReasoning = false,
+  }) async {
+    try {
+      final response = await _client.textGeneration(
+        model: _modelId,
+        inputs: messages.last.content,
+        parameters: TextGenerationParameters(
+          temperature: temperature,
+          maxNewTokens: 512,
+          topP: 0.9,
+          doSample: true,
+        ),
+      );
+      
+      return response.generatedText;
+    } catch (e) {
+      throw Exception('Error al consultar DocAI con HF Client: $e');
+    }
+  }
+  */
 }
