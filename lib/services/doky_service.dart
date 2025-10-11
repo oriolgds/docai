@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:hugging_face_chat_gradio/hf_chat_gradio_client.dart';
+import 'package:hugging_face_chat_gradio/hugging_face_chat_gradio.dart';
 import '../models/chat_message.dart';
 import '../models/model_profile.dart';
 
