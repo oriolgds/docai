@@ -5,7 +5,7 @@ import '../models/chat_message.dart';
 import '../models/model_profile.dart';
 
 class DokyService {
-  static const String _mcpUrl = 'https://oriolgds-llama-doky.hf.space/gradio_api/mcp/';
+  static const String _baseUrl = 'https://oriolgds-llama-doky.hf.space/gradio_api/call/respond';
   final http.Client _client;
   StreamSubscription? _currentSubscription;
   StreamController<String>? _currentController;
@@ -19,66 +19,49 @@ class DokyService {
     double temperature = 0.7,
     bool useReasoning = false,
   }) async {
+    final chatHistory = messages.length > 1
+        ? messages.sublist(0, messages.length - 1).map((m) => {
+            'role': m.role == 'user' ? 'user' : 'assistant',
+            'metadata': null,
+            'content': m.content,
+            'options': null,
+          }).toList()
+        : [];
+
     final payload = {
-      'jsonrpc': '2.0',
-      'id': DateTime.now().millisecondsSinceEpoch,
-      'method': 'tools/call',
-      'params': {
-        'name': 'llama_doky_respond',
-        'arguments': {
-          'message': messages.last.content,
-          'chat_history': [],
-          'max_tok': 512,
-          'temp': temperature,
-          'top': 0.9,
-        }
-      }
+      'data': [
+        messages.last.content,
+        chatHistory,
+        128,
+        temperature,
+        0.9,
+      ]
     };
 
-    final uri = Uri.parse(_mcpUrl);
-    final resp = await _client.post(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json, text/event-stream',
-      },
+    final postResp = await _client.post(
+      Uri.parse(_baseUrl),
+      headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
     );
 
-    if (resp.statusCode != 200) {
-      throw Exception('Error al consultar DocAI (${resp.statusCode}): ${resp.body}');
+    if (postResp.statusCode != 200) {
+      throw Exception('Error al consultar DocAI (${postResp.statusCode})');
     }
 
-    final lines = resp.body.split('\n');
+    final eventId = jsonDecode(postResp.body)['event_id'];
+    if (eventId == null) throw Exception('No se recibió event_id');
 
-    for (final line in lines) {
+    final getResp = await _client.get(Uri.parse('$_baseUrl/$eventId'));
+    final lines = getResp.body.split('\n');
+    
+    for (final line in lines.reversed) {
       if (line.startsWith('data: ')) {
-        final jsonStr = line.substring(6).trim();
-        try {
-          final data = jsonDecode(jsonStr);
-
-          if (data['error'] != null) {
-            throw Exception('Error de DocAI: ${data['error']['message']}');
+        final data = jsonDecode(line.substring(6));
+        if (data is List && data.isNotEmpty && data[0] is List) {
+          final lastMsg = (data[0] as List).last;
+          if (lastMsg is List && lastMsg.length > 1) {
+            return lastMsg[1].toString();
           }
-
-          final result = data['result'];
-          if (result != null) {
-            if (result is String) return result;
-            if (result['content'] != null) {
-              final content = result['content'];
-              if (content is List && content.isNotEmpty) {
-                final textContent = content.firstWhere(
-                  (item) => item['type'] == 'text',
-                  orElse: () => null,
-                );
-                if (textContent != null && textContent['text'] != null) {
-                  return textContent['text'].toString();
-                }
-              }
-            }
-          }
-        } catch (e) {
-          continue;
         }
       }
     }
@@ -95,114 +78,81 @@ class DokyService {
   }) async* {
     await cancelCurrentStream();
 
+    final chatHistory = messages.length > 1
+        ? messages.sublist(0, messages.length - 1).map((m) => {
+            'role': m.role == 'user' ? 'user' : 'assistant',
+            'metadata': null,
+            'content': m.content,
+            'options': null,
+          }).toList()
+        : [];
+
     final payload = {
-      'jsonrpc': '2.0',
-      'id': DateTime.now().millisecondsSinceEpoch,
-      'method': 'tools/call',
-      'params': {
-        'name': 'llama_doky_respond',
-        'arguments': {
-          'message': messages.last.content,
-          'chat_history': [],
-          'max_tok': 512,
-          'temp': temperature,
-          'top': 0.9,
-        },
-      },
+      'data': [
+        messages.last.content,
+        chatHistory,
+        128,
+        temperature,
+        0.9,
+      ]
     };
 
-    final uri = Uri.parse(_mcpUrl);
-    final request = http.Request('POST', uri)
-      ..headers.addAll({
-        'Content-Type': 'application/json',
-        'Accept': 'application/json, text/event-stream',
-      })
-      ..body = jsonEncode(payload);
+    final postResp = await _client.post(
+      Uri.parse(_baseUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(payload),
+    );
 
+    if (postResp.statusCode != 200) {
+      throw Exception('Error al consultar DocAI (${postResp.statusCode})');
+    }
+
+    final eventId = jsonDecode(postResp.body)['event_id'];
+    if (eventId == null) throw Exception('No se recibió event_id');
+
+    final request = http.Request('GET', Uri.parse('$_baseUrl/$eventId'));
     final streamedResponse = await _client.send(request);
 
     if (streamedResponse.statusCode != 200) {
-      throw Exception(
-        'Error al consultar DocAI (${streamedResponse.statusCode})',
-      );
+      throw Exception('Error al consultar DocAI (${streamedResponse.statusCode})');
     }
 
     final controller = StreamController<String>();
     _currentController = controller;
 
     var buffer = '';
-    final subscription = streamedResponse.stream
-        .transform(utf8.decoder)
-        .listen(
-          (chunk) {
-            buffer += chunk;
-            final lines = buffer.split('\n');
-            buffer = lines.last;
+    final subscription = streamedResponse.stream.transform(utf8.decoder).listen(
+      (chunk) {
+        buffer += chunk;
+        final lines = buffer.split('\n');
+        buffer = lines.last;
 
-            for (int i = 0; i < lines.length - 1; i++) {
-              final line = lines[i];
-              if (line.startsWith(':') || line.trim().isEmpty) continue;
+        for (int i = 0; i < lines.length - 1; i++) {
+          final line = lines[i];
+          if (!line.startsWith('data: ')) continue;
 
-              if (line.startsWith('data: ')) {
-                final jsonStr = line.substring(6).trim();
-                try {
-                  final data = jsonDecode(jsonStr);
-
-                  if (data['error'] != null) {
-                    if (!controller.isClosed) {
-                      controller.addError(
-                        Exception(
-                          'Error de DocAI: ${data['error']['message']}',
-                        ),
-                      );
-                    }
-                    return;
-                  }
-
-                  if (data['method'] == 'notifications/progress') {
-                    final params = data['params'];
-                    if (params != null && params['progress'] != null) {
-                      final progressText = params['progress'].toString();
-                      if (!controller.isClosed && progressText.isNotEmpty) {
-                        controller.add(progressText);
-                      }
-                    }
-                  }
-
-                  final result = data['result'];
-                  if (result != null && !controller.isClosed) {
-                    if (result is String && result.isNotEmpty) {
-                      controller.add(result);
-                    } else if (result['content'] != null) {
-                      final content = result['content'];
-                      if (content is List && content.isNotEmpty) {
-                        final textContent = content.firstWhere(
-                          (item) => item['type'] == 'text',
-                          orElse: () => null,
-                        );
-                        if (textContent != null &&
-                            textContent['text'] != null) {
-                          final text = textContent['text'].toString();
-                          if (text.isNotEmpty) controller.add(text);
-                        }
-                      }
-                    }
-                  }
-                } catch (e) {
-                  // Skip malformed JSON
-                }
+          try {
+            final data = jsonDecode(line.substring(6));
+            if (data is List && data.isNotEmpty && data[0] is List) {
+              final lastMsg = (data[0] as List).last;
+              if (lastMsg is List && lastMsg.length > 1 && !controller.isClosed) {
+                controller.add(lastMsg[1].toString());
               }
             }
-          },
-          onError: (e) {
-            if (!controller.isClosed) controller.addError(e);
-          },
-          onDone: () {
-            if (!controller.isClosed) controller.close();
-            _currentController = null;
-            _currentSubscription = null;
-          },
-        );
+          } catch (e) {
+            // Skip malformed JSON
+          }
+        }
+      },
+      onError: (e) {
+        if (!controller.isClosed) controller.addError(e);
+      },
+      onDone: () {
+        if (!controller.isClosed) controller.close();
+        _currentController = null;
+        _currentSubscription = null;
+      },
+    );
 
     _currentSubscription = subscription;
     yield* controller.stream;
