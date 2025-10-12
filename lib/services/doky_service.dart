@@ -31,23 +31,74 @@ class DokyService {
       final history = _buildHistory(messages);
       
       final payload = {
-        'data': [userMessage, history]
+        'jsonrpc': '2.0',
+        'id': DateTime.now().millisecondsSinceEpoch,
+        'method': 'tools/call',
+        'params': {
+          'name': 'llama_doky_chat_streaming_ui',
+          'arguments': {
+            'message': userMessage,
+            'history': history,
+          }
+        }
       };
 
-      final response = await _client.post(
-        Uri.parse('$_baseUrl/call/user_message'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(payload),
-      ).timeout(const Duration(seconds: 30));
-
-      if (response.statusCode != 200) {
-        throw Exception('API error: ${response.statusCode}');
+      debugPrint('Calling MCP API with payload: ${jsonEncode(payload)}');
+      final request = http.Request('POST', Uri.parse('$_baseUrl/gradio_api/mcp/'));
+      request.headers['Content-Type'] = 'application/json';
+      request.headers['Accept'] = 'application/json, text/event-stream';
+      request.body = jsonEncode(payload);
+      
+      final streamedResponse = await _client.send(request);
+      
+      if (streamedResponse.statusCode != 200) {
+        throw Exception('API error: ${streamedResponse.statusCode}');
       }
 
-      final result = jsonDecode(response.body);
-      final eventId = result['event_id'];
+      String result = '';
+      bool isMessageEvent = false;
       
-      return await _pollResult(eventId);
+      await for (final chunk in streamedResponse.stream.transform(utf8.decoder)) {
+        final lines = chunk.split('\n');
+        for (final line in lines) {
+          if (line.startsWith('event: message')) {
+            isMessageEvent = true;
+            continue;
+          }
+          
+          if (isMessageEvent && line.startsWith('data: ')) {
+            final jsonStr = line.substring(6).trim();
+            if (jsonStr.isEmpty) continue;
+            
+            try {
+              final decodedJson = jsonStr
+                  .replaceAll('&quot;', '"')
+                  .replaceAll('&#39;', "'");
+              
+              final data = jsonDecode(decodedJson);
+              if (data['result']?['content'] != null) {
+                final content = data['result']['content'] as List;
+                if (content.isNotEmpty && content[0]['text'] != null) {
+                  final text = content[0]['text'] as String;
+                  // Extract assistant response from [[user_msg, assistant_msg]] format
+                  final match = RegExp(r"\[\['[^']*',\s*'([^']*)']\]").firstMatch(text);
+                  if (match != null && match.groupCount >= 1) {
+                    result = match.group(1)!.replaceAll('\\n', '\n');
+                    break;
+                  }
+                }
+              }
+            } catch (e) {
+              debugPrint('Error parsing SSE line: $e');
+            }
+            isMessageEvent = false;
+          }
+        }
+        if (result.isNotEmpty) break;
+      }
+      
+      if (result.isEmpty) throw Exception('No response received');
+      return result;
     } catch (e) {
       debugPrint('Error in DokyService.chatCompletion: $e');
       throw Exception('Error al consultar DocAI: $e');
@@ -56,31 +107,7 @@ class DokyService {
 
 
 
-  Future<String> _pollResult(String eventId) async {
-    for (int i = 0; i < 30; i++) {
-      await Future.delayed(const Duration(seconds: 1));
-      
-      final response = await _client.get(
-        Uri.parse('$_baseUrl/call/user_message/$eventId'),
-      );
 
-      if (response.statusCode == 200) {
-        final lines = response.body.split('\n');
-        for (final line in lines) {
-          if (line.startsWith('data: ')) {
-            final data = jsonDecode(line.substring(6));
-            if (data is List && data.length > 1 && data[1] is List) {
-              final chat = data[1] as List;
-              if (chat.isNotEmpty && chat.last is List && chat.last.length > 1) {
-                return chat.last[1].toString();
-              }
-            }
-          }
-        }
-      }
-    }
-    throw Exception('Timeout waiting for response');
-  }
 
   List<List<String>> _buildHistory(List<ChatMessage> messages) {
     final history = <List<String>>[];
