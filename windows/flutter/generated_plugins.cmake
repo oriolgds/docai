@@ -6,7 +6,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   firebase_core
   flutter_inappwebview_windows
-  serious_python_windows
   share_plus
   url_launcher_windows
 )

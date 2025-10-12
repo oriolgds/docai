@@ -1,17 +1,18 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:serious_python/serious_python.dart';
+import 'package:http/http.dart' as http;
 import '../models/chat_message.dart';
 import '../models/model_profile.dart';
 
 class DokyService {
-  static const String _spaceId = 'oriolgds/llama-doky';
+  static const String _baseUrl = 'https://oriolgds-llama-doky.hf.space';
   
+  final http.Client _client;
   StreamController<String>? _currentController;
   bool _isDisposed = false;
 
-  DokyService();
+  DokyService({http.Client? client}) : _client = client ?? http.Client();
 
   /// Método principal de chat que devuelve la respuesta completa
   Future<String> chatCompletion({
@@ -29,26 +30,24 @@ class DokyService {
 
       final history = _buildHistory(messages);
       
-      final pythonCode = '''
-from gradio_client import Client
+      final payload = {
+        'data': [userMessage, history]
+      };
 
-client = Client("$_spaceId")
-result = client.predict(
-    user_msg="""$userMessage""",
-    history=$history,
-    api_name="/user_message"
-)
-print(result[1][-1][1] if result and len(result) > 1 and result[1] else "")
-''';
+      final response = await _client.post(
+        Uri.parse('$_baseUrl/call/user_message'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      ).timeout(const Duration(seconds: 30));
 
-      debugPrint('Executing Python code for Gradio client');
-      final result = await SeriousPython.run(pythonCode);
-      
-      if (result?.isEmpty ?? true) {
-        throw Exception('Empty response from Gradio API');
+      if (response.statusCode != 200) {
+        throw Exception('API error: ${response.statusCode}');
       }
+
+      final result = jsonDecode(response.body);
+      final eventId = result['event_id'];
       
-      return result!.trim();
+      return await _pollResult(eventId);
     } catch (e) {
       debugPrint('Error in DokyService.chatCompletion: $e');
       throw Exception('Error al consultar DocAI: $e');
@@ -57,10 +56,34 @@ print(result[1][-1][1] if result and len(result) > 1 and result[1] else "")
 
 
 
-  /// Construye el historial de conversación en formato Python
-  String _buildHistory(List<ChatMessage> messages) {
-    final history = <String>[];
-    
+  Future<String> _pollResult(String eventId) async {
+    for (int i = 0; i < 30; i++) {
+      await Future.delayed(const Duration(seconds: 1));
+      
+      final response = await _client.get(
+        Uri.parse('$_baseUrl/call/user_message/$eventId'),
+      );
+
+      if (response.statusCode == 200) {
+        final lines = response.body.split('\n');
+        for (final line in lines) {
+          if (line.startsWith('data: ')) {
+            final data = jsonDecode(line.substring(6));
+            if (data is List && data.length > 1 && data[1] is List) {
+              final chat = data[1] as List;
+              if (chat.isNotEmpty && chat.last is List && chat.last.length > 1) {
+                return chat.last[1].toString();
+              }
+            }
+          }
+        }
+      }
+    }
+    throw Exception('Timeout waiting for response');
+  }
+
+  List<List<String>> _buildHistory(List<ChatMessage> messages) {
+    final history = <List<String>>[];
     final recentMessages = messages.length > 8 
         ? messages.sublist(messages.length - 8, messages.length - 1)
         : messages.sublist(0, messages.length - 1);
@@ -69,16 +92,12 @@ print(result[1][-1][1] if result and len(result) > 1 and result[1] else "")
       if (i + 1 < recentMessages.length) {
         final userMsg = recentMessages[i];
         final assistantMsg = recentMessages[i + 1];
-        
         if (userMsg.role == 'user' && assistantMsg.role == 'assistant') {
-          final userContent = userMsg.content.replaceAll('"', '\\"');
-          final assistantContent = assistantMsg.content.replaceAll('"', '\\"');
-          history.add('["$userContent", "$assistantContent"]');
+          history.add([userMsg.content, assistantMsg.content]);
         }
       }
     }
-    
-    return '[${history.join(", ")}]';
+    return history;
   }
 
   /// Método de streaming que simula respuesta progresiva
@@ -169,5 +188,6 @@ print(result[1][-1][1] if result and len(result) > 1 and result[1] else "")
   void dispose() {
     _isDisposed = true;
     cancelCurrentStream();
+    _client.close();
   }
 }
