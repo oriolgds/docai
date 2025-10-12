@@ -1249,4 +1249,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get balanced => 'Balanced';
+
+  @override
+  String get maintenanceMode => 'Maintenance Mode';
+
+  @override
+  String get maintenanceModeMessage =>
+      'Chat is temporarily disabled for maintenance. Please try again later.';
 }

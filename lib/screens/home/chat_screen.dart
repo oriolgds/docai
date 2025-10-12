@@ -4,12 +4,13 @@ import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/chat_input.dart';
 import '../../l10n/generated/app_localizations.dart';
 
-import '../../services/openrouter_service.dart';
+import '../../services/model_service.dart';
 import '../../services/chat_state_manager.dart';
 import '../../services/chat_history_service.dart';
 import '../../services/model_service.dart';
 import '../../models/model_profile.dart';
 import '../../exceptions/model_exceptions.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/chat_message.dart';
 import '../../models/chat_conversation.dart';
 import '../../models/user_medical_preferences.dart';
@@ -18,6 +19,7 @@ import '../../services/supabase_service.dart';
 import '../../theme/app_theme.dart';
 import '../../services/medical_data_bridge_service.dart';
 import '../../services/medical_preferences_service.dart';
+import '../../services/remote_config_service.dart';
 
 import '../medical_preferences_screen.dart';
 import 'history_screen.dart';
@@ -44,7 +46,6 @@ class _ChatScreenState extends State<ChatScreen> {
   late List<ChatMessage> _messages;
   ModelProfile _selectedProfile = ModelProfile.defaultProfile;
   bool _isSending = false;
-  late OpenRouterService _service;
   bool _showDisclaimer = true;
   int? _streamingIndex;
   Timer? _scrollTimer;
@@ -54,6 +55,7 @@ class _ChatScreenState extends State<ChatScreen> {
   UserMedicalPreferences? _userMedicalPreferences;
   bool _isInitialized = false; // Flag to track initialization
   StreamSubscription<String>? _currentStreamSubscription; // Track current stream
+  bool _isMaintenanceMode = false;
   
   // Variables para el historial
   ChatConversation? _currentConversation;
@@ -70,8 +72,8 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _service = OpenRouterService();
     _initializeDefaultModel();
+    _checkMaintenanceMode();
     
     // Configurar listener del scroll controller
     _scrollController.addListener(_onScrollChanged);
@@ -113,6 +115,19 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } catch (e) {
       // Ya tiene el valor por defecto
+    }
+  }
+
+  Future<void> _checkMaintenanceMode() async {
+    try {
+      final isMaintenanceMode = await RemoteConfigService.isMaintenanceMode();
+      if (mounted) {
+        setState(() {
+          _isMaintenanceMode = isMaintenanceMode;
+        });
+      }
+    } catch (e) {
+      // Silently fail
     }
   }
   
@@ -332,7 +347,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _currentStreamSubscription?.cancel();
     _scrollController.removeListener(_onScrollChanged);
     _scrollController.dispose();
-    _service.dispose();
+    ModelService.dispose();
     _stateManager.removeListener(_onStateManagerChanged);
     super.dispose();
   }
@@ -527,9 +542,9 @@ class _ChatScreenState extends State<ChatScreen> {
     // Cancel the current stream
     await _currentStreamSubscription?.cancel();
     _currentStreamSubscription = null;
-    
+
     // Cancel stream in service
-    await _service.cancelCurrentStream();
+    await ModelService.cancelCurrentStream(_selectedProfile);
     
     // Update UI state
     if (mounted) {
@@ -733,17 +748,225 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  // Modal para configurar permisos de política de datos en OpenRouter
+  Future<void> _showDataPolicyModal(String message, String configUrl) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF9800).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.privacy_tip_outlined,
+                color: Color(0xFFFF9800),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Configuración de privacidad requerida',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEB3B).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFFFF9800).withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      color: Color(0xFFFF9800),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        message,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF6C757D),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Pasos a seguir:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildStep('1', 'Abre la configuración de privacidad de OpenRouter', Icons.open_in_browser),
+              _buildStep('2', 'Busca la sección "Data Policy" o "Política de datos"', Icons.search),
+              _buildStep('3', 'Activa la opción "Allow free model publication" o similar', Icons.toggle_on),
+              _buildStep('4', 'Guarda los cambios y vuelve a intentar', Icons.check_circle),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2196F3).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFF2196F3).withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.lightbulb_outline,
+                      color: Color(0xFF2196F3),
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Esta configuración solo necesitas hacerla una vez.',
+                        style: TextStyle(
+                          color: Color(0xFF6C757D),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              Navigator.pop(context);
+              if (await canLaunchUrl(Uri.parse(configUrl))) {
+                await launchUrl(Uri.parse(configUrl), mode: LaunchMode.externalApplication);
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('No se pudo abrir el navegador. Copia este enlace: https://openrouter.ai/settings/privacy'),
+                      duration: Duration(seconds: 5),
+                    ),
+                  );
+                }
+              }
+            },
+            icon: const Icon(Icons.open_in_browser, size: 16),
+            label: const Text('Abrir configuración'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2196F3),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep(String number, String text, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: const Color(0xFF6C5CE7),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                number,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(icon, size: 16, color: const Color(0xFF6C5CE7)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        text,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _sendMessage(
     String text, {
     int? regenerateIndex,
     ModelProfile? overrideProfile,
     bool? overrideReasoning,
   }) async {
-    // Verificar si el usuario tiene BYOK configurado
-    final hasApiKey = await SupabaseService.hasUserApiKey('openrouter');
-    if (!hasApiKey) {
-      await _showApiKeySetupModal();
-      return; // No continuar con el envío del mensaje
+    if (_isMaintenanceMode) return;
+    
+    final profile = overrideProfile ?? _selectedProfile;
+
+    // Verificar si el modelo requiere BYOK
+    if (profile.provider == ModelProvider.byok || profile.provider == ModelProvider.openrouter) {
+      final hasApiKey = await SupabaseService.hasUserApiKey('openrouter');
+      if (!hasApiKey) {
+        await _showApiKeySetupModal();
+        return; // No continuar con el envío del mensaje
+      }
     }
 
     final userMessage = ChatMessage.user(text);
@@ -789,7 +1012,7 @@ class _ChatScreenState extends State<ChatScreen> {
       await Future.delayed(Duration.zero);
       await _scrollToBottom(force: true);
 
-      final stream = _service.streamChatCompletion(
+      final stream = ModelService.streamChatCompletion(
         messages: history,
         profile: overrideProfile ?? _selectedProfile,
         systemPromptOverride: _buildPersonalizedSystemPrompt(),
@@ -861,8 +1084,13 @@ class _ChatScreenState extends State<ChatScreen> {
           _currentStreamSubscription = null;
 
           if (mounted) {
+            // Check if it's a data policy configuration error
+            if (e is DataPolicyConfigurationException) {
+              _showDataPolicyModal(e.message, e.configUrl);
+            }
             // Check if it's a BYOK error
-            if (e.toString().contains('No API key configured')) {
+            else if (e.toString().contains('No API key configured') &&
+                (profile.provider == ModelProvider.byok || profile.provider == ModelProvider.openrouter)) {
               // Show BYOK setup modal
               _showApiKeySetupModal();
             } else {
@@ -903,8 +1131,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
     } catch (e) {
       if (mounted) {
+        // Check if it's a data policy configuration error
+        if (e is DataPolicyConfigurationException) {
+          _showDataPolicyModal(e.message, e.configUrl);
+        }
         // Check if it's a BYOK error
-        if (e.toString().contains('No API key configured')) {
+        else if (e.toString().contains('No API key configured') &&
+            (profile.provider == ModelProvider.byok || profile.provider == ModelProvider.openrouter)) {
           // Show BYOK setup modal
           await _showApiKeySetupModal();
         } else {
@@ -1337,34 +1570,65 @@ class _ChatScreenState extends State<ChatScreen> {
                   },
                 ),
               ),
-              FutureBuilder<List<ModelProfile>>(
-                future: ModelService.getAvailableModels(),
-                builder: (context, snapshot) {
-                  final profiles = snapshot.data ?? [];
-                  return ChatInput(
-                    onSend: (text) => _sendMessage(text),
-                    onCancel: _cancelGeneration,
-                    isSending: _isSending,
-                    selectedProfile: _selectedProfile,
-                    allProfiles: profiles,
-                    useReasoning: _useReasoning,
-                    onProfileChanged: (p) {
-                      setState(() {
-                        _selectedProfile = p;
-                      });
-                    },
-                    onReasoningChanged: (enabled) {
-                      setState(() {
-                        _useReasoning = enabled;
-                      });
-                    },
-                    onRequestPro: () {},
-                    // Add new scroll button properties
-                    showScrollButton: _showScrollToBottomButton,
-                    onScrollToBottom: _scrollToBottomButtonPressed,
-                  );
-                },
-              ),
+              if (_isMaintenanceMode)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.construction, color: Colors.orange, size: 24),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              l10n.maintenanceMode ?? 'Modo de mantenimiento',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              l10n.maintenanceModeMessage ?? 'El chat está temporalmente deshabilitado por mantenimiento. Por favor, inténtalo más tarde.',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                FutureBuilder<List<ModelProfile>>(
+                  future: ModelService.getAvailableModels(),
+                  builder: (context, snapshot) {
+                    final profiles = snapshot.data ?? [];
+                    return ChatInput(
+                      onSend: (text) => _sendMessage(text),
+                      onCancel: _cancelGeneration,
+                      isSending: _isSending,
+                      selectedProfile: _selectedProfile,
+                      allProfiles: profiles,
+                      onProfileChanged: (p) {
+                        setState(() {
+                          _selectedProfile = p;
+                        });
+                      },
+                      onRequestPro: () {},
+                      // Add new scroll button properties
+                      showScrollButton: _showScrollToBottomButton,
+                      onScrollToBottom: _scrollToBottomButtonPressed,
+                    );
+                  },
+                ),
             ],
           ),
           // Remove the floating button since we've moved it to the ChatInput

@@ -1259,4 +1259,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get balanced => 'Balanceado';
+
+  @override
+  String get maintenanceMode => 'Modo de mantenimiento';
+
+  @override
+  String get maintenanceModeMessage =>
+      'El chat está temporalmente deshabilitado por mantenimiento. Por favor, inténtalo más tarde.';
 }

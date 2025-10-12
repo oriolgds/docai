@@ -250,6 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
           TextFormField(
             controller: _passwordController,
             obscureText: true,
+            onFieldSubmitted: (_) => _handleLogin(),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter your password';
