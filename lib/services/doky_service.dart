@@ -2,19 +2,31 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:serious_python/serious_python.dart';
 import '../models/chat_message.dart';
 import '../models/model_profile.dart';
 
 class DokyService {
-  static const String _baseUrl = 'https://oriolgds-llama-doky.hf.space';
-  
-  final http.Client _client;
+  static const String _serverUrl = 'http://127.0.0.1:8765';
   StreamController<String>? _currentController;
   bool _isDisposed = false;
+  static bool _pythonInitialized = false;
 
-  DokyService({http.Client? client}) : _client = client ?? http.Client();
+  DokyService();
 
-  /// Método principal de chat que devuelve la respuesta completa
+  Future<void> _ensurePythonRunning() async {
+    if (_pythonInitialized) return;
+    
+    try {
+      await SeriousPython.run("python_app/app.zip", sync: false);
+      await Future.delayed(const Duration(seconds: 2));
+      _pythonInitialized = true;
+    } catch (e) {
+      debugPrint('Python initialization error: $e');
+      rethrow;
+    }
+  }
+
   Future<String> chatCompletion({
     required List<ChatMessage> messages,
     required ModelProfile profile,
@@ -22,92 +34,20 @@ class DokyService {
     double temperature = 0.7,
     bool useReasoning = false,
   }) async {
-    if (_isDisposed) throw Exception('DokyService has been disposed');
-    
-    try {
-      final userMessage = messages.isNotEmpty ? messages.last.content : '';
-      if (userMessage.isEmpty) throw Exception('No message provided');
+    final buffer = StringBuffer();
 
-      final history = _buildHistory(messages);
-      
-      final payload = {
-        'jsonrpc': '2.0',
-        'id': DateTime.now().millisecondsSinceEpoch,
-        'method': 'tools/call',
-        'params': {
-          'name': 'llama_doky_chat_streaming_ui',
-          'arguments': {
-            'message': userMessage,
-            'history': history,
-          }
-        }
-      };
-
-      debugPrint('Calling MCP API with payload: ${jsonEncode(payload)}');
-      final request = http.Request('POST', Uri.parse('$_baseUrl/gradio_api/mcp/'));
-      request.headers['Content-Type'] = 'application/json';
-      request.headers['Accept'] = 'application/json, text/event-stream';
-      request.body = jsonEncode(payload);
-      
-      final streamedResponse = await _client.send(request);
-      
-      if (streamedResponse.statusCode != 200) {
-        throw Exception('API error: ${streamedResponse.statusCode}');
-      }
-
-      String result = '';
-      bool isMessageEvent = false;
-      
-      await for (final chunk in streamedResponse.stream.transform(utf8.decoder)) {
-        final lines = chunk.split('\n');
-        for (final line in lines) {
-          if (line.startsWith('event: message')) {
-            isMessageEvent = true;
-            continue;
-          }
-          
-          if (isMessageEvent && line.startsWith('data: ')) {
-            final jsonStr = line.substring(6).trim();
-            if (jsonStr.isEmpty) continue;
-            
-            try {
-              final decodedJson = jsonStr
-                  .replaceAll('&quot;', '"')
-                  .replaceAll('&#39;', "'");
-              
-              final data = jsonDecode(decodedJson);
-              if (data['result']?['content'] != null) {
-                final content = data['result']['content'] as List;
-                if (content.isNotEmpty && content[0]['text'] != null) {
-                  final text = content[0]['text'] as String;
-                  // Extract assistant response from [[user_msg, assistant_msg]] format
-                  final match = RegExp(r"\[\['[^']*',\s*'([^']*)']\]").firstMatch(text);
-                  if (match != null && match.groupCount >= 1) {
-                    result = match.group(1)!.replaceAll('\\n', '\n');
-                    break;
-                  }
-                }
-              }
-            } catch (e) {
-              debugPrint('Error parsing SSE line: $e');
-            }
-            isMessageEvent = false;
-          }
-        }
-        if (result.isNotEmpty) break;
-      }
-      
-      if (result.isEmpty) throw Exception('No response received');
-      return result;
-    } catch (e) {
-      debugPrint('Error in DokyService.chatCompletion: $e');
-      throw Exception('Error al consultar DocAI: $e');
+    await for (final chunk in streamChatCompletion(
+      messages: messages,
+      profile: profile,
+      systemPromptOverride: systemPromptOverride,
+      temperature: temperature,
+      useReasoning: useReasoning,
+    )) {
+      buffer.write(chunk);
     }
+
+    return buffer.toString();
   }
-
-
-
-
 
   List<List<String>> _buildHistory(List<ChatMessage> messages) {
     final history = <List<String>>[];
@@ -127,7 +67,6 @@ class DokyService {
     return history;
   }
 
-  /// Método de streaming que simula respuesta progresiva
   Stream<String> streamChatCompletion({
     required List<ChatMessage> messages,
     required ModelProfile profile,
@@ -138,69 +77,117 @@ class DokyService {
     if (_isDisposed) throw Exception('DokyService has been disposed');
     
     await cancelCurrentStream();
+    await _ensurePythonRunning();
 
-    try {
-      // Create a new stream controller
-      final controller = StreamController<String>();
-      _currentController = controller;
+    final controller = StreamController<String>();
+    _currentController = controller;
 
-      // Get the complete response first
-      _startStreamingResponse(messages, controller, systemPromptOverride);
+    final userMessage = messages.isNotEmpty ? messages.last.content : '';
+    if (userMessage.isEmpty) throw Exception('No message provided');
 
-      // Yield from the controller's stream
-      yield* controller.stream;
-    } catch (e) {
-      debugPrint('Error in DokyService.streamChatCompletion: $e');
-      throw Exception('Error al consultar DocAI: $e');
-    }
+    final history = _buildHistory(messages);
+    final systemPrompt = systemPromptOverride ?? _getDefaultSystemPrompt();
+
+    _streamFromPython(
+      message: userMessage,
+      history: history,
+      systemPrompt: systemPrompt,
+      temperature: temperature,
+      controller: controller,
+    );
+
+    yield* controller.stream;
   }
 
-  /// Maneja la respuesta de streaming simulando chunks
-  Future<void> _startStreamingResponse(
-    List<ChatMessage> messages,
-    StreamController<String> controller,
-    String? systemPromptOverride,
-  ) async {
+  Future<void> _streamFromPython({
+    required String message,
+    required List<List<String>> history,
+    required String systemPrompt,
+    required double temperature,
+    required StreamController<String> controller,
+  }) async {
     try {
-      // Obtener la respuesta completa
-      final response = await chatCompletion(
-        messages: messages,
-        profile: ModelProfile.defaultProfile,
-        systemPromptOverride: systemPromptOverride,
-      );
-      
-      if (_isDisposed || controller.isClosed) return;
+      final request = http.Request('POST', Uri.parse(_serverUrl));
+      request.headers['Content-Type'] = 'application/json';
+      request.body = jsonEncode({
+        'message': message,
+        'history': history,
+        'sys_prompt': systemPrompt,
+        'temperature': temperature,
+      });
 
-      // Simular streaming dividiendo la respuesta en palabras
-      final words = response.split(' ');
-      
-      for (int i = 0; i < words.length; i++) {
+      final client = http.Client();
+      final response = await client.send(request);
+
+      if (response.statusCode != 200) {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+
+      await for (final chunk in response.stream.transform(utf8.decoder)) {
         if (_isDisposed || controller.isClosed) break;
-        
-        // Agregar palabra con espaciado apropiado
-        final chunk = i == 0 ? words[i] : ' ${words[i]}';
-        controller.add(chunk);
-        
-        // Pequeña pausa para simular streaming real
-        await Future.delayed(const Duration(milliseconds: 100));
+
+        final lines = chunk.split('\n');
+        for (final line in lines) {
+          if (line.startsWith('data: ')) {
+            final data = line.substring(6);
+            if (data == '[DONE]') {
+              controller.close();
+              break;
+            }
+            
+            try {
+              final json = jsonDecode(data);
+              if (json['text'] != null) {
+                controller.add(json['text']);
+              } else if (json['error'] != null) {
+                controller.addError(Exception(json['error']));
+              }
+            } catch (e) {
+              debugPrint('Error parsing SSE: $e');
+            }
+          }
+        }
       }
-      
+
+      client.close();
     } catch (e) {
-      debugPrint('Error in streaming response: $e');
+      debugPrint('Error streaming from Python: $e');
       if (!controller.isClosed) {
-        controller.addError(Exception('Error al procesar respuesta: $e'));
-      }
-    } finally {
-      if (!controller.isClosed) {
+        controller.addError(Exception('Error al consultar DocAI: $e'));
         controller.close();
       }
+    } finally {
       _currentController = null;
     }
   }
 
+  String _getDefaultSystemPrompt() {
+    return '''Eres DocAI, una inteligencia artificial médica avanzada desarrollada por Oriol Giner Díaz. Tu misión es proporcionar asistencia e información médica de alta calidad, exclusivamente sobre temas relacionados con la salud.
 
+Directrices fundamentales:
+- Proporciona información médica precisa, actualizada y basada en evidencia científica
+- Mantén un tono profesional, empático y accesible
+- Usa terminología médica cuando sea necesario, pero explícala en lenguaje sencillo
+- IMPORTANTE: No sustituyes la consulta con un profesional sanitario
+- No proporciones diagnósticos definitivos, solo orientación informativa
+- Para síntomas graves o urgentes, recomienda buscar atención médica inmediata
+- Si la pregunta no es médica, redirige educadamente al ámbito de la salud
 
-  /// Cancela el stream actual si existe
+Áreas de especialización:
+- Información sobre enfermedades y condiciones médicas
+- Síntomas y posibles causas
+- Prevención y hábitos saludables
+- Medicamentos y tratamientos generales
+- Primeros auxilios básicos
+- Salud mental y bienestar
+
+Limitaciones éticas:
+- No recetes medicamentos específicos
+- No interpretes estudios médicos personales (análisis, radiografías, etc.)
+- En caso de emergencia, deriva inmediatamente a servicios de urgencia
+- Respeta la privacidad y confidencialidad del usuario''';
+  }
+
   Future<void> cancelCurrentStream() async {
     if (_currentController != null && !_currentController!.isClosed) {
       await _currentController!.close();
@@ -208,13 +195,10 @@ class DokyService {
     }
   }
 
-  /// Verifica si actualmente está transmitiendo
   bool get isStreaming => _currentController != null && !_currentController!.isClosed;
 
-  /// Libera recursos del servicio
   void dispose() {
     _isDisposed = true;
     cancelCurrentStream();
-    _client.close();
   }
 }
