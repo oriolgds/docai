@@ -39,6 +39,7 @@ class _CloudSyncModalState extends State<CloudSyncModal>
   }
 
   Future<void> _performSync() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
     });
@@ -46,6 +47,7 @@ class _CloudSyncModalState extends State<CloudSyncModal>
     // Simulate sync process
     await Future.delayed(const Duration(seconds: 2));
 
+    if (!mounted) return;
     setState(() {
       _isLoading = false;
       _isSynced = true;
