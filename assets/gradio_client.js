@@ -1,46 +1,58 @@
-// Gradio Client for Flutter
-var GRADIO_URL = GRADIO_URL || 'https://oriolgds-doky-opus.hf.space';
+// Gradio Client for Flutter using official @gradio/client library
+var GRADIO_SPACE = GRADIO_SPACE || 'oriolgds/doky-opus';
+
+async function waitForGradio() {
+  let attempts = 0;
+  while (!window.gradio && attempts < 50) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    attempts++;
+  }
+  if (!window.gradio) {
+    throw new Error('Gradio library failed to load');
+  }
+}
 
 async function streamChat(message, history, sysPrompt, maxTok, temp) {
-  const payload = {
-    data: [message, history, sysPrompt, maxTok, temp]
-  };
-
-  const response = await fetch(`${GRADIO_URL}/call/send_message`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  const eventData = await response.json();
-  const eventId = eventData.event_id;
-  const streamUrl = `${GRADIO_URL}/call/send_message/${eventId}`;
-  
-  const eventSource = new EventSource(streamUrl);
-  let lastResponse = '';
-  
-  eventSource.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
+  try {
+    console.log('Waiting for Gradio library...');
+    await waitForGradio();
+    
+    console.log('Connecting to Gradio space:', GRADIO_SPACE);
+    
+    const { Client } = window.gradio;
+    const client = await Client.connect(GRADIO_SPACE);
+    
+    console.log('Connected, sending message...');
+    
+    const result = await client.predict('/send_message', {
+      message: message,
+      history: history,
+      sys_prompt: sysPrompt,
+      max_tok: maxTok,
+      temp: temp
+    });
+    
+    console.log('Received result:', result);
+    
+    if (result && result.data) {
+      const responseData = result.data;
       
-      if (data && data[0] && data[0].length > 0) {
-        const lastPair = data[0][data[0].length - 1];
-        if (lastPair && lastPair[1]) {
+      // Extract assistant response from the result
+      if (Array.isArray(responseData) && responseData.length > 0) {
+        const lastPair = responseData[responseData.length - 1];
+        if (Array.isArray(lastPair) && lastPair.length > 1) {
           const assistantMsg = lastPair[1];
-          const newText = assistantMsg.substring(lastResponse.length);
-          if (newText) {
-            window.flutter_inappwebview.callHandler('onChunk', newText);
-            lastResponse = assistantMsg;
+          if (assistantMsg) {
+            window.flutter_inappwebview.callHandler('onChunk', assistantMsg);
           }
         }
       }
-    } catch (e) {
-      console.error('Parse error:', e);
     }
-  };
-
-  eventSource.onerror = () => {
-    eventSource.close();
+    
     window.flutter_inappwebview.callHandler('onDone');
-  };
+  } catch (error) {
+    console.error('Gradio client error:', error);
+    window.flutter_inappwebview.callHandler('onChunk', 'Error: ' + error.message);
+    window.flutter_inappwebview.callHandler('onDone');
+  }
 }
