@@ -1249,19 +1249,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _navigateToBackupTab() {
-    if (widget.onNavigateToBackup != null) {
-      widget.onNavigateToBackup!();
-      // Show cloud sync modal after tab change
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          showModalBottomSheet<bool>(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (context) => const CloudSyncModal(),
-          );
-        }
-      });
+    if (widget.onNavigateToHistory != null) {
+      widget.onNavigateToHistory!();
     }
   }
 

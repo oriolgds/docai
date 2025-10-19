@@ -392,5 +392,13 @@
   "light": "Ligero",
   "balanced": "Balanceado",
   "maintenanceMode": "Modo de mantenimiento",
-  "maintenanceModeMessage": "El chat está temporalmente deshabilitado por mantenimiento. Por favor, inténtalo más tarde."
+  "maintenanceModeMessage": "El chat está temporalmente deshabilitado por mantenimiento. Por favor, inténtalo más tarde.",
+  "refreshHistory": "Actualizar historial",
+  "startNewChat": "Iniciar nuevo chat",
+  "deleteAllConversations": "Eliminar todas las conversaciones",
+  "cloudSync": "Sincronización en la nube",
+  "syncYourData": "Sincroniza tus datos",
+  "exportData": "Exportar datos",
+  "downloadYourData": "Descarga tus datos",
+  "featureComingSoon": "Función próximamente disponible"
 }

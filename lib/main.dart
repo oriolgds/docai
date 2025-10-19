@@ -9,7 +9,6 @@ import 'package:app_links/app_links.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/dashboard_screen.dart';
-import 'screens/auth/email_verified_screen.dart';
 import 'screens/splash/splash_screen.dart';
 import 'services/supabase_service.dart';
 import 'services/localization_service.dart';

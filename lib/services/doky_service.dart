@@ -1,30 +1,76 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:serious_python/serious_python.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../models/chat_message.dart';
 import '../models/model_profile.dart';
+import '../models/doky_model_config.dart';
+import 'doky_config_service.dart';
 
+
+
+// Don't change to MCP or HTTPS because of CORS issues with HF Spaces always use JS client
 class DokyService {
-  static const String _serverUrl = 'http://127.0.0.1:8765';
   StreamController<String>? _currentController;
+  HeadlessInAppWebView? _webView;
   bool _isDisposed = false;
-  static bool _pythonInitialized = false;
+  bool _isInitialized = false;
+  String _currentGradioUrl = 'https://oriolgds-doky-opus.hf.space';
 
   DokyService();
 
-  Future<void> _ensurePythonRunning() async {
-    if (_pythonInitialized) return;
-    
-    try {
-      await SeriousPython.run("python_app/app.zip", sync: false);
-      await Future.delayed(const Duration(seconds: 2));
-      _pythonInitialized = true;
-    } catch (e) {
-      debugPrint('Python initialization error: $e');
-      rethrow;
+  Future<void> _initWebView(String gradioUrl) async {
+    if (_isInitialized && _currentGradioUrl == gradioUrl) return;
+
+    if (_isInitialized && _currentGradioUrl != gradioUrl) {
+      await _webView?.dispose();
+      _isInitialized = false;
     }
+
+    _currentGradioUrl = gradioUrl;
+    final jsCode = await rootBundle.loadString('assets/gradio_client.js');
+
+    _webView = HeadlessInAppWebView(
+      initialSettings: InAppWebViewSettings(
+        javaScriptEnabled: true,
+        domStorageEnabled: true,
+      ),
+      onWebViewCreated: (controller) {
+        controller.addJavaScriptHandler(
+          handlerName: 'onChunk',
+          callback: (args) {
+            debugPrint('Received chunk: ${args[0]}');
+            if (_currentController != null && !_currentController!.isClosed) {
+              _currentController!.add(args[0].toString());
+            }
+          },
+        );
+
+        controller.addJavaScriptHandler(
+          handlerName: 'onDone',
+          callback: (args) {
+            debugPrint('Stream done');
+            if (_currentController != null && !_currentController!.isClosed) {
+              _currentController!.close();
+            }
+          },
+        );
+      },
+      onConsoleMessage: (controller, consoleMessage) {
+        debugPrint('JS Console: ${consoleMessage.message}');
+      },
+      onLoadStop: (controller, url) async {
+        final fullJs = "var GRADIO_URL = '$gradioUrl';\n$jsCode";
+        await controller.evaluateJavascript(source: fullJs);
+        await Future.delayed(const Duration(milliseconds: 500));
+        _isInitialized = true;
+      },
+    );
+
+    await _webView!.run();
+    await _webView!.webViewController?.loadData(data: '<html><body></body></html>');
+    await Future.delayed(const Duration(milliseconds: 1500));
   }
 
   Future<String> chatCompletion({
@@ -77,7 +123,12 @@ class DokyService {
     if (_isDisposed) throw Exception('DokyService has been disposed');
     
     await cancelCurrentStream();
-    await _ensurePythonRunning();
+
+    final configService = await DokyConfigService.getInstance();
+    final modelConfig = configService.getModelById(profile.id) ?? configService.getDefaultModel();
+    final gradioUrl = modelConfig.gradioUrl ?? 'https://oriolgds-doky-opus.hf.space';
+
+    await _initWebView(gradioUrl);
 
     final controller = StreamController<String>();
     _currentController = controller;
@@ -88,7 +139,7 @@ class DokyService {
     final history = _buildHistory(messages);
     final systemPrompt = systemPromptOverride ?? _getDefaultSystemPrompt();
 
-    _streamFromPython(
+    _executeJS(
       message: userMessage,
       history: history,
       systemPrompt: systemPrompt,
@@ -99,7 +150,7 @@ class DokyService {
     yield* controller.stream;
   }
 
-  Future<void> _streamFromPython({
+  Future<void> _executeJS({
     required String message,
     required List<List<String>> history,
     required String systemPrompt,
@@ -107,56 +158,30 @@ class DokyService {
     required StreamController<String> controller,
   }) async {
     try {
-      final request = http.Request('POST', Uri.parse(_serverUrl));
-      request.headers['Content-Type'] = 'application/json';
-      request.body = jsonEncode({
-        'message': message,
-        'history': history,
-        'sys_prompt': systemPrompt,
-        'temperature': temperature,
-      });
+      final escapedMessage = message.replaceAll("'", "\\'").replaceAll('\n', '\\n');
+      final escapedPrompt = systemPrompt.replaceAll("'", "\\'").replaceAll('\n', '\\n');
+      final historyJson = jsonEncode(history);
 
-      final client = http.Client();
-      final response = await client.send(request);
+      final jsCall = '''
+        streamChat(
+          '$escapedMessage',
+          $historyJson,
+          '$escapedPrompt',
+          512,
+          $temperature
+        ).catch(err => {
+          console.error('Error:', err);
+          window.flutter_inappwebview.callHandler('onDone');
+        });
+      ''';
 
-      if (response.statusCode != 200) {
-        throw Exception('Server error: ${response.statusCode}');
-      }
-
-      await for (final chunk in response.stream.transform(utf8.decoder)) {
-        if (_isDisposed || controller.isClosed) break;
-
-        final lines = chunk.split('\n');
-        for (final line in lines) {
-          if (line.startsWith('data: ')) {
-            final data = line.substring(6);
-            if (data == '[DONE]') {
-              controller.close();
-              break;
-            }
-            
-            try {
-              final json = jsonDecode(data);
-              if (json['text'] != null) {
-                controller.add(json['text']);
-              } else if (json['error'] != null) {
-                controller.addError(Exception(json['error']));
-              }
-            } catch (e) {
-              debugPrint('Error parsing SSE: $e');
-            }
-          }
-        }
-      }
-
-      client.close();
+      await _webView?.webViewController?.evaluateJavascript(source: jsCall);
     } catch (e) {
-      debugPrint('Error streaming from Python: $e');
+      debugPrint('Error executing JS: $e');
       if (!controller.isClosed) {
         controller.addError(Exception('Error al consultar DocAI: $e'));
         controller.close();
       }
-    } finally {
       _currentController = null;
     }
   }
@@ -200,5 +225,6 @@ Limitaciones éticas:
   void dispose() {
     _isDisposed = true;
     cancelCurrentStream();
+    _webView?.dispose();
   }
 }

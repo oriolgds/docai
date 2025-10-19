@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../services/supabase_service.dart';
 import '../../widgets/responsive_layout.dart';
 import '../../widgets/android_download_modal.dart';
-import '../../theme/app_theme.dart';
 import '../auth/login_screen.dart';
 import 'chat_screen.dart';
 import 'history_screen.dart';
@@ -18,6 +17,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
+  VoidCallback? _showHistoryModal;
 
   // Callback para cambiar de tab
   void _changeTab(int index) {
@@ -39,6 +39,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  // Método para ir a History y mostrar el modal de opciones avanzadas
+  void _goToHistoryAndShowModal() {
+    setState(() {
+      _currentIndex = 1; // Cambiar a la tab de History
+    });
+    // Mostrar el modal después de cambiar de tab
+    Future.delayed(const Duration(milliseconds: 300), () {
+      _showHistoryModal?.call();
+    });
+  }
+
   late final List<Widget> _screens;
 
   @override
@@ -54,10 +65,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       HistoryScreen(
         onNavigateToChat: () => _changeTab(0),
         onStartNewChat: _goToChatAndStartNew,
+        onModalRequested: (callback) => _showHistoryModal = callback,
       ),
       ProfileScreen(
         onNavigateToHistory: () => _changeTab(1),
-        onNavigateToBackup: () => _changeTab(1),
+        onNavigateToBackup: _goToHistoryAndShowModal,
       ),
     ];
     

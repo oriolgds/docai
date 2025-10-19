@@ -2449,6 +2449,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Chat is temporarily disabled for maintenance. Please try again later.'**
   String get maintenanceModeMessage;
+
+  /// Refresh history option
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh history'**
+  String get refreshHistory;
+
+  /// Start new chat option
+  ///
+  /// In en, this message translates to:
+  /// **'Start new chat'**
+  String get startNewChat;
+
+  /// Delete all conversations option
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all conversations'**
+  String get deleteAllConversations;
+
+  /// Cloud sync option
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud sync'**
+  String get cloudSync;
+
+  /// Sync your data subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Sync your data'**
+  String get syncYourData;
+
+  /// Export data option
+  ///
+  /// In en, this message translates to:
+  /// **'Export data'**
+  String get exportData;
+
+  /// Download your data subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Download your data'**
+  String get downloadYourData;
+
+  /// Feature coming soon message
+  ///
+  /// In en, this message translates to:
+  /// **'Feature coming soon'**
+  String get featureComingSoon;
 }
 
 class _AppLocalizationsDelegate

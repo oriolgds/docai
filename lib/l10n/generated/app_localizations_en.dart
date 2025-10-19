@@ -1256,4 +1256,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get maintenanceModeMessage =>
       'Chat is temporarily disabled for maintenance. Please try again later.';
+
+  @override
+  String get refreshHistory => 'Refresh history';
+
+  @override
+  String get startNewChat => 'Start new chat';
+
+  @override
+  String get deleteAllConversations => 'Delete all conversations';
+
+  @override
+  String get cloudSync => 'Cloud sync';
+
+  @override
+  String get syncYourData => 'Sync your data';
+
+  @override
+  String get exportData => 'Export data';
+
+  @override
+  String get downloadYourData => 'Download your data';
+
+  @override
+  String get featureComingSoon => 'Feature coming soon';
 }
