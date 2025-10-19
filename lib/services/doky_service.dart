@@ -70,6 +70,7 @@ class DokyService {
     if (userMessage.isEmpty) throw Exception('No message provided');
 
     final history = _buildHistory(messages);
+    // IMPORTANTE: Usar el systemPromptOverride que incluye las preferencias médicas del usuario
     final systemPrompt = systemPromptOverride ?? _getDefaultSystemPrompt();
 
     final controller = StreamController<String>();

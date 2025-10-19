@@ -17,7 +17,6 @@ import '../../models/user_medical_preferences.dart';
 import '../../config/openrouter_config.dart';
 import '../../services/supabase_service.dart';
 import '../../theme/app_theme.dart';
-import '../../services/medical_data_bridge_service.dart';
 import '../../services/medical_preferences_service.dart';
 import '../../services/remote_config_service.dart';
 
@@ -251,93 +250,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String _buildPersonalizedSystemPrompt() {
-    String basePrompt = OpenRouterConfig.medicalSystemPrompt;
-
+    final basePrompt = OpenRouterConfig.medicalSystemPrompt;
+    
     if (_userMedicalPreferences == null) {
       return basePrompt;
     }
 
-    List<String> personalizations = [];
-
-    // Agregar información sobre alergias
-    if (_userMedicalPreferences!.allergies.isNotEmpty) {
-      personalizations.add(
-        'IMPORTANTE: El usuario tiene las siguientes alergias: ${_userMedicalPreferences!.allergies.join(", ")}. '
-        'SIEMPRE considera estas alergias al dar recomendaciones médicas, medicamentos o tratamientos.'
-      );
-    }
-
-    // Agregar alergias a medicamentos
-    if (_userMedicalPreferences!.medicationAllergies.isNotEmpty) {
-      personalizations.add(
-        'IMPORTANTE: El usuario tiene alergias a los siguientes medicamentos: ${_userMedicalPreferences!.medicationAllergies.join(", ")}. '
-        'NUNCA recomiendes estos medicamentos.'
-      );
-    }
-
-    // Agregar preferencia de medicina
-    if (_userMedicalPreferences!.medicinePreference != 'both') {
-      String preferenceText = _userMedicalPreferences!.medicinePreference == 'natural'
-          ? 'El usuario prefiere medicina natural y remedios alternativos'
-          : 'El usuario prefiere medicina convencional y tratamientos farmacológicos';
-      personalizations.add('$preferenceText. Ajusta tus recomendaciones según esta preferencia.');
-    }
-
-    // Agregar condiciones crónicas
-    if (_userMedicalPreferences!.chronicConditions.isNotEmpty) {
-      personalizations.add(
-        'El usuario tiene las siguientes condiciones crónicas: ${_userMedicalPreferences!.chronicConditions.join(", ")}. '
-        'Ten en cuenta estas condiciones al proporcionar consejos médicos.'
-      );
-    }
-
-    // Agregar medicamentos actuales
-    if (_userMedicalPreferences!.currentMedications.isNotEmpty) {
-      personalizations.add(
-        'El usuario toma actualmente los siguientes medicamentos: ${_userMedicalPreferences!.currentMedications.join(", ")}. '
-        'Verifica posibles interacciones medicamentosas antes de recomendar nuevos tratamientos.'
-      );
-    }
-
-    // Agregar información de edad calculada de dateOfBirth
-    if (_userMedicalPreferences!.dateOfBirth != null) {
-      final age = DateTime.now().difference(_userMedicalPreferences!.dateOfBirth!).inDays ~/ 365;
-      String ageRange;
-      if (age < 18) ageRange = 'menor de 18 años';
-      else if (age < 36) ageRange = '18-35 años';
-      else if (age < 56) ageRange = '36-55 años';
-      else if (age < 76) ageRange = '56-75 años';
-      else ageRange = 'más de 75 años';
-      personalizations.add('El usuario tiene $age años (rango: $ageRange).');
-    }
-
-    // Agregar género
-    if (_userMedicalPreferences!.gender != null && _userMedicalPreferences!.gender != 'prefer_not_to_say') {
-      String genderText;
-      switch (_userMedicalPreferences!.gender) {
-        case 'male': genderText = 'Masculino'; break;
-        case 'female': genderText = 'Femenino'; break;
-        case 'other': genderText = 'Otro'; break;
-        default: genderText = _userMedicalPreferences!.gender!;
-      }
-      personalizations.add('Género del usuario: $genderText.');
-    }
-
-    // Agregar información adicional si está disponible
-    if (_userMedicalPreferences!.smokingStatus != 'never') {
-      personalizations.add('Hábitos de tabaquismo: ${_userMedicalPreferences!.smokingStatus}.');
-    }
-
-    if (_userMedicalPreferences!.alcoholConsumption != 'never') {
-      personalizations.add('Consumo de alcohol: ${_userMedicalPreferences!.alcoholConsumption}.');
-    }
-
-    // Construir el prompt personalizado
-    if (personalizations.isNotEmpty) {
-      return '$basePrompt\n\nINFORMACIÓN PERSONALIZADA DEL USUARIO:\n${personalizations.join("\n\n")}';
-    }
-
-    return basePrompt;
+    // Usar el método del modelo para generar el contexto médico
+    final medicalContext = _userMedicalPreferences!.generateMedicalContext();
+    
+    return '$basePrompt\n\nINFORMACIÓN PERSONALIZADA DEL PACIENTE:\n$medicalContext';
   }
 
   @override
