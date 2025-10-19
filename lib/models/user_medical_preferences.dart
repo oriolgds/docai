@@ -182,64 +182,75 @@ class UserMedicalPreferences {
 
   /// Genera un prompt personalizado basado en las preferencias del usuario
   String generateMedicalContext() {
-    List<String> contextParts = [];
+    final critical = <String>[];
+    final info = <String>[];
+    
+    // INFORMACIÓN CRÍTICA (alergias y medicamentos a evitar)
+    if (medicationAllergies.isNotEmpty) {
+      critical.add("⚠️ ALERGIAS A MEDICAMENTOS: ${medicationAllergies.join(', ')}. NUNCA recomendar estos medicamentos.");
+    }
+    if (allergies.isNotEmpty) {
+      critical.add("⚠️ ALERGIAS: ${allergies.join(', ')}. Considerar al recomendar tratamientos.");
+    }
+    if (avoidMedications.isNotEmpty) {
+      critical.add("⚠️ MEDICAMENTOS A EVITAR: ${avoidMedications.join(', ')}.");
+    }
+    if (foodIntolerances.isNotEmpty) {
+      critical.add("Intolerancias alimentarias: ${foodIntolerances.join(', ')}.");
+    }
     
     // Información básica
     if (dateOfBirth != null) {
       final age = DateTime.now().difference(dateOfBirth!).inDays ~/ 365;
-      contextParts.add("Paciente de $age años");
+      info.add("Edad: $age años");
     }
-    
-    if (gender != null) contextParts.add("género $gender");
+    if (gender != null && gender != 'prefer_not_to_say') {
+      final genderMap = {'male': 'masculino', 'female': 'femenino', 'other': 'otro'};
+      info.add("Género: ${genderMap[gender] ?? gender}");
+    }
     if (weight != null && height != null) {
       final bmi = weight! / ((height! / 100) * (height! / 100));
-      contextParts.add("IMC ${bmi.toStringAsFixed(1)}");
+      info.add("Peso: ${weight}kg, Altura: ${height}cm, IMC: ${bmi.toStringAsFixed(1)}");
     }
     
-    // Alergias importantes
-    if (allergies.isNotEmpty) {
-      contextParts.add("Alergias: ${allergies.join(', ')}");
+    // Condiciones médicas actuales
+    if (chronicConditions.isNotEmpty) {
+      info.add("Condiciones crónicas: ${chronicConditions.join(', ')}");
     }
-    if (medicationAllergies.isNotEmpty) {
-      contextParts.add("Alergias a medicamentos: ${medicationAllergies.join(', ')}");
+    if (currentMedications.isNotEmpty) {
+      info.add("Medicación actual: ${currentMedications.join(', ')}. Verificar interacciones.");
+    }
+    if (previousSurgeries.isNotEmpty) {
+      info.add("Cirugías previas: ${previousSurgeries.join(', ')}");
     }
     
     // Preferencias de tratamiento
-    switch (medicinePreference) {
-      case 'natural':
-        contextParts.add("Prefiere medicina natural y remedios alternativos");
-        break;
-      case 'conventional':
-        contextParts.add("Prefiere medicina convencional");
-        break;
-      case 'both':
-        contextParts.add("Está abierto tanto a medicina convencional como natural");
-        break;
+    if (medicinePreference == 'natural') {
+      info.add("Preferencia: medicina natural y remedios alternativos");
+    } else if (medicinePreference == 'conventional') {
+      info.add("Preferencia: medicina convencional");
+    }
+    if (preferredTreatments.isNotEmpty) {
+      info.add("Tratamientos preferidos: ${preferredTreatments.join(', ')}");
     }
     
-    // Condiciones existentes
-    if (chronicConditions.isNotEmpty) {
-      contextParts.add("Condiciones crónicas: ${chronicConditions.join(', ')}");
-    }
-    if (currentMedications.isNotEmpty) {
-      contextParts.add("Medicamentos actuales: ${currentMedications.join(', ')}");
+    // Estilo de vida
+    final lifestyle = <String>[];
+    if (smokingStatus != 'never') lifestyle.add("Tabaco: $smokingStatus");
+    if (alcoholConsumption != 'never') lifestyle.add("Alcohol: $alcoholConsumption");
+    if (exerciseFrequency != 'none') lifestyle.add("Ejercicio: $exerciseFrequency");
+    if (dietType != null && dietType!.isNotEmpty) lifestyle.add("Dieta: $dietType");
+    if (lifestyle.isNotEmpty) info.add("Estilo de vida: ${lifestyle.join(', ')}");
+    
+    // Construir el contexto final
+    final parts = <String>[];
+    if (critical.isNotEmpty) parts.add(critical.join('\n'));
+    if (info.isNotEmpty) parts.add(info.join('. '));
+    
+    if (parts.isEmpty) {
+      return "Sin información médica personalizada disponible.";
     }
     
-    // Estilo de vida relevante
-    if (smokingStatus != 'never') {
-      contextParts.add("Fumador: $smokingStatus");
-    }
-    if (alcoholConsumption != 'never') {
-      contextParts.add("Consumo de alcohol: $alcoholConsumption");
-    }
-    
-    if (contextParts.isEmpty) {
-      return "Por favor, proporciona consejos médicos generales.";
-    }
-    
-    return "Contexto médico del paciente: ${contextParts.join('. ')}. "
-           "Ten en cuenta estas características al proporcionar consejos médicos. "
-           "IMPORTANTE: Esta información es solo para fines educativos y no sustituye "
-           "el consejo médico profesional.";
+    return parts.join('\n\n');
   }
 }

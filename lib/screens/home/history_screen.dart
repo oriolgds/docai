@@ -9,11 +9,13 @@ import 'chat_screen.dart';
 class HistoryScreen extends StatefulWidget {
   final VoidCallback? onNavigateToChat;
   final VoidCallback? onStartNewChat;
+  final Function(VoidCallback)? onModalRequested;
   
   const HistoryScreen({
     super.key,
     this.onNavigateToChat,
     this.onStartNewChat,
+    this.onModalRequested,
   });
 
   @override
@@ -39,6 +41,9 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
     
     // Escuchar cambios generales del state manager
     _stateManager.addListener(_onStateChanged);
+    
+    // Registrar el callback del modal
+    widget.onModalRequested?.call(showAdvancedOptionsModal);
   }
 
   @override
@@ -290,8 +295,9 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
   }
 
   // Modal para opciones avanzadas
-  void _showAdvancedOptionsModal() {
+  void showAdvancedOptionsModal() {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     
     showModalBottomSheet(
       context: context,
@@ -299,87 +305,164 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, modalSetState) => Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Handle bar
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               
-              Text(
-                l10n.settings,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-              
-              _buildSyncSettings(modalSetState),
-              
-              const SizedBox(height: 20),
-              
-              // Botones de acción
+              // Título
               Row(
                 children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _forceRefresh();
-                      },
-                      icon: const Icon(Icons.refresh),
-                      label: Text(l10n.refresh),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.settings,
+                      color: theme.colorScheme.primary,
+                      size: 24,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _startNewConversation();
-                      },
-                      icon: const Icon(Icons.chat),
-                      label: Text(l10n.newConversation),
+                  const SizedBox(width: 12),
+                  Text(
+                    l10n.settings,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2D3436),
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 24),
+              
+              // Configuración de sincronización
+              _buildSyncSettings(modalSetState),
+              const SizedBox(height: 16),
+              
+              // Opciones de acción
+              _buildModalOption(
+                icon: Icons.refresh,
+                title: l10n.refresh,
+                subtitle: l10n.refreshHistory,
+                color: theme.colorScheme.primary,
+                onTap: () {
+                  Navigator.pop(context);
+                  _forceRefresh();
+                },
+              ),
+              const SizedBox(height: 12),
+              
+              _buildModalOption(
+                icon: Icons.chat,
+                title: l10n.newConversation,
+                subtitle: l10n.startNewChat,
+                color: const Color(0xFF00B894),
+                onTap: () {
+                  Navigator.pop(context);
+                  _startNewConversation();
+                },
+              ),
               
               if (_stateManager.conversations.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _clearAllHistory();
-                    },
-                    icon: const Icon(Icons.delete_sweep, color: Colors.red),
-                    label: Text(
-                      l10n.clearHistory,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
+                const SizedBox(height: 12),
+                _buildModalOption(
+                  icon: Icons.delete_sweep,
+                  title: l10n.clearHistory,
+                  subtitle: l10n.deleteAllConversations,
+                  color: const Color(0xFFE74C3C),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _clearAllHistory();
+                  },
                 ),
               ],
               
-              const SizedBox(height: 10),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModalOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6C757D),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: color.withOpacity(0.5),
+                size: 20,
+              ),
             ],
           ),
         ),
@@ -824,7 +907,7 @@ class _HistoryScreenState extends State<HistoryScreen> with WidgetsBindingObserv
                 size: 20,
               ),
             ),
-            onPressed: _showAdvancedOptionsModal,
+            onPressed: showAdvancedOptionsModal,
             tooltip: l10n.settings,
           ),
           const SizedBox(width: 8),

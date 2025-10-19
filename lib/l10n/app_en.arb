@@ -1630,5 +1630,37 @@
   "maintenanceModeMessage": "Chat is temporarily disabled for maintenance. Please try again later.",
   "@maintenanceModeMessage": {
     "description": "Maintenance mode message"
+  },
+  "refreshHistory": "Refresh history",
+  "@refreshHistory": {
+    "description": "Refresh history option"
+  },
+  "startNewChat": "Start new chat",
+  "@startNewChat": {
+    "description": "Start new chat option"
+  },
+  "deleteAllConversations": "Delete all conversations",
+  "@deleteAllConversations": {
+    "description": "Delete all conversations option"
+  },
+  "cloudSync": "Cloud sync",
+  "@cloudSync": {
+    "description": "Cloud sync option"
+  },
+  "syncYourData": "Sync your data",
+  "@syncYourData": {
+    "description": "Sync your data subtitle"
+  },
+  "exportData": "Export data",
+  "@exportData": {
+    "description": "Export data option"
+  },
+  "downloadYourData": "Download your data",
+  "@downloadYourData": {
+    "description": "Download your data subtitle"
+  },
+  "featureComingSoon": "Feature coming soon",
+  "@featureComingSoon": {
+    "description": "Feature coming soon message"
   }
 }

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+
 import 'chat_message.dart';
 
 class ChatConversation {
