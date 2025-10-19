@@ -98,22 +98,37 @@ class _DocAIAppState extends State<DocAIApp> {
 
     try {
       debugPrint('Handling deep link: $uri');
+      debugPrint('Deep link host: ${uri.host}');
+      debugPrint('Deep link path: ${uri.path}');
+      debugPrint('Deep link fragment: ${uri.fragment}');
+      debugPrint('Deep link query: ${uri.query}');
       
-      // Handle email verification deep links
-      if (uri.host == 'email-verified' || uri.path.contains('email-verified')) {
-        await _handleEmailVerificationLink(uri);
-      }
-      // Handle auth callback deep links from Supabase
-      else if (uri.fragment.contains('access_token') || uri.fragment.contains('refresh_token')) {
+      // Check for OAuth tokens or PKCE code
+      // Tokens can be in fragment (#) or query (?)
+      final hasTokensInFragment = uri.fragment.contains('access_token') || 
+                                   uri.fragment.contains('refresh_token');
+      final hasTokensInQuery = uri.query.contains('access_token') ||
+                               uri.query.contains('refresh_token');
+      final hasPKCECode = uri.query.contains('code=');
+      
+      // Handle OAuth callback (with tokens or PKCE code)
+      if (hasTokensInFragment || hasTokensInQuery || hasPKCECode) {
+        debugPrint('OAuth/Auth callback detected (tokens or code found)');
         await _handleAuthCallback(uri);
       }
-      // Handle generic auth deep links
+      // Handle generic auth deep links (fallback for auth host without tokens)
       else if (uri.host == 'auth' || uri.path.contains('auth')) {
+        debugPrint('Generic auth link detected - checking session');
         await _handleAuthLink(uri);
       }
       // Handle login deep links
       else if (uri.host == 'login' || uri.path.contains('login')) {
+        debugPrint('Login link detected');
         await _handleLoginLink();
+      }
+      else {
+        debugPrint('Unknown deep link type - refreshing auth state');
+        await _refreshAuthState();
       }
     } catch (e) {
       debugPrint('Error handling deep link: $e');
@@ -124,73 +139,58 @@ class _DocAIAppState extends State<DocAIApp> {
     }
   }
 
-  Future<void> _handleEmailVerificationLink(Uri uri) async {
-    // For email verification, always redirect to login screen
-    // so users can log in with their now-verified account
-    try {
-      // Show a message that email is verified and redirect to login
-      _navigatorKey.currentState?.pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
-        ),
-        (route) => false,
-      );
-      
-      // Show a snackbar to inform the user
-      Future.delayed(const Duration(milliseconds: 500), () {
-        final scaffoldMessenger = ScaffoldMessenger.of(_navigatorKey.currentContext!);
-        scaffoldMessenger.showSnackBar(
-          const SnackBar(
-            content: Text('Email verified successfully! Please log in to continue.'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 4),
-          ),
-        );
-      });
-    } catch (e) {
-      debugPrint('Error handling email verification link: $e');
-      // Fallback to login screen
-      _navigatorKey.currentState?.pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (route) => false,
-      );
-    }
-  }
-
   Future<void> _handleAuthCallback(Uri uri) async {
-    // Handle Supabase auth callback with tokens
+    // Handle Supabase auth callback with tokens (OAuth flow)
     try {
-      // Extract tokens from fragment
-      final fragment = uri.fragment;
-      final params = Uri.splitQueryString(fragment);
+      debugPrint('Handling OAuth callback...');
       
-      if (params.containsKey('access_token') && params.containsKey('refresh_token')) {
-        // Let Supabase handle the session
-        await SupabaseService.client.auth.getSessionFromUrl(uri);
+      // Try to get session from URL (handles both fragment and query params)
+      await SupabaseService.client.auth.getSessionFromUrl(uri);
+      debugPrint('Session established from URL');
+      
+      // Small delay to ensure session is fully established
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // Check if user is now authenticated
+      final user = SupabaseService.currentUser;
+      debugPrint('Current user after OAuth: ${user?.email}');
+      
+      if (user != null) {
+        // OAuth providers (GitHub, Discord, Google) don't require email verification
+        // They're already verified by the OAuth provider
+        final provider = user.appMetadata['provider'] as String?;
+        debugPrint('User provider: $provider');
         
-        // Check if user is now authenticated and verified  
-        final user = SupabaseService.currentUser;
-        if (user != null) {
-          if (user.emailConfirmedAt != null) {
-            // User is verified, go to dashboard
-            _navigatorKey.currentState?.pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const DashboardScreen()),
-              (route) => false,
-            );
-          } else {
-            // User exists but email not verified, redirect to login
-            _navigatorKey.currentState?.pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
-              (route) => false,
-            );
-          }
+        // For OAuth providers, go directly to dashboard (no message needed)
+        if (provider == 'github' || provider == 'discord' || provider == 'google') {
+          debugPrint('OAuth provider detected, navigating to dashboard');
+          // Navigate silently without any snackbar
+          _navigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            (route) => false,
+          );
+        } else if (user.emailConfirmedAt != null) {
+          // Email/password user with verified email
+          debugPrint('Email verified, navigating to dashboard');
+          _navigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            (route) => false,
+          );
         } else {
-          // No user found, redirect to login
+          // Email/password user without verification
+          debugPrint('Email not verified, staying on login');
           _navigatorKey.currentState?.pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const LoginScreen()),
             (route) => false,
           );
         }
+      } else {
+        debugPrint('No user found after OAuth callback');
+        // No user found, redirect to login
+        _navigatorKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
       }
     } catch (e) {
       debugPrint('Error handling auth callback: $e');
@@ -280,8 +280,18 @@ class _DocAIAppState extends State<DocAIApp> {
           (route) => false,
         );
       } else if (event == AuthChangeEvent.signedIn && user != null && _isInitialized) {
-        // User signed in, check if email is verified
-        if (user.emailConfirmedAt != null) {
+        // User signed in, check provider and email verification
+        final provider = user.appMetadata['provider'] as String?;
+        
+        // OAuth providers (GitHub, Discord, Google) are pre-verified
+        if (provider == 'github' || provider == 'discord' || provider == 'google') {
+          debugPrint('OAuth sign-in detected, navigating to dashboard');
+          _navigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            (route) => false,
+          );
+        } else if (user.emailConfirmedAt != null) {
+          // Email/password user with verified email
           _navigatorKey.currentState?.pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const DashboardScreen()),
             (route) => false,

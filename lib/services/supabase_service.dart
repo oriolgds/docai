@@ -202,6 +202,36 @@ class SupabaseService {
     }
   }
 
+  /// GitHub OAuth Sign-In
+  static Future<bool> signInWithGitHub() async {
+    try {
+      await client.auth.signInWithOAuth(
+        OAuthProvider.github,
+        redirectTo: _authRedirectUrl,
+      );
+      return true;
+    } on AuthException catch (e) {
+      throw _handleAuthError(e);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Discord OAuth Sign-In
+  static Future<bool> signInWithDiscord() async {
+    try {
+      await client.auth.signInWithOAuth(
+        OAuthProvider.discord,
+        redirectTo: _authRedirectUrl,
+      );
+      return true;
+    } on AuthException catch (e) {
+      throw _handleAuthError(e);
+    } catch (e) {
+      return false;
+    }
+  }
+
   static Future<void> signOut() async {
     try {
       await client.auth.signOut();

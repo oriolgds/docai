@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../widgets/auth_button.dart';
 import '../../widgets/responsive_layout.dart';
 import '../../widgets/android_download_modal.dart';
@@ -20,6 +21,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _isGoogleLoading = false;
+  bool _isGitHubLoading = false;
+  bool _isDiscordLoading = false;
   String? _errorMessage;
 
   @override
@@ -301,6 +304,30 @@ class _LoginScreenState extends State<LoginScreen> {
             isOutlined: true,
             isLoading: _isGoogleLoading,
           ),
+          const SizedBox(height: 12),
+          
+          // GitHub Sign In
+          AuthButton(
+            onPressed: _isGitHubLoading ? null : _handleGitHubSignIn,
+            icon: FontAwesomeIcons.github,
+            text: _isGitHubLoading ? 'Signing in...' : 'Continue with GitHub',
+            isOutlined: true,
+            isLoading: _isGitHubLoading,
+            backgroundColor: Colors.black,
+            textColor: Colors.black,
+          ),
+          const SizedBox(height: 12),
+          
+          // Discord Sign In
+          AuthButton(
+            onPressed: _isDiscordLoading ? null : _handleDiscordSignIn,
+            icon: FontAwesomeIcons.discord,
+            text: _isDiscordLoading ? 'Signing in...' : 'Continue with Discord',
+            isOutlined: true,
+            isLoading: _isDiscordLoading,
+            backgroundColor: const Color(0xFF5865F2),
+            textColor: const Color(0xFF5865F2),
+          ),
           const SizedBox(height: 16),
           
           // Forgot Password
@@ -436,6 +463,58 @@ class _LoginScreenState extends State<LoginScreen> {
     }
     
     setState(() => _isGoogleLoading = false);
+  }
+
+  void _handleGitHubSignIn() async {
+    setState(() {
+      _isGitHubLoading = true;
+      _errorMessage = null;
+    });
+    
+    try {
+      // OAuth will open in browser and redirect back via deep link
+      // The auth state listener in main.dart will handle navigation
+      await SupabaseService.signInWithGitHub();
+      
+      // Reset loading state after initiating OAuth
+      // Navigation will be handled by the auth state listener
+      if (mounted) {
+        setState(() => _isGitHubLoading = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+          _isGitHubLoading = false;
+        });
+      }
+    }
+  }
+
+  void _handleDiscordSignIn() async {
+    setState(() {
+      _isDiscordLoading = true;
+      _errorMessage = null;
+    });
+    
+    try {
+      // OAuth will open in browser and redirect back via deep link
+      // The auth state listener in main.dart will handle navigation
+      await SupabaseService.signInWithDiscord();
+      
+      // Reset loading state after initiating OAuth
+      // Navigation will be handled by the auth state listener
+      if (mounted) {
+        setState(() => _isDiscordLoading = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+          _isDiscordLoading = false;
+        });
+      }
+    }
   }
 
   void _showEmailVerificationDialog(String email) {

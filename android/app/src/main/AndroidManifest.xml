@@ -3,7 +3,7 @@
         android:label="Docai"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
-        android:extractNativeLibs="true">
+        android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
