@@ -1,22 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/supabase_service.dart';
 import '../../services/user_stats_service.dart';
 import '../../widgets/medical_preferences_button.dart';
 import '../../widgets/medical_preferences_status.dart';
-import '../../widgets/language_selector.dart';
 import '../../widgets/share_modal.dart';
-import '../../widgets/cloud_sync_modal.dart';
 import '../auth/login_screen.dart';
-import '../medical_preferences_screen.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../main.dart';
 import 'privacy_security_screen.dart';
 import 'account_deletion_screen.dart';
 import 'help_support_screen.dart';
 import 'about_screen.dart';
-import 'history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onNavigateToHistory;
@@ -40,7 +35,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   late AnimationController _statsAnimationController;
   late Animation<double> _fadeInAnimation;
   late Animation<Offset> _slideAnimation;
-  late Animation<double> _statsAnimation;
 
   final UserStatsService _statsService = UserStatsService();
   UserStats? _userStats;
@@ -48,7 +42,6 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   // BYOK state
   bool _hasApiKey = false;
-  bool _isVerifyingApiKey = false;
   String? _apiKeyLastUpdated;
 
   // Scroll key for API key section
@@ -76,12 +69,6 @@ class _ProfileScreenState extends State<ProfileScreen>
             curve: Curves.easeOutQuart,
           ),
         );
-    _statsAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _statsAnimationController,
-        curve: Curves.easeOutBack,
-      ),
-    );
 
     _animationController.forward();
     _loadUserStats();
@@ -170,42 +157,26 @@ class _ProfileScreenState extends State<ProfileScreen>
     final localeProvider = LocaleProvider.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: Text(
           l10n.profile,
           style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.5,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1A1D1F),
           ),
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
+        centerTitle: false,
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            child: Material(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              elevation: 2,
-              shadowColor: Colors.black.withOpacity(0.1),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => _showQuickSettings(context, l10n),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.settings,
-                    color: Colors.black87,
-                    size: 22,
-                  ),
-                ),
-              ),
+          IconButton(
+            onPressed: () => _navigateToSettings(context, l10n, localeProvider),
+            icon: const Icon(
+              Icons.settings_outlined,
+              color: Color(0xFF6F767E),
+              size: 24,
             ),
           ),
         ],
@@ -226,46 +197,30 @@ class _ProfileScreenState extends State<ProfileScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
                     children: [
-                      const SizedBox(height: 8),
-
-                      // Compact Profile Header
-                      _buildUltraCompactProfileHeader(l10n),
-                      const SizedBox(height: 16),
-
-                      // Quick Stats Row con datos reales
-                      _buildRealQuickStatsRow(l10n),
                       const SizedBox(height: 20),
 
-                      // Quick Actions Grid - UPDATED with new functionality
-                      _buildQuickActionsGrid(l10n),
-                      const SizedBox(height: 20),
+                      // Profile Header
+                      _buildProfileHeader(l10n),
+                      const SizedBox(height: 24),
 
-                      // API Key Section (BYOK)
+                      // Stats Section
+                      _buildStatsSection(l10n),
+                      const SizedBox(height: 24),
+
+                      // API Key Section
                       _buildApiKeySection(l10n),
                       const SizedBox(height: 16),
 
-                      // Medical Section (separada)
+                      // Medical Section
                       _buildMedicalSection(l10n),
+                      const SizedBox(height: 24),
+
+                      // Menu Items
+                      _buildMenuItems(l10n, localeProvider),
                       const SizedBox(height: 16),
 
-                      
-
-                      // Subscription Section (separada)
-                      //_buildSubscriptionSection(l10n),
-                      //const SizedBox(height: 20),
-
-                      // Responsive Menu Items (más compactos) - UPDATED
-                      _buildCompactMenuItems(l10n, localeProvider),
-
-                      const SizedBox(height: 16),
-
-                      // Account Deletion Section (NEW)
-                      _buildAccountDeletionSection(l10n),
-
-                      const SizedBox(height: 20),
-
-                      // Enhanced Logout Button
-                      _buildLogoutButton(l10n),
+                      // Danger Zone
+                      _buildDangerZone(l10n),
                       const SizedBox(height: 32),
                     ],
                   ),
@@ -278,48 +233,40 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildUltraCompactProfileHeader(AppLocalizations l10n) {
+  Widget _buildProfileHeader(AppLocalizations l10n) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFE9ECEF),
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
-          // Avatar compacto
-          Hero(
-            tag: 'profile-avatar',
-            child: Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF2E7D32), Color(0xFF4CAF50)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+          // Avatar
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: const Color(0xFF4A90E2),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                _getUserInitials(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
                 ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2E7D32).withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
-              child: const Icon(Icons.person, color: Colors.white, size: 28),
             ),
           ),
-          const SizedBox(width: 12),
-          // Info del usuario
+          const SizedBox(width: 16),
+          // User Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,251 +276,118 @@ class _ProfileScreenState extends State<ProfileScreen>
                       l10n.user,
                   style: const TextStyle(
                     fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.3,
-                    color: Color(0xFF2D3436),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  SupabaseService.currentUser?.email ?? l10n.noEmail,
-                  style: const TextStyle(
-                    color: Color(0xFF6C757D),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1D1F),
                   ),
                 ),
                 const SizedBox(height: 4),
-                // Badge de estado
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
+                Text(
+                  SupabaseService.currentUser?.email ?? l10n.noEmail,
+                  style: const TextStyle(
+                    color: Color(0xFF6F767E),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
                   ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF00B894),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    l10n.active,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          // Botón de editar
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FA),
-              borderRadius: BorderRadius.circular(10),
+          // Edit Button
+          IconButton(
+            onPressed: () => _showEditProfileDialog(l10n),
+            icon: const Icon(
+              Icons.edit_outlined,
+              size: 20,
+              color: Color(0xFF6F767E),
             ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(10),
-                onTap: () {},
-                child: const Icon(
-                  Icons.edit,
-                  size: 18,
-                  color: Color(0xFF6C757D),
-                ),
-              ),
-            ),
+            tooltip: 'Editar perfil',
           ),
         ],
       ),
     );
   }
 
-  Widget _buildRealQuickStatsRow(AppLocalizations l10n) {
-    return AnimatedBuilder(
-      animation: _statsAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _statsAnimation.value,
-          child: Row(
+  Widget _buildStatsSection(AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFE9ECEF),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Estadísticas',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1D1F),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
             children: [
               Expanded(
-                child: _buildRealStatCard(
+                child: _buildStatItem(
                   _isLoadingStats
                       ? '...'
                       : '${_userStats?.totalConversations ?? 0}',
                   l10n.consultations,
                   Icons.chat_bubble_outline,
-                  const Color(0xFF6C5CE7),
                 ),
               ),
-              const SizedBox(width: 12),
+              Container(
+                width: 1,
+                height: 40,
+                color: const Color(0xFFE9ECEF),
+              ),
               Expanded(
-                child: _buildRealStatCard(
+                child: _buildStatItem(
                   _isLoadingStats
                       ? '...'
                       : (_userStats?.formattedLastActivity ?? l10n.never),
                   l10n.lastUsage,
                   Icons.access_time,
-                  const Color(0xFF00B894),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildRealStatCard(
-                  _isLoadingStats
-                      ? '...'
-                      : (_userStats?.formattedSatisfaction ?? '0%'),
-                  l10n.satisfaction,
-                  Icons.thumb_up_alt_outlined,
-                  const Color(0xFFE17055),
                 ),
               ),
             ],
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
-  Widget _buildRealStatCard(
-    String value,
-    String label,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+  Widget _buildStatItem(String value, String label, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 4),
+          Icon(icon, color: const Color(0xFF6F767E), size: 20),
+          const SizedBox(height: 8),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: color,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1D1F),
             ),
           ),
+          const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(fontSize: 10, color: Color(0xFF6C757D)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickActionsGrid(AppLocalizations l10n) {
-    final quickActions = [
-      _QuickAction(
-        icon: Icons.history,
-        label: l10n.history,
-        color: const Color(0xFF6C5CE7),
-        onTap: () => _navigateToHistoryTab(),
-      ),
-      _QuickAction(
-        icon: Icons.favorite_outline,
-        label: l10n.favorites,
-        color: const Color(0xFFE84393),
-        onTap: () {},
-      ),
-      _QuickAction(
-        icon: Icons.share,
-        label: l10n.share,
-        color: const Color(0xFF00B894),
-        onTap: () => ShareModal.show(context),
-      ),
-      _QuickAction(
-        icon: Icons.backup,
-        label: l10n.backup,
-        color: const Color(0xFF00B894),
-        onTap: () => _navigateToBackupTab(),
-      ),
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.quickAccess,
             style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2D3436),
+              fontSize: 12,
+              color: Color(0xFF6F767E),
             ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: quickActions
-                .map((action) => _buildQuickActionItem(action))
-                .toList(),
+            textAlign: TextAlign.center,
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildQuickActionItem(_QuickAction action) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: action.onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: action.color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(action.icon, color: action.color, size: 20),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                action.label,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF6C757D),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -583,31 +397,21 @@ class _ProfileScreenState extends State<ProfileScreen>
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFE9ECEF),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6C5CE7).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.local_hospital,
-                  color: Color(0xFF6C5CE7),
-                  size: 20,
-                ),
+              Icon(
+                Icons.local_hospital_outlined,
+                color: const Color(0xFF6F767E),
+                size: 20,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -619,13 +423,16 @@ class _ProfileScreenState extends State<ProfileScreen>
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF2D3436),
+                        color: Color(0xFF1A1D1F),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       l10n.configureMedicalInfo,
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF6C757D)),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF6F767E),
+                      ),
                     ),
                   ],
                 ),
@@ -643,12 +450,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(l10n.medicalPreferencesUpdated),
-                    backgroundColor: const Color(0xFF00B894),
+                    backgroundColor: const Color(0xFF4A90E2),
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    margin: const EdgeInsets.all(16),
                   ),
                 );
               },
@@ -665,53 +471,43 @@ class _ProfileScreenState extends State<ProfileScreen>
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFE9ECEF),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6C5CE7).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.key,
-                  color: Color(0xFF6C5CE7),
-                  size: 20,
-                ),
+              Icon(
+                Icons.vpn_key_outlined,
+                color: const Color(0xFF6F767E),
+                size: 20,
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Clave API de OpenRouter',
-                      style: const TextStyle(
+                    const Text(
+                      'OpenRouter API Key',
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF2D3436),
+                        color: Color(0xFF1A1D1F),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       _hasApiKey
-                          ? 'Tu clave API está configurada y lista para usar'
-                          : 'Configura tu clave API para acceder a DocAI',
+                          ? 'Tu clave API está configurada'
+                          : 'Configura tu clave para usar DocAI',
                       style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF6C757D),
+                        fontSize: 13,
+                        color: Color(0xFF6F767E),
                       ),
                     ),
                   ],
@@ -722,39 +518,29 @@ class _ProfileScreenState extends State<ProfileScreen>
           const SizedBox(height: 16),
           if (_hasApiKey) ...[
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFF00B894).withOpacity(0.1),
+                color: const Color(0xFFE8F5E9),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: const Color(0xFF00B894).withOpacity(0.3),
-                ),
               ),
               child: Row(
                 children: [
                   const Icon(
-                    Icons.check_circle,
-                    color: Color(0xFF00B894),
-                    size: 20,
+                    Icons.check_circle_outline,
+                    color: Color(0xFF2E7D32),
+                    size: 18,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Clave API configurada',
+                      'Configurada ${_apiKeyLastUpdated != null ? '• ${_formatDate(_apiKeyLastUpdated!)}' : ''}',
                       style: const TextStyle(
-                        color: Color(0xFF00B894),
+                        color: Color(0xFF2E7D32),
                         fontWeight: FontWeight.w500,
+                        fontSize: 13,
                       ),
                     ),
                   ),
-                  if (_apiKeyLastUpdated != null)
-                    Text(
-                      'Actualizada: ${_formatDate(_apiKeyLastUpdated!)}',
-                      style: const TextStyle(
-                        color: Color(0xFF6C757D),
-                        fontSize: 10,
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -762,55 +548,32 @@ class _ProfileScreenState extends State<ProfileScreen>
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _isVerifyingApiKey ? null : _verifyApiKey,
-                    icon: _isVerifyingApiKey
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.verified, size: 16),
-                    label: Text(
-                      _isVerifyingApiKey ? 'Verificando...' : 'Verificar',
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF00B894),
-                      side: const BorderSide(color: Color(0xFF00B894)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
+                  child: OutlinedButton(
                     onPressed: _showApiKeyDialog,
-                    icon: const Icon(Icons.edit, size: 16),
-                    label: const Text('Cambiar'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF6C5CE7),
-                      side: const BorderSide(color: Color(0xFF6C5CE7)),
+                      foregroundColor: const Color(0xFF6F767E),
+                      side: const BorderSide(color: Color(0xFFE9ECEF)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
+                    child: const Text('Cambiar'),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: OutlinedButton.icon(
+                  child: OutlinedButton(
                     onPressed: _removeApiKey,
-                    icon: const Icon(Icons.delete, size: 16),
-                    label: const Text('Eliminar'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFE74C3C),
-                      side: const BorderSide(color: Color(0xFFE74C3C)),
+                      foregroundColor: const Color(0xFFE53E3E),
+                      side: const BorderSide(color: Color(0xFFE9ECEF)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
+                    child: const Text('Eliminar'),
                   ),
                 ),
               ],
@@ -818,17 +581,20 @@ class _ProfileScreenState extends State<ProfileScreen>
           ] else ...[
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
+              child: ElevatedButton(
                 onPressed: _showApiKeyDialog,
-                icon: const Icon(Icons.vpn_key),
-                label: const Text('Configurar Clave API'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6C5CE7),
+                  backgroundColor: const Color(0xFF4A90E2),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Configurar API Key',
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -838,404 +604,376 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildSubscriptionSection(AppLocalizations l10n) {
+  Widget _buildMenuItems(
+    AppLocalizations l10n,
+    LocaleProvider? localeProvider,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFE9ECEF),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          _buildMenuItem(
+            icon: Icons.history,
+            title: l10n.history,
+            onTap: _navigateToHistoryTab,
+          ),
+          _buildDivider(),
+          _buildMenuItem(
+            icon: Icons.cloud_upload_outlined,
+            title: l10n.backup,
+            onTap: _navigateToBackupTab,
+          ),
+          _buildDivider(),
+          _buildLanguageMenuItem(l10n, localeProvider),
+          _buildDivider(),
+          _buildMenuItem(
+            icon: Icons.security,
+            title: l10n.privacySecurity,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PrivacySecurityScreen()),
+              );
+            },
+          ),
+          _buildDivider(),
+          _buildMenuItem(
+            icon: Icons.help_outline,
+            title: l10n.helpSupport,
+            onTap: _navigateToHelpSupport,
+          ),
+          _buildDivider(),
+          _buildMenuItem(
+            icon: Icons.share_outlined,
+            title: l10n.share,
+            onTap: () => ShareModal.show(context),
+          ),
+          _buildDivider(),
+          _buildMenuItem(
+            icon: Icons.info_outline,
+            title: l10n.about,
+            onTap: _navigateToAbout,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: const Color(0xFF6F767E),
+              size: 20,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF1A1D1F),
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: Color(0xFF9A9FA5),
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageMenuItem(
+    AppLocalizations l10n,
+    LocaleProvider? localeProvider,
+  ) {
+    if (localeProvider == null) {
+      return _buildMenuItem(
+        icon: Icons.language,
+        title: l10n.languageSettings,
+        onTap: () {},
+      );
+    }
+
+    final currentLocale = Localizations.localeOf(context);
+    final languages = {
+      'en': 'English',
+      'es': 'Español'
+    };
+
+    return PopupMenuButton<String>(
+      offset: const Offset(0, 0),
+      onSelected: (languageCode) {
+        final newLocale = Locale(languageCode);
+        localeProvider.onLocaleChanged(newLocale);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              languageCode == 'es'
+                  ? 'Idioma cambiado a ${languages[languageCode]}'
+                  : languageCode == 'ca'
+                      ? 'Idioma canviat a ${languages[languageCode]}'
+                      : 'Language changed to ${languages[languageCode]}',
+            ),
+            backgroundColor: const Color(0xFF4A90E2),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      },
+      itemBuilder: (context) => languages.entries.map((entry) {
+        final isSelected = entry.key == currentLocale.languageCode;
+        return PopupMenuItem<String>(
+          value: entry.key,
+          child: Row(
+            children: [
+              if (isSelected)
+                const Icon(
+                  Icons.check,
+                  color: Color(0xFF4A90E2),
+                  size: 20,
+                )
+              else
+                const SizedBox(width: 20),
+              const SizedBox(width: 12),
+              Text(
+                entry.value,
+                style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected
+                      ? const Color(0xFF4A90E2)
+                      : const Color(0xFF1A1D1F),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.language,
+              color: Color(0xFF6F767E),
+              size: 20,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.languageSettings,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF1A1D1F),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    languages[currentLocale.languageCode] ?? 'English',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF6F767E),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.expand_more,
+              color: Color(0xFF9A9FA5),
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return const Divider(
+      height: 1,
+      thickness: 1,
+      color: Color(0xFFF5F7FA),
+      indent: 52,
+    );
+  }
+
+  Widget _buildDangerZone(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2E7D32), Color(0xFF4CAF50)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFE9ECEF),
+          width: 1,
         ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2E7D32).withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.star, color: Colors.white, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.premiumPlan,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.enjoyAllFeatures,
-                      style: const TextStyle(color: Colors.white70, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF00B894),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  l10n.active,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+          const Text(
+            'Zona de peligro',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1D1F),
+            ),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.unlimitedConsultations,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      l10n.expiresOn,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => _showLogoutDialog(context, l10n),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFE53E3E),
+                side: const BorderSide(color: Color(0xFFE9ECEF)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              ElevatedButton(
-                onPressed: () => _showSubscriptionDetails(l10n),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white.withOpacity(0.2),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: Text(
-                  l10n.manage,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                ),
+              child: Text(
+                l10n.logout,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-            ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => _navigateToAccountDeletion(context),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFE53E3E),
+                side: const BorderSide(color: Color(0xFFFFE5E5)),
+                backgroundColor: const Color(0xFFFFF5F5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: Text(
+                l10n.deleteAccount,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCompactMenuItems(
+  // Helper Methods
+  String _getUserInitials() {
+    final fullName = SupabaseService.currentUser?.userMetadata?['full_name'] as String?;
+    if (fullName != null && fullName.isNotEmpty) {
+      final parts = fullName.split(' ');
+      if (parts.length >= 2) {
+        return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      }
+      return fullName[0].toUpperCase();
+    }
+    final email = SupabaseService.currentUser?.email;
+    return email != null && email.isNotEmpty ? email[0].toUpperCase() : 'U';
+  }
+
+  void _showEditProfileDialog(AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text(
+          'Editar perfil',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: const Text(
+          'La funcionalidad de edición de perfil estará disponible próximamente.',
+          style: TextStyle(
+            fontSize: 14,
+            color: Color(0xFF6F767E),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToSettings(
+    BuildContext context,
     AppLocalizations l10n,
     LocaleProvider? localeProvider,
   ) {
-    final menuItems = [
-      _MenuItemData(
-        icon: Icons.tune,
-        title: l10n.personalization,
-        subtitle: l10n.customizeYourExperience,
-        color: const Color(0xFF6C5CE7),
-        onTap: () => _navigateToPersonalization(context),
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      _MenuItemData(
-        icon: Icons.language,
-        title: l10n.languageSettings,
-        subtitle: l10n.changeAppLanguage,
-        color: const Color(0xFF00CEC9),
-        onTap: () => _showLanguageSelector(context, localeProvider),
-      ),
-      _MenuItemData(
-        icon: Icons.security,
-        title: l10n.privacySecurity,
-        subtitle: l10n.privacyAndSecuritySettings,
-        color: const Color(0xFFE84393),
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const PrivacySecurityScreen()),
-          );
-        },
-      ),
-      _MenuItemData(
-        icon: Icons.help_outline,
-        title: l10n.helpSupport,
-        subtitle: l10n.helpCenter,
-        color: const Color(0xFF00B894),
-        onTap: () => _navigateToHelpSupport(),
-      ),
-      _MenuItemData(
-        icon: FontAwesomeIcons.xTwitter,
-        title: 'X (Twitter)',
-        subtitle: '@docaiapp',
-        color: const Color(0xFF000000),
-        onTap: () async {
-          final url = Uri.parse('https://x.com/docaiapp');
-          if (await canLaunchUrl(url)) {
-            await launchUrl(url, mode: LaunchMode.externalApplication);
-          }
-        },
-      ),
-      _MenuItemData(
-        icon: Icons.info_outline,
-        title: l10n.about,
-        subtitle: l10n.projectInformation,
-        color: const Color(0xFF636E72),
-        onTap: () => _navigateToAbout(),
-      ),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: menuItems.asMap().entries.map((entry) {
-          final index = entry.key;
-          final item = entry.value;
-          final isLast = index == menuItems.length - 1;
-
-          return Column(
-            children: [
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: item.onTap,
-                  borderRadius: BorderRadius.vertical(
-                    top: index == 0 ? const Radius.circular(16) : Radius.zero,
-                    bottom: isLast ? const Radius.circular(16) : Radius.zero,
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: item.color.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(item.icon, color: item.color, size: 18),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.title,
-                                style: const TextStyle(
-                                  color: Color(0xFF2D3436),
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              if (item.subtitle != null)
-                                const SizedBox(height: 2),
-                              if (item.subtitle != null)
-                                Text(
-                                  item.subtitle!,
-                                  style: TextStyle(
-                                    color: const Color(
-                                      0xFF6C757D,
-                                    ).withOpacity(0.8),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        Icon(
-                          Icons.chevron_right,
-                          color: const Color(0xFF6C757D).withOpacity(0.5),
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Configuración rápida',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1A1D1F),
               ),
-              if (!isLast)
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: const Color(0xFF6C757D).withOpacity(0.1),
-                  indent: 50,
-                ),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  // NEW: Account Deletion Section
-  Widget _buildAccountDeletionSection(AppLocalizations l10n) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFE74C3C).withOpacity(0.2),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _navigateToAccountDeletion(context),
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE74C3C).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.delete_forever_outlined,
-                    color: Color(0xFFE74C3C),
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.deleteAccount,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFFE74C3C),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.deleteAccountDescription,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF6C757D),
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFEBEE),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: const Color(0xFFE74C3C).withOpacity(0.3),
-                    ),
-                  ),
-                  child: Text(
-                    l10n.dangerous,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFE74C3C),
-                    ),
-                  ),
-                ),
-              ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLogoutButton(AppLocalizations l10n) {
-    return Container(
-      width: double.infinity,
-      height: 50,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE74C3C).withOpacity(0.3),
-          width: 1.5,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showLogoutDialog(context, l10n),
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.logout, color: Color(0xFFE74C3C), size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.logout,
-                  style: const TextStyle(
-                    color: Color(0xFFE74C3C),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 24),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.security, color: Color(0xFF6F767E)),
+              title: Text(l10n.privacySecurity),
+              trailing: const Icon(Icons.chevron_right, color: Color(0xFF9A9FA5)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PrivacySecurityScreen()),
+                );
+              },
             ),
-          ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
@@ -1328,269 +1066,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  // Métodos auxiliares
-  void _showQuickSettings(BuildContext context, AppLocalizations l10n) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.quickSettings,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 16),
-            _buildQuickSettingItem(
-              Icons.dark_mode,
-              l10n.darkMode,
-              false,
-              (value) {},
-            ),
-            _buildQuickSettingItem(
-              Icons.notifications,
-              l10n.notifications,
-              true,
-              (value) {},
-            ),
-            _buildQuickSettingItem(
-              Icons.location_on,
-              l10n.location,
-              true,
-              (value) {},
-            ),
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickSettingItem(
-    IconData icon,
-    String title,
-    bool value,
-    Function(bool) onChanged,
-  ) {
-    return ListTile(
-      leading: Icon(icon, color: const Color(0xFF2E7D32)),
-      title: Text(title),
-      trailing: Switch(
-        value: value,
-        onChanged: onChanged,
-        activeColor: const Color(0xFF2E7D32),
-      ),
-    );
-  }
-
-  void _showLanguageSelector(
-    BuildContext context,
-    LocaleProvider? localeProvider,
-  ) {
-    if (localeProvider == null) return;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                AppLocalizations.of(context)!.selectLanguageTitle,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 16),
-              LanguageSelector(
-                onLocaleChanged: (locale) {
-                  localeProvider.onLocaleChanged(locale);
-                  Navigator.pop(context);
-                },
-              ),
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showSubscriptionDetails(AppLocalizations l10n) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.6,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                l10n.premiumPlanTitle,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2E7D32), Color(0xFF4CAF50)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.white),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.premiumPlan,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildFeatureItem(l10n.unlimitedConsultationsFeature, Icons.chat),
-                    _buildFeatureItem(l10n.priorityAccess, Icons.flash_on),
-                    _buildFeatureItem(l10n.completeHistory, Icons.history),
-                    _buildFeatureItem(l10n.premiumSupport, Icons.headset_mic),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFE74C3C)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        l10n.cancelPlan,
-                        style: const TextStyle(color: Color(0xFFE74C3C)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2E7D32),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        l10n.manage,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureItem(String text, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white, size: 16),
-          const SizedBox(width: 8),
-          Text(text, style: const TextStyle(color: Colors.white, fontSize: 14)),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _navigateToPersonalization(BuildContext context) async {
-    final result = await Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const MedicalPreferencesScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: animation.drive(
-              Tween(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).chain(CurveTween(curve: Curves.easeOutQuart)),
-            ),
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 300),
-      ),
-    );
-
-    if (result == true) {
-      setState(() {});
-    }
-  }
-
   void _showLogoutDialog(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
@@ -1665,47 +1140,6 @@ class _ProfileScreenState extends State<ProfileScreen>
       }
     } catch (e) {
       return 'desconocido';
-    }
-  }
-
-  Future<void> _verifyApiKey() async {
-    setState(() => _isVerifyingApiKey = true);
-
-    try {
-      final result = await SupabaseService.client.functions.invoke(
-        'verify-api-key',
-        body: {
-          'apiKey': await SupabaseService.getUserApiKey('openrouter'),
-          'provider': 'openrouter',
-        },
-      );
-
-      if (result.status == 200 && result.data?['valid'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Clave API verificada correctamente'),
-            backgroundColor: Color(0xFF00B894),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('La clave API no es válida'),
-            backgroundColor: Color(0xFFE74C3C),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al verificar clave: $e'),
-          backgroundColor: Color(0xFFE74C3C),
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isVerifyingApiKey = false);
-      }
     }
   }
 
@@ -1888,35 +1322,4 @@ class _ProfileScreenState extends State<ProfileScreen>
       }
     }
   }
-}
-
-// Clases auxiliares
-class _MenuItemData {
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  _MenuItemData({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-}
-
-class _QuickAction {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  _QuickAction({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
 }
