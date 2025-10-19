@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../services/supabase_service.dart';
 import '../../services/user_stats_service.dart';
 import '../../widgets/medical_preferences_button.dart';
@@ -217,6 +218,10 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                       // Menu Items
                       _buildMenuItems(l10n, localeProvider),
+                      const SizedBox(height: 16),
+
+                      // Social Media Section
+                      _buildSocialMediaSection(),
                       const SizedBox(height: 16),
 
                       // Danger Zone
@@ -822,6 +827,98 @@ class _ProfileScreenState extends State<ProfileScreen>
       thickness: 1,
       color: Color(0xFFF5F7FA),
       indent: 52,
+    );
+  }
+
+  Widget _buildSocialMediaSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFE9ECEF),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Follow Us',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1D1F),
+            ),
+          ),
+          const SizedBox(height: 16),
+          InkWell(
+            onTap: () async {
+              final url = Uri.parse('https://x.com/docaiapp');
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              }
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xFFE9ECEF)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: FaIcon(
+                        FontAwesomeIcons.xTwitter,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'DocAI on X',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1A1D1F),
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          '@docaiapp',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF6F767E),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.open_in_new,
+                    color: Color(0xFF9A9FA5),
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
