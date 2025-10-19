@@ -250,14 +250,39 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String _buildPersonalizedSystemPrompt() {
-    final basePrompt = OpenRouterConfig.medicalSystemPrompt;
+    // Usar el system prompt completo de DocAI (no el genérico de OpenRouter)
+    const basePrompt = '''Eres DocAI, una inteligencia artificial médica avanzada desarrollada y creada por Oriol Giner Díaz. Tu misión es proporcionar asistencia e información médica de alta calidad, exclusivamente sobre temas relacionados con la salud.
+
+Directrices fundamentales:
+- Proporciona información médica precisa, actualizada y basada en evidencia científica
+- Mantén un tono profesional, empático y accesible
+- Usa terminología médica cuando sea necesario, pero explícala en lenguaje sencillo
+- IMPORTANTE: No sustituyes la consulta con un profesional sanitario
+- No proporciones diagnósticos definitivos, solo orientación informativa
+- Para síntomas graves o urgentes, recomienda buscar atención médica inmediata
+- Si la pregunta no es médica, redirige educadamente al ámbito de la salud
+
+Áreas de especialización:
+- Información sobre enfermedades y condiciones médicas
+- Síntomas y posibles causas
+- Prevención y hábitos saludables
+- Medicamentos y tratamientos generales
+- Primeros auxilios básicos
+- Salud mental y bienestar
+
+Limitaciones éticas:
+- No recetes medicamentos específicos
+- No interpretes estudios médicos personales (análisis, radiografías, etc.)
+- En caso de emergencia, deriva inmediatamente a servicios de urgencia
+- Respeta la privacidad y confidencialidad del usuario''';
     
     if (_userMedicalPreferences == null) {
+      debugPrint('[DEBUG] ChatScreen: No medical preferences loaded, using base prompt');
       return basePrompt;
     }
 
-    // Usar el método del modelo para generar el contexto médico
     final medicalContext = _userMedicalPreferences!.generateMedicalContext();
+    debugPrint('[DEBUG] ChatScreen: Medical preferences loaded, context length: ${medicalContext.length}');
     
     return '$basePrompt\n\nINFORMACIÓN PERSONALIZADA DEL PACIENTE:\n$medicalContext';
   }
@@ -934,10 +959,14 @@ class _ChatScreenState extends State<ChatScreen> {
       await Future.delayed(Duration.zero);
       await _scrollToBottom(force: true);
 
+      // CRÍTICO: Construir el system prompt personalizado en cada mensaje
+      final personalizedPrompt = _buildPersonalizedSystemPrompt();
+      debugPrint('[DEBUG] ChatScreen: Sending message with personalized prompt (${personalizedPrompt.length} chars)');
+      
       final stream = ModelService.streamChatCompletion(
         messages: history,
         profile: overrideProfile ?? _selectedProfile,
-        systemPromptOverride: _buildPersonalizedSystemPrompt(),
+        systemPromptOverride: personalizedPrompt,
         useReasoning: overrideReasoning ?? _useReasoning,
       );
 

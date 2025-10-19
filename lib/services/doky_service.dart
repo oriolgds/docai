@@ -36,9 +36,10 @@ class DokyService {
 
   List<List<dynamic>> _buildHistory(List<ChatMessage> messages) {
     final history = <List<dynamic>>[];
-    final recentMessages = messages.length > 8
-        ? messages.sublist(messages.length - 8, messages.length - 1)
-        : messages.sublist(0, messages.length - 1);
+    // Excluir el último mensaje (el actual) del historial
+    final recentMessages = messages.length > 1
+        ? (messages.length > 9 ? messages.sublist(messages.length - 9, messages.length - 1) : messages.sublist(0, messages.length - 1))
+        : [];
 
     for (int i = 0; i < recentMessages.length; i += 2) {
       if (i + 1 < recentMessages.length) {
@@ -70,8 +71,9 @@ class DokyService {
     if (userMessage.isEmpty) throw Exception('No message provided');
 
     final history = _buildHistory(messages);
-    // IMPORTANTE: Usar el systemPromptOverride que incluye las preferencias médicas del usuario
+    // CRÍTICO: Siempre usar systemPromptOverride si está disponible (incluye preferencias médicas)
     final systemPrompt = systemPromptOverride ?? _getDefaultSystemPrompt();
+    debugPrint('[DEBUG] DokyService: Using system prompt (${systemPrompt.length} chars)');
 
     final controller = StreamController<String>();
     _currentController = controller;
@@ -100,6 +102,13 @@ class DokyService {
   }) async {
     try {
       _httpClient = http.Client();
+      
+      debugPrint('[DEBUG] DokyService: Sending to Gradio:');
+      debugPrint('[DEBUG]   - Message: ${message.substring(0, message.length > 50 ? 50 : message.length)}...');
+      debugPrint('[DEBUG]   - History length: ${history.length}');
+      debugPrint('[DEBUG]   - System prompt: ${systemPrompt.substring(0, systemPrompt.length > 100 ? 100 : systemPrompt.length)}...');
+      debugPrint('[DEBUG]   - Max tokens: $maxTokens');
+      debugPrint('[DEBUG]   - Temperature: $temperature');
       
       final callResponse = await _httpClient!.post(
         Uri.parse('$gradioUrl/call/send_message'),
@@ -160,7 +169,7 @@ class DokyService {
   }
 
   String _getDefaultSystemPrompt() {
-    return '''Eres DocAI, una inteligencia artificial médica avanzada desarrollada por Oriol Giner Díaz. Tu misión es proporcionar asistencia e información médica de alta calidad, exclusivamente sobre temas relacionados con la salud.
+    return '''Eres DocAI, una inteligencia artificial médica avanzada desarrollada y creada por Oriol Giner Díaz. Tu misión es proporcionar asistencia e información médica de alta calidad, exclusivamente sobre temas relacionados con la salud.
 
 Directrices fundamentales:
 - Proporciona información médica precisa, actualizada y basada en evidencia científica
