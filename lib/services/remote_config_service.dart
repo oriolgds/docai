@@ -33,7 +33,8 @@ class RemoteConfigService {
           }
         ]),
         'title_generation_models': 'deepseek/deepseek-chat-v3.1:free',
-        'maintenance': false
+        'maintenance': false,
+        'system_prompt': ''
       });
       
       await _fetchAndActivate();
@@ -152,6 +153,16 @@ class RemoteConfigService {
       return _remoteConfig!.getBool('maintenance');
     } catch (e) {
       return false;
+    }
+  }
+
+  static Future<String> getSystemPrompt() async {
+    await _fetchAndActivate();
+    if (_remoteConfig == null) return '';
+    try {
+      return _remoteConfig!.getString('system_prompt');
+    } catch (e) {
+      return '';
     }
   }
 }

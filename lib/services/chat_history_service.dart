@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_conversation.dart';
 import '../models/chat_message.dart';
 import 'supabase_service.dart';
-import 'openrouter_service.dart';
+import 'title_generator_service.dart';
 import 'chat_state_manager.dart';
 
 class ChatHistoryService {
@@ -25,7 +25,7 @@ class ChatHistoryService {
   }
 
   SharedPreferences? _prefs;
-  final OpenRouterService _openRouterService = OpenRouterService();
+  final TitleGeneratorService _titleGeneratorService = TitleGeneratorService();
   
   // Cache para optimizar rendimiento
   List<ChatConversation>? _cachedLocalConversations;
@@ -341,11 +341,11 @@ class ChatHistoryService {
     return conversation;
   }
 
-  // Generar título de forma síncrona
+  // Generar título usando Hugging Face Space
   Future<String> generateConversationTitle(String firstMessage) async {
     try {
-      debugPrint('[DEBUG] ChatHistoryService.generateConversationTitle: Starting title generation');
-      final generatedTitle = await _openRouterService.generateConversationTitle(firstMessage);
+      debugPrint('[DEBUG] ChatHistoryService.generateConversationTitle: Starting title generation with HF Space');
+      final generatedTitle = await _titleGeneratorService.generateTitle(firstMessage);
       debugPrint('[DEBUG] ChatHistoryService.generateConversationTitle: Generated title: $generatedTitle');
       return generatedTitle;
     } catch (e) {

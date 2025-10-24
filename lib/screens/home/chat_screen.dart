@@ -7,7 +7,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../services/model_service.dart';
 import '../../services/chat_state_manager.dart';
 import '../../services/chat_history_service.dart';
-import '../../services/model_service.dart';
+import '../../services/system_prompt_service.dart';
 import '../../models/model_profile.dart';
 import '../../exceptions/model_exceptions.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -52,9 +52,10 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _useReasoning = false;
   bool _showFirstTimeWarning = false;
   UserMedicalPreferences? _userMedicalPreferences;
-  bool _isInitialized = false; // Flag to track initialization
-  StreamSubscription<String>? _currentStreamSubscription; // Track current stream
+  bool _isInitialized = false;
+  StreamSubscription<String>? _currentStreamSubscription;
   bool _isMaintenanceMode = false;
+  String? _systemPrompt;
   
   // Variables para el historial
   ChatConversation? _currentConversation;
@@ -73,6 +74,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _initializeDefaultModel();
     _checkMaintenanceMode();
+    _loadSystemPrompt();
     
     // Configurar listener del scroll controller
     _scrollController.addListener(_onScrollChanged);
@@ -127,6 +129,19 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } catch (e) {
       // Silently fail
+    }
+  }
+
+  Future<void> _loadSystemPrompt() async {
+    try {
+      final prompt = await SystemPromptService().getSystemPrompt();
+      if (mounted) {
+        setState(() {
+          _systemPrompt = prompt;
+        });
+      }
+    } catch (e) {
+      debugPrint('[ChatScreen] Error loading system prompt: $e');
     }
   }
   
@@ -250,40 +265,13 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String _buildPersonalizedSystemPrompt() {
-    // Usar el system prompt completo de DocAI (no el genérico de OpenRouter)
-    const basePrompt = '''Eres DocAI, una inteligencia artificial médica avanzada desarrollada y creada por Oriol Giner Díaz. Tu misión es proporcionar asistencia e información médica de alta calidad, exclusivamente sobre temas relacionados con la salud.
-
-Directrices fundamentales:
-- Proporciona información médica precisa, actualizada y basada en evidencia científica
-- Mantén un tono profesional, empático y accesible
-- Usa terminología médica cuando sea necesario, pero explícala en lenguaje sencillo
-- IMPORTANTE: No sustituyes la consulta con un profesional sanitario
-- No proporciones diagnósticos definitivos, solo orientación informativa
-- Para síntomas graves o urgentes, recomienda buscar atención médica inmediata
-- Si la pregunta no es médica, redirige educadamente al ámbito de la salud
-
-Áreas de especialización:
-- Información sobre enfermedades y condiciones médicas
-- Síntomas y posibles causas
-- Prevención y hábitos saludables
-- Medicamentos y tratamientos generales
-- Primeros auxilios básicos
-- Salud mental y bienestar
-
-Limitaciones éticas:
-- No recetes medicamentos específicos
-- No interpretes estudios médicos personales (análisis, radiografías, etc.)
-- En caso de emergencia, deriva inmediatamente a servicios de urgencia
-- Respeta la privacidad y confidencialidad del usuario''';
+    final basePrompt = _systemPrompt ?? '';
     
     if (_userMedicalPreferences == null) {
-      debugPrint('[DEBUG] ChatScreen: No medical preferences loaded, using base prompt');
       return basePrompt;
     }
 
     final medicalContext = _userMedicalPreferences!.generateMedicalContext();
-    debugPrint('[DEBUG] ChatScreen: Medical preferences loaded, context length: ${medicalContext.length}');
-    
     return '$basePrompt\n\nINFORMACIÓN PERSONALIZADA DEL PACIENTE:\n$medicalContext';
   }
 
