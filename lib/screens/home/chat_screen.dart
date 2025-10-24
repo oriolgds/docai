@@ -250,6 +250,10 @@ class _ChatScreenState extends State<ChatScreen> {
       // Load the user medical preferences for chat
       final medicalService = MedicalPreferencesService();
       final preferences = await medicalService.getUserMedicalPreferences();
+      debugPrint('[DEBUG] ChatScreen: Medical preferences loaded: ${preferences != null ? "YES" : "NO"}');
+      if (preferences != null) {
+        debugPrint('[DEBUG] ChatScreen: Preferences - Allergies: ${preferences.allergies.length}, Medications: ${preferences.currentMedications.length}');
+      }
       if (mounted) {
         setState(() {
           _userMedicalPreferences = preferences;
@@ -260,7 +264,7 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
     } catch (e) {
-      // Silently fail if we can't load preferences - not critical
+      debugPrint('[DEBUG] ChatScreen: Error loading medical preferences: $e');
     }
   }
 
@@ -268,10 +272,13 @@ class _ChatScreenState extends State<ChatScreen> {
     final basePrompt = _systemPrompt ?? '';
     
     if (_userMedicalPreferences == null) {
+      debugPrint('[DEBUG] ChatScreen: No medical preferences available');
       return basePrompt;
     }
 
     final medicalContext = _userMedicalPreferences!.generateMedicalContext();
+    debugPrint('[DEBUG] ChatScreen: Medical context generated (${medicalContext.length} chars)');
+    debugPrint('[DEBUG] ChatScreen: Medical context preview: ${medicalContext.substring(0, medicalContext.length > 100 ? 100 : medicalContext.length)}...');
     return '$basePrompt\n\nINFORMACIÓN PERSONALIZADA DEL PACIENTE:\n$medicalContext';
   }
 
