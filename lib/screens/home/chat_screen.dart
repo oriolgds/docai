@@ -495,13 +495,34 @@ class _ChatScreenState extends State<ChatScreen> {
         _streamingIndex = null;
       });
       
-      // Remove the incomplete assistant message if it exists
+      // Remove the incomplete assistant message ONLY if it's empty
       if (_messages.isNotEmpty && 
           _messages.last.role == ChatRole.assistant && 
           _messages.last.content.trim().isEmpty) {
         setState(() {
           _messages.removeLast();
         });
+      }
+      
+      // Save the conversation with partial response
+      if (_currentConversation != null && _messages.isNotEmpty) {
+        final updatedConversation = _currentConversation!.copyWith(
+          messages: List.from(_messages),
+          updatedAt: DateTime.now(),
+        );
+        await _stateManager.saveConversation(updatedConversation);
+        _currentConversation = updatedConversation;
+        
+        // Generate title if needed
+        if (_currentConversation!.title == 'Nueva conversación') {
+          final firstUserMessage = _messages.firstWhere(
+            (m) => m.role == ChatRole.user,
+            orElse: () => ChatMessage.user(''),
+          );
+          if (firstUserMessage.content.isNotEmpty) {
+            await _generateAndUpdateTitle(firstUserMessage.content);
+          }
+        }
       }
       
       // Show cancellation message

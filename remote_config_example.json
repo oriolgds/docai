@@ -1,5 +1,17 @@
-{
-  "available_models": [
+[
+  {
+    "id": "doky",
+    "brand": "doky",
+    "displayName": "Doky 1.0 (Beta)",
+    "modelId": "doky-llama",
+    "description": "Nuestro modelo propio en fase de pruebas.",
+    "reasoning": false,
+    "color1": "#3F51B5",
+    "color2": "#2196F3",
+    "disabled": false,
+    "provider": "doky",
+    "gradioUrl": "https://oriolgds-doky-opus.hf.space"
+  },
   {
     "id": "doky_balanced",
     "brand": "byok",
@@ -9,62 +21,6 @@
     "color1": "#505DA0",
     "color2": "#1FB1CF",
     "type": "openrouter",
-    "disabled": false
-  },
-  {
-    "id": "doky_reasoning",
-    "brand": "byok",
-    "displayName": "Deepseek R1",
-    "modelId": "deepseek/deepseek-r1-0528:free",
-    "description": "Análisis médico profundo con capacidades avanzadas",
-    "color1": "#BC1B68",
-    "color2": "#D3989B",
-    "type": "openrouter",
-    "disabled": false
-  },
-  {
-    "id": "doky_instant",
-    "brand": "byok",
-    "displayName": "Gemini 2.0 Flash",
-    "modelId": "google/gemini-2.0-flash-exp:free",
-    "description": "Respuestas rápidas para consultas médicas básicas",
-    "color1": "#348756",
-    "color2": "#54B6CA",
-    "type": "openrouter",
-    "disabled": false
-  },
-  {
-    "id": "doky_research",
-    "brand": "byok",
-    "displayName": "Tongyi DeepResearch 30B",
-    "modelId": "alibaba/tongyi-deepresearch-30b-a3b:free",
-    "description": "Investigación avanzada con los mejores informes médicos",
-    "color1": "#FF0F7B",
-    "color2": "#F89B29",
-    "type": "openrouter",
-    "disabled": false
-  },
-  {
-    "id": "doky_pro",
-    "brand": "byok",
-    "displayName": "Llama 4 Maverick",
-    "modelId": "meta-llama/llama-4-maverick:free",
-    "description": "Máxima precisión para casos médicos complejos",
-    "color1": "#F9655B",
-    "color2": "#EE821A",
-    "type": "openrouter",
-    "disabled": false
-  },
-  {
-    "id": "doky_2",
-    "brand": "byok",
-    "displayName": "GPT-OSS 20B",
-    "modelId": "openai/gpt-oss-20b:free",
-    "description": "Nuevo modelo en fase de pruebas",
-    "color1": "#CAF2EF",
-    "color2": "#F2BBF1",
-    "type": "openrouter",
-    "disabled": false
+    "disabled": true
   }
 ]
-}
