@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import '../models/model_profile.dart';
+import '../models/prompt_preset.dart';
 
 class RemoteConfigService {
   static FirebaseRemoteConfig? _remoteConfig;
@@ -35,7 +36,27 @@ class RemoteConfigService {
         'title_generation_models': 'deepseek/deepseek-chat-v3.1:free',
         'maintenance': false,
         'system_prompt': '',
-        'modal_daily_limit': 5
+        'modal_daily_limit': 5,
+        'prompt_presets': jsonEncode([
+          {
+            'id': 'general',
+            'name': 'General',
+            'systemPrompt': 'Eres DocAI, un asistente médico general.',
+            'icon': '🏥'
+          },
+          {
+            'id': 'medico',
+            'name': 'Médico',
+            'systemPrompt': 'Eres DocAI, un médico especialista que proporciona información médica detallada.',
+            'icon': '👨⚕️'
+          },
+          {
+            'id': 'psicologo',
+            'name': 'Psicólogo',
+            'systemPrompt': 'Eres DocAI, un psicólogo especializado en salud mental y bienestar emocional.',
+            'icon': '🧠'
+          }
+        ])
       });
       
       await _fetchAndActivate();
@@ -177,6 +198,23 @@ class RemoteConfigService {
       return _remoteConfig!.getInt('modal_daily_limit');
     } catch (e) {
       return 5;
+    }
+  }
+
+  static Future<List<PromptPreset>> getPromptPresets() async {
+    await _fetchAndActivate();
+    if (_remoteConfig == null) {
+      return [PromptPreset.general, PromptPreset.medico, PromptPreset.psicologo];
+    }
+    try {
+      final presetsJson = _remoteConfig!.getString('prompt_presets');
+      if (presetsJson.isEmpty) {
+        return [PromptPreset.general, PromptPreset.medico, PromptPreset.psicologo];
+      }
+      final List<dynamic> presetsList = jsonDecode(presetsJson);
+      return presetsList.map((json) => PromptPreset.fromJson(json)).toList();
+    } catch (e) {
+      return [PromptPreset.general, PromptPreset.medico, PromptPreset.psicologo];
     }
   }
 }

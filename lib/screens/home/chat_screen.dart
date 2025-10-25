@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/chat_input.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../models/prompt_preset.dart';
 
 import '../../services/model_service.dart';
 import '../../services/chat_state_manager.dart';
@@ -57,6 +58,8 @@ class _ChatScreenState extends State<ChatScreen> {
   StreamSubscription<String>? _currentStreamSubscription;
   bool _isMaintenanceMode = false;
   String? _systemPrompt;
+  PromptPreset? _selectedPreset;
+  List<PromptPreset> _availablePresets = [];
   
   // Variables para el historial
   ChatConversation? _currentConversation;
@@ -76,6 +79,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _initializeDefaultModel();
     _checkMaintenanceMode();
     _loadSystemPrompt();
+    _loadPresets();
     
     // Configurar listener del scroll controller
     _scrollController.addListener(_onScrollChanged);
@@ -143,6 +147,19 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } catch (e) {
       debugPrint('[ChatScreen] Error loading system prompt: $e');
+    }
+  }
+
+  Future<void> _loadPresets() async {
+    try {
+      final presets = await RemoteConfigService.getPromptPresets();
+      if (mounted) {
+        setState(() {
+          _availablePresets = presets;
+        });
+      }
+    } catch (e) {
+      debugPrint('[ChatScreen] Error loading presets: $e');
     }
   }
   
@@ -270,7 +287,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String _buildPersonalizedSystemPrompt() {
-    final basePrompt = _systemPrompt ?? '';
+    // Usar preset si está seleccionado, sino usar el system prompt base
+    final basePrompt = _selectedPreset?.systemPrompt ?? _systemPrompt ?? '';
     
     if (_userMedicalPreferences == null) {
       debugPrint('[DEBUG] ChatScreen: No medical preferences available');
@@ -1600,6 +1618,10 @@ class _ChatScreenState extends State<ChatScreen> {
                   future: ModelService.getAvailableModels(),
                   builder: (context, snapshot) {
                     final profiles = snapshot.data ?? [];
+                    final showPresets = _selectedProfile.provider == ModelProvider.doky || 
+                        _selectedProfile.provider == ModelProvider.modal ||
+                        (_selectedProfile.provider == ModelProvider.openrouter && 
+                         _selectedProfile.modelId.contains('huggingface'));
                     return ChatInput(
                       onSend: (text) => _sendMessage(text),
                       onCancel: _cancelGeneration,
@@ -1612,9 +1634,15 @@ class _ChatScreenState extends State<ChatScreen> {
                         });
                       },
                       onRequestPro: () {},
-                      // Add new scroll button properties
                       showScrollButton: _showScrollToBottomButton,
                       onScrollToBottom: _scrollToBottomButtonPressed,
+                      presets: showPresets ? _availablePresets : null,
+                      selectedPreset: _selectedPreset,
+                      onPresetChanged: (preset) {
+                        setState(() {
+                          _selectedPreset = preset;
+                        });
+                      },
                     );
                   },
                 ),

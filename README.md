@@ -120,6 +120,7 @@ Use a test email (e.g., `test@example.com`) and password to log in (ensure these
 - **API Errors**: Verify `.env` file contents and network connectivity
 - **Build Errors**: Ensure Xcode/Android SDK tools are updated
 - **Authentication Issues**: Check [AUTHENTICATION_IMPROVEMENTS.md](AUTHENTICATION_IMPROVEMENTS.md) for recent fixes
+- **Preset Issues**: Verify Firebase Remote Config setup in [PROMPT_PRESETS_CONFIG.md](PROMPT_PRESETS_CONFIG.md)
 
 ## 🤖 Dynamic Model Management
 
@@ -149,6 +150,30 @@ DocAI now supports Modal Labs for running custom models. See [MODAL_LABS_INTEGRA
 - Graceful handling of unavailable models
 - User-friendly error messages
 - Automatic model switching when needed
+
+## 🎭 System Prompt Presets
+
+DocAI now supports **dynamic system prompt presets** for specialized medical roles:
+
+### Key Features:
+- **Multiple specialties** (Psicólogo, Médico, General, etc.)
+- **Dynamic configuration** through Firebase Remote Config
+- **Provider-specific** (Doky, Modal, HuggingFace models)
+- **Easy switching** with visual chips in the chat interface
+- **Customizable prompts** without app updates
+
+### Available Presets:
+- **🏥 General** → Asistente médico general
+- **👨⚕️ Médico** → Especialista con información detallada
+- **🧠 Psicólogo** → Especializado en salud mental
+
+### Configuration:
+Presets are managed through Firebase Remote Config. See [PROMPT_PRESETS_CONFIG.md](PROMPT_PRESETS_CONFIG.md) for detailed setup instructions and examples.
+
+### Supported Providers:
+- ✅ Doky models
+- ✅ Modal Labs models
+- ✅ HuggingFace models (via OpenRouter)
 
 ## Contributing
 

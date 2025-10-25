@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/model_profile.dart';
+import '../../models/prompt_preset.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 class ChatInput extends StatefulWidget {
@@ -10,8 +11,11 @@ class ChatInput extends StatefulWidget {
   final List<ModelProfile> allProfiles;
   final ValueChanged<ModelProfile> onProfileChanged;
   final VoidCallback onRequestPro;
-  final VoidCallback? onScrollToBottom; // New callback for scroll to bottom
-  final bool showScrollButton; // New property to control scroll button visibility
+  final VoidCallback? onScrollToBottom;
+  final bool showScrollButton;
+  final List<PromptPreset>? presets;
+  final PromptPreset? selectedPreset;
+  final ValueChanged<PromptPreset?>? onPresetChanged;
 
   const ChatInput({
     super.key,
@@ -22,8 +26,11 @@ class ChatInput extends StatefulWidget {
     required this.allProfiles,
     required this.onProfileChanged,
     required this.onRequestPro,
-    this.onScrollToBottom, // Optional scroll callback
-    this.showScrollButton = false, // Default to hidden
+    this.onScrollToBottom,
+    this.showScrollButton = false,
+    this.presets,
+    this.selectedPreset,
+    this.onPresetChanged
   });
 
   @override
@@ -100,13 +107,30 @@ class _ChatInputState extends State<ChatInput> with SingleTickerProviderStateMix
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Model selector row
+            // Model selector and presets row
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-              child: _ModelDisplay(
-                selected: current,
-                allProfiles: widget.allProfiles,
-                onChanged: widget.onProfileChanged,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _ModelDisplay(
+                      selected: current,
+                      allProfiles: widget.allProfiles,
+                      onChanged: widget.onProfileChanged,
+                    ),
+                  ),
+                  if (widget.presets != null && widget.presets!.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _PresetDisplay(
+                        presets: widget.presets!,
+                        selected: widget.selectedPreset,
+                        onChanged: widget.onPresetChanged,
+                        accentColor: current.primaryColor,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
 
@@ -205,6 +229,116 @@ class _ChatInputState extends State<ChatInput> with SingleTickerProviderStateMix
 
 
 
+
+class _PresetDisplay extends StatelessWidget {
+  final List<PromptPreset> presets;
+  final PromptPreset? selected;
+  final ValueChanged<PromptPreset?>? onChanged;
+  final Color accentColor;
+
+  const _PresetDisplay({
+    required this.presets,
+    required this.selected,
+    required this.onChanged,
+    required this.accentColor,
+  });
+
+  void _showPresetSelector(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'Seleccionar especialidad',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+            ),
+            ...presets.map((preset) =>
+              ListTile(
+                leading: Text(preset.icon, style: const TextStyle(fontSize: 24)),
+                title: Text(
+                  preset.name,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+                trailing: selected?.id == preset.id
+                    ? Icon(Icons.check_circle, color: accentColor)
+                    : null,
+                onTap: () {
+                  onChanged?.call(preset);
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.clear, size: 24),
+              title: const Text('Ninguno'),
+              trailing: selected == null
+                  ? Icon(Icons.check_circle, color: accentColor)
+                  : null,
+              onTap: () {
+                onChanged?.call(null);
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showPresetSelector(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFFE0E0E0)),
+          borderRadius: BorderRadius.circular(10),
+          color: Colors.white,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              selected?.icon ?? '🏥',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                selected?.name ?? 'General',
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Icon(Icons.arrow_drop_down, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _ModelDisplay extends StatefulWidget {
   final ModelProfile selected;
