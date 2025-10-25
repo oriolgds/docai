@@ -2497,6 +2497,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Feature coming soon'**
   String get featureComingSoon;
+
+  /// Error message when user exceeds Modal Labs daily rate limit
+  ///
+  /// In en, this message translates to:
+  /// **'You have exceeded the daily message limit. Please try again tomorrow.'**
+  String get modalRateLimitExceeded;
 }
 
 class _AppLocalizationsDelegate

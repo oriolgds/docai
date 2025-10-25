@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 enum BrandName { doky }
 
-enum ModelProvider { openrouter, byok, doky }
+enum ModelProvider { openrouter, byok, doky, modal }
 
 String brandDisplayName(BrandName b) {
   switch (b) {
@@ -30,6 +30,7 @@ class ModelProfile {
   final String color2; // Color secundario del degradado
   final bool disabled; // Si el modelo está deshabilitado
   final ModelProvider provider; // Provider del modelo
+  final bool isDefault; // Si es el modelo por defecto
 
   const ModelProfile({
     required this.id,
@@ -43,6 +44,7 @@ class ModelProfile {
     this.color2 = '#2196F3',
     this.disabled = false,
     this.provider = ModelProvider.openrouter,
+    this.isDefault = false,
   });
   
   Color get primaryColor => Color(int.parse(color1.replaceFirst('#', '0xFF')));

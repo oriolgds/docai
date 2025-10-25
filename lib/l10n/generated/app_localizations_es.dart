@@ -1290,4 +1290,8 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get featureComingSoon => 'Función próximamente disponible';
+
+  @override
+  String get modalRateLimitExceeded =>
+      'Has superado el límite de mensajes por hoy. Por favor, inténtalo mañana.';
 }

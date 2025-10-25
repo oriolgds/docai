@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/model_profile.dart';
 import '../../services/model_service.dart';
 import '../../services/supabase_service.dart';
+import '../../services/query_limit_service.dart';
 
 class ModelSelector extends StatefulWidget {
   final ModelProfile selected;
@@ -20,6 +21,7 @@ class _ModelSelectorState extends State<ModelSelector> {
   bool _isLoading = true;
   String? _errorMessage;
   bool _hasByok = false;
+  int? _remainingQueries;
 
   @override
   void initState() {
@@ -53,8 +55,16 @@ class _ModelSelectorState extends State<ModelSelector> {
 
         // Verificar si el modelo actual sigue disponible
         final currentModelExists = models.any((m) => m.id == _profile.id);
-        if (!currentModelExists && models.isNotEmpty) {
-          _profile = models.first;
+        if (!currentModelExists) {
+          // Priorizar modelo marcado como default
+          final defaultModel = models.where((m) => m.isDefault).firstOrNull;
+          if (defaultModel != null) {
+            _profile = defaultModel;
+          } else {
+            // Fallback: priorizar modelo Doky
+            final dokyModels = models.where((m) => m.provider == ModelProvider.doky && m.brand == BrandName.doky);
+            _profile = dokyModels.isNotEmpty ? dokyModels.first : models.first;
+          }
           _brand = _profile.brand;
           WidgetsBinding.instance.addPostFrameCallback((_) => widget.onSelected(_profile));
         }
@@ -101,6 +111,20 @@ class _ModelSelectorState extends State<ModelSelector> {
   void _selectProfile(ModelProfile p) {
     setState(() => _profile = p);
     widget.onSelected(p);
+    if (p.provider == ModelProvider.modal) {
+      _loadRemainingQueries();
+    }
+  }
+
+  Future<void> _loadRemainingQueries() async {
+    try {
+      final remaining = await QueryLimitService.getRemainingQueries();
+      if (mounted) {
+        setState(() => _remainingQueries = remaining);
+      }
+    } catch (e) {
+      // Silently fail
+    }
   }
 
   @override
@@ -175,7 +199,30 @@ class _ModelSelectorState extends State<ModelSelector> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: FilterChip(
-                    label: Text(p.displayName),
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(p.displayName),
+                        if (p.provider == ModelProvider.modal && _profile.id == p.id && _remainingQueries != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _remainingQueries! > 0 ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$_remainingQueries',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: _remainingQueries! > 0 ? Colors.green : Colors.red,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                     selected: _profile.id == p.id,
                     onSelected: (_) => _selectProfile(p),
                     selectedColor: Colors.transparent,

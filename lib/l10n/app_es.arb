@@ -400,5 +400,6 @@
   "syncYourData": "Sincroniza tus datos",
   "exportData": "Exportar datos",
   "downloadYourData": "Descarga tus datos",
-  "featureComingSoon": "Función próximamente disponible"
+  "featureComingSoon": "Función próximamente disponible",
+  "modalRateLimitExceeded": "Has superado el límite de mensajes por hoy. Por favor, inténtalo mañana."
 }

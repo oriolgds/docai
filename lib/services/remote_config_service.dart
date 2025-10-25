@@ -34,7 +34,8 @@ class RemoteConfigService {
         ]),
         'title_generation_models': 'deepseek/deepseek-chat-v3.1:free',
         'maintenance': false,
-        'system_prompt': ''
+        'system_prompt': '',
+        'modal_daily_limit': 5
       });
       
       await _fetchAndActivate();
@@ -75,8 +76,8 @@ class RemoteConfigService {
 
       final List<dynamic> modelsList = jsonDecode(modelsJson);
       final models = modelsList.map((json) => _parseModelFromJson(json)).toList();
-      // Filter out disabled models and non-free models (except Doky models)
-      final enabledModels = models.where((model) => !model.disabled && (model.modelId.endsWith(':free') || model.provider == ModelProvider.doky)).toList();
+      // Filter out disabled models and non-free models (except Doky and Modal models)
+      final enabledModels = models.where((model) => !model.disabled && (model.modelId.endsWith(':free') || model.provider == ModelProvider.doky || model.provider == ModelProvider.modal)).toList();
       return enabledModels.isEmpty ? [] : enabledModels;
     } catch (e) {
       return [];
@@ -96,6 +97,7 @@ class RemoteConfigService {
       color2: json['color2'] ?? '#2196F3',
       disabled: json['disabled'] ?? false,
       provider: _parseProvider(json['provider']),
+      isDefault: json['default'] == 'true' || json['default'] == true,
     );
   }
   
@@ -140,6 +142,8 @@ class RemoteConfigService {
         return ModelProvider.byok;
       case 'doky':
         return ModelProvider.doky;
+      case 'modal':
+        return ModelProvider.modal;
       case 'openrouter':
       default:
         return ModelProvider.openrouter;
@@ -163,6 +167,16 @@ class RemoteConfigService {
       return _remoteConfig!.getString('system_prompt');
     } catch (e) {
       return '';
+    }
+  }
+
+  static Future<int> getModalDailyLimit() async {
+    await _fetchAndActivate();
+    if (_remoteConfig == null) return 5;
+    try {
+      return _remoteConfig!.getInt('modal_daily_limit');
+    } catch (e) {
+      return 5;
     }
   }
 }
