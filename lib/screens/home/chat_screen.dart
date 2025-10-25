@@ -10,6 +10,7 @@ import '../../services/chat_history_service.dart';
 import '../../services/system_prompt_service.dart';
 import '../../models/model_profile.dart';
 import '../../exceptions/model_exceptions.dart';
+import '../../exceptions/modal_exceptions.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/chat_message.dart';
 import '../../models/chat_conversation.dart';
@@ -1051,8 +1052,29 @@ class _ChatScreenState extends State<ChatScreen> {
           _currentStreamSubscription = null;
 
           if (mounted) {
+            // Check if it's a Modal rate limit error
+            if (e is ModalRateLimitException) {
+              final l10n = AppLocalizations.of(context)!;
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(l10n.modalRateLimitExceeded),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 5),
+              ));
+              
+              if (_streamingIndex != null && _streamingIndex! < _messages.length) {
+                setState(() {
+                  _messages[_streamingIndex!] = ChatMessage(
+                    id: _messages[_streamingIndex!].id,
+                    role: ChatRole.assistant,
+                    content: l10n.modalRateLimitExceeded,
+                    createdAt: DateTime.now(),
+                  );
+                });
+              }
+            }
             // Check if it's a data policy configuration error
-            if (e is DataPolicyConfigurationException) {
+            else if (e is DataPolicyConfigurationException) {
               _showDataPolicyModal(e.message, e.configUrl);
             }
             // Check if it's a BYOK error

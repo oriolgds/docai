@@ -61,3 +61,4 @@ web-debug*.zip
 upload-keystore.jks
 app/app.zip
 app/app.zip.hash
+/supabase/.temp

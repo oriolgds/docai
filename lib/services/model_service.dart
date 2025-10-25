@@ -3,13 +3,16 @@ import '../models/chat_message.dart';
 import 'remote_config_service.dart';
 import 'openrouter_service.dart';
 import 'doky_service.dart';
+import 'modal_service.dart';
 
 class ModelService {
   static OpenRouterService? _openRouterService;
   static DokyService? _dokyService;
+  static ModalService? _modalService;
 
   static OpenRouterService get _openRouter => _openRouterService ??= OpenRouterService();
   static DokyService get _doky => _dokyService ??= DokyService();
+  static ModalService get _modal => _modalService ??= ModalService();
 
   static Future<List<ModelProfile>> getAvailableModels() async {
     try {
@@ -40,7 +43,12 @@ class ModelService {
     if (models.isEmpty) {
       return null;
     }
-    // Priorizar modelo Doky
+    // Priorizar modelo marcado como default
+    final defaultModel = models.where((m) => m.isDefault).firstOrNull;
+    if (defaultModel != null) {
+      return defaultModel;
+    }
+    // Fallback: priorizar modelo Doky
     final dokyModels = models.where((m) => m.provider == ModelProvider.doky && m.brand == BrandName.doky);
     if (dokyModels.isNotEmpty) {
       return dokyModels.first;
@@ -67,6 +75,14 @@ class ModelService {
         );
       case ModelProvider.doky:
         return _doky.chatCompletion(
+          messages: messages,
+          profile: profile,
+          systemPromptOverride: systemPromptOverride,
+          temperature: temperature,
+          useReasoning: useReasoning,
+        );
+      case ModelProvider.modal:
+        return _modal.chatCompletion(
           messages: messages,
           profile: profile,
           systemPromptOverride: systemPromptOverride,
@@ -103,6 +119,15 @@ class ModelService {
           useReasoning: useReasoning,
         );
         break;
+      case ModelProvider.modal:
+        yield* _modal.streamChatCompletion(
+          messages: messages,
+          profile: profile,
+          systemPromptOverride: systemPromptOverride,
+          temperature: temperature,
+          useReasoning: useReasoning,
+        );
+        break;
     }
   }
 
@@ -115,6 +140,9 @@ class ModelService {
       case ModelProvider.doky:
         await _doky.cancelCurrentStream();
         break;
+      case ModelProvider.modal:
+        await _modal.cancelCurrentStream();
+        break;
     }
   }
 
@@ -125,6 +153,8 @@ class ModelService {
         return _openRouter.isStreaming;
       case ModelProvider.doky:
         return _doky.isStreaming;
+      case ModelProvider.modal:
+        return _modal.isStreaming;
     }
   }
 
@@ -140,7 +170,9 @@ class ModelService {
   static void dispose() {
     _openRouterService?.dispose();
     _dokyService?.dispose();
+    _modalService?.dispose();
     _openRouterService = null;
     _dokyService = null;
+    _modalService = null;
   }
 }

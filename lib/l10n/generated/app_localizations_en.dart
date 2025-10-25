@@ -1280,4 +1280,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get featureComingSoon => 'Feature coming soon';
+
+  @override
+  String get modalRateLimitExceeded =>
+      'You have exceeded the daily message limit. Please try again tomorrow.';
 }

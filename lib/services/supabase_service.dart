@@ -250,6 +250,12 @@ class SupabaseService {
     final user = currentUser;
     return user?.emailConfirmedAt != null;
   }
+  
+  /// Get current user's access token for API authentication
+  static String? get accessToken => client.auth.currentSession?.accessToken;
+  
+  /// Get current user's ID
+  static String? get userId => currentUser?.id;
 
   /// Get auth redirect URLs for configuration
   static String get emailRedirectUrl => _emailRedirectUrl;

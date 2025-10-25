@@ -137,9 +137,13 @@ The app now features **dynamic model management** through Firebase Remote Config
 - **Doky Balanced** → `deepseek/deepseek-chat-v3.1:free`
 - **Doky Reasoning** → `deepseek/deepseek-reasoner:free`
 - **Doky Pro** → `x-ai/grok-4-fast:free`
+- **Doky Modal** → `Llama 3.2 3B` (via Modal Labs)
 
 ### Configuration:
 Models are managed through Firebase Remote Config. See [REMOTE_CONFIG_SETUP.md](REMOTE_CONFIG_SETUP.md) for detailed setup instructions.
+
+### Modal Labs Integration:
+DocAI now supports Modal Labs for running custom models. See [MODAL_LABS_INTEGRATION.md](MODAL_LABS_INTEGRATION.md) for setup and usage details.
 
 ### Error Handling:
 - Graceful handling of unavailable models
@@ -162,6 +166,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 - Built with [Flutter](https://flutter.dev)
 - Backend powered by [Supabase](https://supabase.com)
 - AI integration using [OpenRouter API](https://openrouter.ai)
+- Model hosting via [Modal Labs](https://modal.com)
 
 ---
 

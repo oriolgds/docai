@@ -1662,5 +1662,9 @@
   "featureComingSoon": "Feature coming soon",
   "@featureComingSoon": {
     "description": "Feature coming soon message"
+  },
+  "modalRateLimitExceeded": "You have exceeded the daily message limit. Please try again tomorrow.",
+  "@modalRateLimitExceeded": {
+    "description": "Error message when user exceeds Modal Labs daily rate limit"
   }
 }
