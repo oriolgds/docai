@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'remote_config_service.dart';
+import '../models/prompt_preset.dart';
 
 class SystemPromptService {
   static final SystemPromptService _instance = SystemPromptService._internal();
@@ -8,8 +9,19 @@ class SystemPromptService {
   SystemPromptService._internal();
 
   String? _cachedPrompt;
+  PromptPreset? _currentPreset;
 
-  Future<String> getSystemPrompt() async {
+  Future<String> getSystemPrompt({PromptPreset? preset}) async {
+    // Si hay un preset activo, usarlo
+    if (preset != null) {
+      return preset.systemPrompt;
+    }
+    
+    // Si hay un preset guardado, usarlo
+    if (_currentPreset != null) {
+      return _currentPreset!.systemPrompt;
+    }
+
     if (_cachedPrompt != null) return _cachedPrompt!;
 
     try {
@@ -57,6 +69,19 @@ Limitaciones éticas:
 - No interpretes estudios médicos personales (análisis, radiografías, etc.)
 - En caso de emergencia, deriva inmediatamente a servicios de urgencia
 - Respeta la privacidad y confidencialidad del usuario''';
+  }
+
+  void setPreset(PromptPreset? preset) {
+    _currentPreset = preset;
+    _cachedPrompt = null;
+  }
+
+  PromptPreset? getCurrentPreset() {
+    return _currentPreset;
+  }
+
+  Future<List<PromptPreset>> getAvailablePresets() async {
+    return await RemoteConfigService.getPromptPresets();
   }
 
   void invalidateCache() {
