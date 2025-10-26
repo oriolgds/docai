@@ -17,23 +17,23 @@ class RemoteConfigService {
         minimumFetchInterval: Duration.zero,
       ));
       
-      // Valores por defecto
+      // Valores por defecto - Nueva estructura simplificada
+      // Eliminados campos redundantes: id, brand
+      // El brand se deriva automáticamente del provider
       await _remoteConfig!.setDefaults({
         'available_models': jsonEncode([
           {
-            'id': 'doky',
-            'brand': 'doky',
-            'displayName': 'Doky',
             'modelId': 'doky-llama',
+            'displayName': 'Doky 1.0',
             'description': 'Asistente médico inteligente especializado.',
-            'reasoning': false,
+            'provider': 'doky',
             'color1': '#3F51B5',
             'color2': '#2196F3',
+            'reasoning': false,
             'disabled': false,
-            'provider': 'doky'
+            'default': true
           }
         ]),
-        'title_generation_models': 'deepseek/deepseek-chat-v3.1:free',
         'maintenance': false,
         'system_prompt': '',
         'modal_daily_limit': 5,
@@ -106,56 +106,51 @@ class RemoteConfigService {
   }
   
   static ModelProfile _parseModelFromJson(Map<String, dynamic> json) {
+    // Nueva estructura simplificada - campos requeridos:
+    // - modelId: identificador único del modelo
+    // - displayName: nombre para mostrar
+    // - provider: tipo de provider (doky, byok, openrouter, modal)
+    // - description, color1, color2, reasoning, disabled, default: opcionales
+
+    // Compatibilidad con JSON viejo: también acepta 'id' como fallback de modelId
+    // y 'type' como fallback de provider
+    final modelId = json['modelId'] ?? json['id'] ?? 'unknown';
+    final provider = _parseProvider(json['provider'] ?? json['type']);
+
+    // Derivar brand del provider para compatibilidad con UI
+    final brand = _deriveBrandFromProvider(provider);
+
     return ModelProfile(
-      id: json['id'] ?? 'unknown',
-      brand: _parseBrand(json['brand']),
+      id: modelId,
+      brand: brand,
       tier: json['tier'] ?? '',
       displayName: json['displayName'] ?? 'Modelo desconocido',
-      modelId: json['modelId'] ?? '',
+      modelId: modelId,
       description: json['description'] ?? '',
       reasoning: json['reasoning'] ?? false,
       color1: json['color1'] ?? '#3F51B5',
       color2: json['color2'] ?? '#2196F3',
       disabled: json['disabled'] ?? false,
-      provider: _parseProvider(json['provider'] ?? json['type']),
+      provider: provider,
       isDefault: json['default'] == 'true' || json['default'] == true,
     );
   }
   
   static Future<List<String>> getTitleGenerationModels() async {
-    await _fetchAndActivate();
-
-    if (_remoteConfig == null) {
-      return ['openai/gpt-3.5-turbo', 'openai/gpt-4o-mini', 'x-ai/grok-2-1212'];
-    }
-
-    try {
-      final modelsStr = _remoteConfig!.getString('title_generation_models');
-
-      // Check if title generation is disabled
-      if (modelsStr.trim().toLowerCase() == 'disabled') {
-        return []; // Return empty list to disable AI title generation
-      }
-
-      if (modelsStr.isEmpty) {
-        return ['openai/gpt-3.5-turbo', 'openai/gpt-4o-mini', 'x-ai/grok-2-1212'];
-      }
-
-      final models = modelsStr.split(',').map((m) => m.trim()).where((m) => m.isNotEmpty).toList();
-      return models.isEmpty ? ['openai/gpt-3.5-turbo', 'openai/gpt-4o-mini', 'x-ai/grok-2-1212'] : models;
-    } catch (e) {
-      return ['openai/gpt-3.5-turbo', 'openai/gpt-4o-mini', 'x-ai/grok-2-1212'];
-    }
+    // ❌ ELIMINADO: Sistema de generación de títulos con OpenRouter
+    // ✅ AHORA: Se usa TitleGeneratorService con HuggingFace Space automáticamente
+    return [];
   }
 
-  static BrandName _parseBrand(String? brandStr) {
-    switch (brandStr?.toLowerCase()) {
-      case 'doky':
+  static BrandName _deriveBrandFromProvider(ModelProvider provider) {
+    switch (provider) {
+      case ModelProvider.doky:
         return BrandName.doky;
-      case 'byok':
+      case ModelProvider.byok:
+      case ModelProvider.openrouter:
         return BrandName.byok;
-      default:
-        return BrandName.doky;
+      case ModelProvider.modal:
+        return BrandName.doky; // Modal models also use doky brand for now
     }
   }
 
