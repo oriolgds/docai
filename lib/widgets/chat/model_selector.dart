@@ -168,11 +168,120 @@ class _ModelSelectorState extends State<ModelSelector> {
     
     final brands = _byBrand.keys.toList();
     final dokyModels = _byBrand[BrandName.doky]?.where((p) => p.provider != ModelProvider.byok) ?? [];
+    final byokBrandModels = _byBrand[BrandName.byok] ?? [];
     final byokModels = _byBrand.values.expand((models) => models.where((p) => p.provider == ModelProvider.byok)).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Modelos BYOK principales
+        if (byokBrandModels.isNotEmpty) ...[
+          const Text(
+            'Modelos BYOK',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final p in byokBrandModels)
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: _profile.id == p.id ? LinearGradient(
+                      colors: [p.primaryColor.withOpacity(0.1), p.secondaryColor.withOpacity(0.1)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ) : null,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: FilterChip(
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(p.displayName),
+                        if (p.provider == ModelProvider.modal && _profile.id == p.id && _remainingQueries != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _remainingQueries! > 0 ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$_remainingQueries',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: _remainingQueries! > 0 ? Colors.green : Colors.red,
+                              ),
+                            ),
+                          ),
+                        ] else if (p.provider == ModelProvider.openrouter) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF00B894), Color(0xFF00CEC9)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF00B894).withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.vpn_key,
+                                  size: 12,
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                                const SizedBox(width: 4),
+                                const Text(
+                                  'BYOK',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    selected: _profile.id == p.id,
+                    onSelected: (_) => _selectProfile(p),
+                    selectedColor: Colors.transparent,
+                    checkmarkColor: p.primaryColor,
+                    labelStyle: TextStyle(
+                      color: _profile.id == p.id ? p.primaryColor : Colors.black,
+                      fontWeight: _profile.id == p.id ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(color: p.primaryColor.withOpacity(0.35)),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
         // Modelos Doky principales
         if (dokyModels.isNotEmpty) ...[
           const Text(
@@ -279,6 +388,7 @@ class _ModelSelectorState extends State<ModelSelector> {
                 ),
             ],
           ),
+          const SizedBox(height: 16),
         ],
 
         // Modelos BYOK en accordion

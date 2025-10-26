@@ -98,7 +98,7 @@ class RemoteConfigService {
       final List<dynamic> modelsList = jsonDecode(modelsJson);
       final models = modelsList.map((json) => _parseModelFromJson(json)).toList();
       // Filter out disabled models and non-free models (except Doky and Modal models)
-      final enabledModels = models.where((model) => !model.disabled && (model.modelId.endsWith(':free') || model.provider == ModelProvider.doky || model.provider == ModelProvider.modal)).toList();
+      final enabledModels = models.where((model) => !model.disabled && (model.modelId.endsWith(':free') || model.provider == ModelProvider.doky || model.provider == ModelProvider.modal || model.provider == ModelProvider.openrouter)).toList();
       return enabledModels.isEmpty ? [] : enabledModels;
     } catch (e) {
       return [];
@@ -117,7 +117,7 @@ class RemoteConfigService {
       color1: json['color1'] ?? '#3F51B5',
       color2: json['color2'] ?? '#2196F3',
       disabled: json['disabled'] ?? false,
-      provider: _parseProvider(json['provider']),
+      provider: _parseProvider(json['provider'] ?? json['type']),
       isDefault: json['default'] == 'true' || json['default'] == true,
     );
   }
@@ -152,6 +152,8 @@ class RemoteConfigService {
     switch (brandStr?.toLowerCase()) {
       case 'doky':
         return BrandName.doky;
+      case 'byok':
+        return BrandName.byok;
       default:
         return BrandName.doky;
     }
