@@ -398,7 +398,7 @@ class _ModelDisplayState extends State<_ModelDisplay> {
                       profile.displayName,
                       style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
-                    if (profile.provider == ModelProvider.byok) ...[
+                    if (profile.provider == ModelProvider.byok || profile.provider == ModelProvider.openrouter) ...[
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

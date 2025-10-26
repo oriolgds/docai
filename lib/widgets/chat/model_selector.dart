@@ -220,6 +220,46 @@ class _ModelSelectorState extends State<ModelSelector> {
                               ),
                             ),
                           ),
+                        ] else if (p.provider == ModelProvider.openrouter) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF00B894), Color(0xFF00CEC9)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF00B894).withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.vpn_key,
+                                  size: 12,
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                                const SizedBox(width: 4),
+                                const Text(
+                                  'BYOK',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ],
                     ),
