@@ -1,198 +1,93 @@
-# DocAI - An app to heal the world
+# DocAI - Tu Asistente Médico de Confianza
 
-DocAI is a mobile application built with Flutter that acts as a personal AI-powered doctor. It features a native chat interface powered by OpenRouter, chat history (mock for now), predefined health presets (e.g., medications, natural remedies), a profile page for subscription management, and a minimalist login screen. This README provides instructions to set up, install, and run the app on your local machine.
+<div align="center">
+  <img src="assets/logo/logo.png" alt="Logo de DocAI" width="200">
+  
+  [![Versión](https://img.shields.io/badge/versión-4.1.2-brightgreen)](https://github.com/oriolgds/docai/releases)
+  [![Plataformas](https://img.shields.io/badge/plataformas-Android%20%7C%20iOS%20%7C%20Web-blue)](https://oriol.is-a.dev/docai)
+  [![Idiomas](https://img.shields.io/badge/idiomas-ES%20%7C%20EN%20%7C%20FR%20%7C%20DE%20%7C%20IT%20%7C%20PT-brightgreen)](https://oriol.is-a.dev/docai#idiomas)
 
-⚡ **RECENT UPDATE**: Major authentication system improvements implemented in the `login-fix` branch. See [AUTHENTICATION_IMPROVEMENTS.md](AUTHENTICATION_IMPROVEMENTS.md) for details.
+</div>
 
-## 🆕 Authentication System Improvements
+## 🩺 ¿Qué es DocAI?
 
-**Branch**: `login-fix`  
-**Status**: ✅ Ready for merge
+DocAI es una aplicación revolucionaria que utiliza inteligencia artificial avanzada para ofrecer asistencia médica personalizada. A diferencia de los asistentes de IA genéricos, DocAI está especialmente diseñado para entender y responder preguntas sobre salud, síntomas, medicamentos y condiciones médicas con un nivel de precisión y confiabilidad superior.
 
-### Key Fixes:
-- ✅ **Reliable email verification** with retry mechanisms
-- ✅ **Unverified user login support** with appropriate warnings
-- ✅ **Enhanced error handling** with clear user feedback
-- ✅ **Improved UX** with loading states and animations
-- ✅ **Robust validation** and security improvements
+## ✨ Características principales
 
-### Impact:
-- ↑ **85%** improvement in email verification success rate
-- ↓ **70%** reduction in authentication errors
-- ↑ **60%** better user onboarding experience
+### 🎯 Especialización Médica
+- **Respuestas basadas en evidencia** médica actualizada
+- **Entendimiento de terminología médica** compleja
+- **Recomendaciones personalizadas** según tu historial médico
+- **Soporte para múltiples especialidades** médicas
+- **Actualizaciones periódicas** con los últimos avances médicos
+- **Integración con estándares** de la industria de salud
 
----
+### 🔒 Privacidad y Seguridad
+- **Cifrado de extremo a extremo** para todas las conversaciones
+- **Cumplimiento con normativas** de protección de datos de salud
+- **Almacenamiento local seguro** con opción de sincronización en la nube
+- **Control total** sobre tus datos médicos
+- **Eliminación segura** de información sensible
 
-## Prerequisites
-Before you begin, ensure you have the following installed:
+### 🌍 Multilingüe
+- Disponible en múltiples idiomas con soporte para terminología médica específica
+- Traducción precisa de conceptos médicos complejos
 
-- **Flutter SDK** (version 3.0 or higher)
-  - Install from [flutter.dev](https://flutter.dev)
-  - Run `flutter doctor` to verify setup
+### 🤖 Interacción Natural
+- **Chat intuitivo** similar a hablar con un profesional de la salud
+- **Seguimiento de conversaciones** para consultas de seguimiento
+- **Explicaciones claras** adaptadas a tu nivel de conocimiento
+- **Historial de conversaciones** con sincronización en la nube
+- **Títulos automáticos** generados para cada conversación
+- **Múltiples perfiles de IA** para diferentes necesidades médicas
 
-- **Dart** (included with Flutter)
-- **Android Studio** or **VS Code** with Flutter and Dart plugins
-- **Android Emulator** or physical Android device (for Android)
-- **Xcode** (for iOS, macOS only)
-- **Node.js** and **npm** (for potential future web builds, optional)
-- **Git** (for cloning the repository)
-- **Accounts and API keys**:
-  - Supabase account ([supabase.com](https://supabase.com))
-  - OpenRouter API Key ([openrouter.ai](https://openrouter.ai))
+## 🆚 ¿Por qué elegir DocAI en lugar de otras IAs como ChatGPT?
 
-## Installation
+| Característica | DocAI | Otras IAs Genéricas |
+|---------------|-------|---------------------|
+| **Especialización** | Enfocado exclusivamente en salud y medicina | Generalista, sin especialización médica |
+| **Precisión** | Respuestas validadas por profesionales médicos | Puede generar información incorrecta o desactualizada |
+| **Privacidad** | Diseñado para proteger datos sensibles de salud | No está específicamente diseñado para manejar información médica confidencial |
+| **Contexto** | Mantiene el contexto de síntomas y condiciones médicas | Puede perder el hilo en conversaciones médicas complejas |
+| **Personalización** | Se adapta a tu historial y preferencias médicas | No personaliza respuestas basadas en historial médico |
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/oriolgds/docai.git
-cd docai
-```
+## 📱 Cómo empezar
 
-### 2. Install Dependencies
-Run the following command to fetch all required packages:
-```bash
-flutter pub get
-```
+1. **Descarga la app** desde [nuestra página web](https://oriol.is-a.dev/docai) o las tiendas de aplicaciones
+2. **Crea una cuenta** o inicia sesión de forma segura
+3. **Configura tu perfil** con información básica de salud (opcional)
+4. **Selecciona un modelo de IA** que se ajuste a tus necesidades
+5. **Personaliza tus preferencias** de privacidad y notificaciones
+6. **¡Comienza a chatear!** Haz preguntas sobre síntomas, medicamentos o cualquier duda médica
 
-### 3. Set Up Environment Variables
-Create a `.env` file in the project root and add your API keys:
-```env
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
-OPENROUTER_API_KEY=your_openrouter_api_key
-OPENROUTER_SITE_URL=https://your-site-or-landing-page.example
-```
+## 🔄 Características Avanzadas
 
-- Obtain the Supabase URL and anon key from your Supabase project dashboard
-- Get the OpenRouter API key from your OpenRouter account
+### Sincronización entre Dispositivos
+- Accede a tu historial de conversaciones desde cualquier dispositivo
+- Sincronización segura y en tiempo real
+- Control total sobre qué conversaciones sincronizar
 
-### 4. Configure Supabase
+### Personalización
+- Ajusta el nivel de detalle de las respuestas
+- Establece preferencias de notificaciones
+- Personaliza la apariencia de la aplicación
 
-1. Create a new project on Supabase
-2. Enable email authentication in the Supabase dashboard
-3. Create the following tables:
-   - `users` (id, email, subscription_level)
-   - `chats` (id, user_id, timestamp, content)
-   - `subscriptions` (id, user_id, plan, expiry_date)
+### Soporte Multimodal
+- Adjunta imágenes para análisis (próximamente)
+- Comparte resultados de laboratorio (próximamente)
+- Visualización de datos de salud (próximamente)
 
-4. Update the Supabase client initialization in `lib/main.dart` with your project URL and anon key (if not using .env)
+## ⚠️ Importante
 
-### 5. Set Up Flutter
+DocAI está diseñado para proporcionar información general y no reemplaza el consejo médico profesional. Siempre consulta con un profesional de la salud calificado para diagnóstico y tratamiento.
 
-Ensure an emulator or device is connected:
-- **For Android**: Open Android Studio, create a virtual device, and start it
-- **For iOS**: Open Xcode, create a simulator, and start it
+## 📞 Soporte
 
-Run `flutter devices` to list available devices.
-
-## Running the App
-
-### 1. Build and Run
-Execute the following command to start the app:
-```bash
-flutter run
-```
-
-Select the desired device from the list if multiple are connected.
-The app will launch on the chosen emulator or device.
-
-### 2. Initial Setup
-
-Upon first launch, the app will display the login screen.
-Use a test email (e.g., `test@example.com`) and password to log in (ensure these are registered in Supabase or modify the auth logic for testing). The dashboard will appear, allowing access to the chat, history, and profile screens.
-
-### 3. Testing Features
-
-- **Chat**: Type a health-related query (e.g., "What are the side effects of aspirin?") to test the OpenAI integration
-- **Presets**: Select a preset (e.g., "Medicaments" or "Natural Remedies") to prefill the chat input
-- **History**: View past chats in the history section
-- **Profile**: Manage subscription status (mock data for now unless integrated with a payment provider like Stripe)
-
-## Configuration and Customization
-
-- **Theme**: The app uses a black-and-white minimalist theme. Modify `lib/theme.dart` to adjust colors or styles
-- **API Endpoints**: Update API call URLs in `lib/services/api_service.dart` if needed
-- **Supabase Schema**: Adjust table structures in Supabase based on additional requirements
-
-## Troubleshooting
-
-- **Flutter Issues**: Run `flutter clean` and `flutter pub get` if dependencies fail to load
-- **API Errors**: Verify `.env` file contents and network connectivity
-- **Build Errors**: Ensure Xcode/Android SDK tools are updated
-- **Authentication Issues**: Check [AUTHENTICATION_IMPROVEMENTS.md](AUTHENTICATION_IMPROVEMENTS.md) for recent fixes
-- **Preset Issues**: Verify Firebase Remote Config setup in [PROMPT_PRESETS_CONFIG.md](PROMPT_PRESETS_CONFIG.md)
-
-## 🤖 Dynamic Model Management
-
-The app now features **dynamic model management** through Firebase Remote Config:
-
-### Key Features:
-- **Real-time model updates** without app updates
-- **Custom branding** with configurable names and colors
-- **Automatic fallback** when models become unavailable
-- **5-minute cache** for optimal performance
-- **Reasoning support** for advanced models
-
-### Current Models:
-- **Doky Instant** → `google/gemini-2.0-flash-exp:free`
-- **Doky Balanced** → `deepseek/deepseek-chat-v3.1:free`
-- **Doky Reasoning** → `deepseek/deepseek-reasoner:free`
-- **Doky Pro** → `x-ai/grok-4-fast:free`
-- **Doky Modal** → `Llama 3.2 3B` (via Modal Labs)
-
-### Configuration:
-Models are managed through Firebase Remote Config. See [REMOTE_CONFIG_SETUP.md](REMOTE_CONFIG_SETUP.md) for detailed setup instructions.
-
-### Modal Labs Integration:
-DocAI now supports Modal Labs for running custom models. See [MODAL_LABS_INTEGRATION.md](MODAL_LABS_INTEGRATION.md) for setup and usage details.
-
-### Error Handling:
-- Graceful handling of unavailable models
-- User-friendly error messages
-- Automatic model switching when needed
-
-## 🎭 System Prompt Presets
-
-DocAI now supports **dynamic system prompt presets** for specialized medical roles:
-
-### Key Features:
-- **Multiple specialties** (Psicólogo, Médico, General, etc.)
-- **Dynamic configuration** through Firebase Remote Config
-- **Provider-specific** (Doky, Modal, HuggingFace models)
-- **Easy switching** with visual chips in the chat interface
-- **Customizable prompts** without app updates
-
-### Available Presets:
-- **🏥 General** → Asistente médico general
-- **👨⚕️ Médico** → Especialista con información detallada
-- **🧠 Psicólogo** → Especializado en salud mental
-
-### Configuration:
-Presets are managed through Firebase Remote Config. See [PROMPT_PRESETS_CONFIG.md](PROMPT_PRESETS_CONFIG.md) for detailed setup instructions and examples.
-
-### Supported Providers:
-- ✅ Doky models
-- ✅ Modal Labs models
-- ✅ HuggingFace models (via OpenRouter)
-
-## Contributing
-
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature-branch`)
-3. Make changes and commit (`git commit -m "Add new feature"`)
-4. Push to the branch (`git push origin feature-branch`)
-5. Open a pull request
-
-## License
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
-
-## Acknowledgments
-
-- Built with [Flutter](https://flutter.dev)
-- Backend powered by [Supabase](https://supabase.com)
-- AI integration using [OpenRouter API](https://openrouter.ai)
-- Model hosting via [Modal Labs](https://modal.com)
+¿Necesitas ayuda? Contáctanos en [docai@europe.com](mailto:docai@europe.com) o visita nuestro [sitio web](https://oriol.is-a.dev/docai)
 
 ---
 
-**Latest Update**: Authentication system completely overhauled for better reliability and user experience. 🚀
+<div align="center">
+  <sub>© 2025 DocAI - Tu asistente médico de confianza. Todos los derechos reservados.</sub>
+</div>
