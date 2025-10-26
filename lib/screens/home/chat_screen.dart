@@ -351,20 +351,20 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> _generateAndUpdateTitle(String firstUserMessage) async {
+  Future<void> _generateAndUpdateTitle() async {
     if (_currentConversation == null) return;
-    
+
     try {
       debugPrint('[DEBUG] ChatScreen: Generating title for conversation ${_currentConversation!.id}');
-      final newTitle = await _historyService.generateConversationTitle(firstUserMessage);
-      
+      final newTitle = await _historyService.generateConversationTitle(_messages);
+
       final updatedConversation = _currentConversation!.copyWith(
         title: newTitle,
         updatedAt: DateTime.now(),
       );
-      
+
       await _stateManager.saveConversation(updatedConversation);
-      
+
       if (mounted) {
         setState(() {
           _currentConversation = updatedConversation;
@@ -531,17 +531,9 @@ class _ChatScreenState extends State<ChatScreen> {
         );
         await _stateManager.saveConversation(updatedConversation);
         _currentConversation = updatedConversation;
-        
-        // Generate title if needed
-        if (_currentConversation!.title == 'Nueva conversación') {
-          final firstUserMessage = _messages.firstWhere(
-            (m) => m.role == ChatRole.user,
-            orElse: () => ChatMessage.user(''),
-          );
-          if (firstUserMessage.content.isNotEmpty) {
-            await _generateAndUpdateTitle(firstUserMessage.content);
-          }
-        }
+
+        // ✅ Generar título también cuando se cancele la respuesta
+        await _generateAndUpdateTitle();
       }
       
       // Show cancellation message
@@ -1059,11 +1051,9 @@ class _ChatScreenState extends State<ChatScreen> {
           // Save the conversation after completion
           if (_currentConversation != null) {
             await _createOrUpdateConversation(text);
-            
-            // Generar título síncrono si es el primer mensaje del usuario
-            if (!_hasFirstMessage || _currentConversation!.title == 'Nueva conversación') {
-              await _generateAndUpdateTitle(text);
-            }
+
+            // ✅ Generar título automáticamente para CADA respuesta usando HuggingFace Space
+            await _generateAndUpdateTitle();
           }
         },
         onError: (e) {

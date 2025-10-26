@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum BrandName { doky }
+enum BrandName { doky, byok }
 
 enum ModelProvider { openrouter, byok, doky, modal }
 
@@ -8,6 +8,8 @@ String brandDisplayName(BrandName b) {
   switch (b) {
     case BrandName.doky:
       return 'Doky 1.0';
+    case BrandName.byok:
+      return 'BYOK';
   }
 }
 
@@ -15,6 +17,8 @@ Color brandColor(BrandName b) {
   switch (b) {
     case BrandName.doky:
       return Colors.indigo;
+    case BrandName.byok:
+      return const Color(0xFF00B894);
   }
 }
 

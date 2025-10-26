@@ -341,20 +341,64 @@ class ChatHistoryService {
     return conversation;
   }
 
-  // Generar título usando Hugging Face Space
-  Future<String> generateConversationTitle(String firstMessage) async {
+  // Generar título usando Hugging Face Space con toda la conversación
+  Future<String> generateConversationTitle(List<ChatMessage> messages) async {
     try {
+      // Construir el contexto de la conversación para el título
+      final conversationText = _buildConversationContext(messages);
       debugPrint('[DEBUG] ChatHistoryService.generateConversationTitle: Starting title generation with HF Space');
-      final generatedTitle = await _titleGeneratorService.generateTitle(firstMessage);
+      debugPrint('[DEBUG] ChatHistoryService.generateConversationTitle: Conversation context length: ${conversationText.length}');
+      final generatedTitle = await _titleGeneratorService.generateTitle(conversationText);
       debugPrint('[DEBUG] ChatHistoryService.generateConversationTitle: Generated title: $generatedTitle');
       return generatedTitle;
     } catch (e) {
       debugPrint('[DEBUG] ChatHistoryService.generateConversationTitle: Failed to generate title: $e');
-      // Usar fallback
-      final fallbackTitle = ChatConversation.generateTitle(firstMessage);
+      // Usar fallback con el primer mensaje del usuario
+      final firstUserMessage = messages.firstWhere(
+        (m) => m.role == ChatRole.user,
+        orElse: () => ChatMessage.user('Nueva conversación'),
+      );
+      final fallbackTitle = ChatConversation.generateTitle(firstUserMessage.content);
       debugPrint('[DEBUG] ChatHistoryService.generateConversationTitle: Using fallback title: $fallbackTitle');
       return fallbackTitle;
     }
+  }
+
+  // Construir contexto de la conversación para generar título
+  String _buildConversationContext(List<ChatMessage> messages) {
+    // Solo usar los últimos mensajes relevantes (máximo 5 pares usuario-asistente)
+    final relevantMessages = <ChatMessage>[];
+    final userMessages = messages.where((m) => m.role == ChatRole.user).toList();
+
+    // Tomar los últimos 3 mensajes de usuario y sus respuestas
+    final recentUserMessages = userMessages.length > 3
+        ? userMessages.sublist(userMessages.length - 3)
+        : userMessages;
+
+    for (final userMsg in recentUserMessages) {
+      relevantMessages.add(userMsg);
+      // Buscar la respuesta correspondiente
+      final userIndex = messages.indexOf(userMsg);
+      if (userIndex != -1 && userIndex + 1 < messages.length) {
+        final assistantResponse = messages[userIndex + 1];
+        if (assistantResponse.role == ChatRole.assistant) {
+          relevantMessages.add(assistantResponse);
+        }
+      }
+    }
+
+    // Si no hay mensajes relevantes, usar el primer mensaje del usuario
+    if (relevantMessages.isEmpty && userMessages.isNotEmpty) {
+      return userMessages.first.content;
+    }
+
+    // Construir el texto de contexto
+    final contextParts = relevantMessages.map((msg) {
+      final role = msg.role == ChatRole.user ? 'Usuario' : 'Asistente';
+      return '$role: ${msg.content}';
+    }).join('\n\n');
+
+    return contextParts;
   }
 
   // Actualizar el título de una conversación existente
