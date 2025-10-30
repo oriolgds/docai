@@ -4,6 +4,7 @@ import '../../widgets/responsive_layout.dart';
 import '../../widgets/android_download_modal.dart';
 import '../auth/login_screen.dart';
 import 'chat_screen.dart';
+import 'chat2_screen.dart';
 import 'history_screen.dart';
 import 'profile_screen.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -62,13 +63,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ChatScreen(
         onNavigateToHistory: () => _changeTab(1),
       ),
+      const Chat2Screen(),
       HistoryScreen(
         onNavigateToChat: () => _changeTab(0),
         onStartNewChat: _goToChatAndStartNew,
         onModalRequested: (callback) => _showHistoryModal = callback,
       ),
       ProfileScreen(
-        onNavigateToHistory: () => _changeTab(1),
+        onNavigateToHistory: () => _changeTab(2),
         onNavigateToBackup: _goToHistoryAndShowModal,
       ),
     ];
@@ -87,6 +89,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         icon: const Icon(Icons.chat_outlined),
         selectedIcon: const Icon(Icons.chat, color: Colors.white),
         label: l10n.chat,
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.web_outlined),
+        selectedIcon: Icon(Icons.web, color: Colors.white),
+        label: 'Chat 2',
       ),
       NavigationDestination(
         icon: const Icon(Icons.history_outlined),
@@ -175,6 +182,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: const Icon(Icons.chat_outlined),
                   selectedIcon: const Icon(Icons.chat),
                   label: Text(l10n.chat),
+                ),
+                const NavigationRailDestination(
+                  icon: Icon(Icons.web_outlined),
+                  selectedIcon: Icon(Icons.web),
+                  label: Text('Chat 2'),
                 ),
                 NavigationRailDestination(
                   icon: const Icon(Icons.history_outlined),
@@ -268,18 +280,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           onTap: () => setState(() => _currentIndex = 0),
                         ),
                         _buildDesktopNavItem(
+                          icon: Icons.web_outlined,
+                          selectedIcon: Icons.web,
+                          label: 'Chat 2',
+                          isSelected: _currentIndex == 1,
+                          onTap: () => setState(() => _currentIndex = 1),
+                        ),
+                        _buildDesktopNavItem(
                           icon: Icons.history_outlined,
                           selectedIcon: Icons.history,
                           label: l10n.history,
-                          isSelected: _currentIndex == 1,
-                          onTap: () => setState(() => _currentIndex = 1),
+                          isSelected: _currentIndex == 2,
+                          onTap: () => setState(() => _currentIndex = 2),
                         ),
                         _buildDesktopNavItem(
                           icon: Icons.person_outline,
                           selectedIcon: Icons.person,
                           label: l10n.profile,
-                          isSelected: _currentIndex == 2,
-                          onTap: () => setState(() => _currentIndex = 2),
+                          isSelected: _currentIndex == 3,
+                          onTap: () => setState(() => _currentIndex = 3),
                         ),
                       ],
                     ),
