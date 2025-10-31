@@ -4,6 +4,16 @@
   "chatTitle": "Chat",
   "menuHome": "Startseite",
   "menuReload": "Neu laden",
+  "menuMoreInfo": "Weitere Infos",
+  "menuTwitter": "Twitter",
+  "menuPortfolio": "Portfolio",
+  "menuProjectSite": "Projekt-Website",
+  "menuPlayStore": "Play Store",
   "newWindowTitle": "Neues Fenster",
-  "loadingLabel": "Wird geladen..."
+  "loadingLabel": "Wird geladen...",
+  "linkOpenError": "Link konnte nicht geöffnet werden",
+  "infoTwitterSubtitle": "Folge den DocAI-Neuigkeiten und Updates auf X.",
+  "infoPortfolioSubtitle": "Entdecke die Arbeit und Projekte von @oriolgds",
+  "infoProjectSiteSubtitle": "Erfahre mehr über DocAI auf der offiziellen Website.",
+  "infoPlayStoreSubtitle": "Lade DocAI im Google Play Store herunter."
 }

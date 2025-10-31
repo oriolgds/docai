@@ -125,6 +125,36 @@ abstract class AppLocalizations {
   /// **'Reload'**
   String get menuReload;
 
+  /// No description provided for @menuMoreInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'More info'**
+  String get menuMoreInfo;
+
+  /// No description provided for @menuTwitter.
+  ///
+  /// In en, this message translates to:
+  /// **'Twitter'**
+  String get menuTwitter;
+
+  /// No description provided for @menuPortfolio.
+  ///
+  /// In en, this message translates to:
+  /// **'Portfolio'**
+  String get menuPortfolio;
+
+  /// No description provided for @menuProjectSite.
+  ///
+  /// In en, this message translates to:
+  /// **'Project website'**
+  String get menuProjectSite;
+
+  /// No description provided for @menuPlayStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Play Store'**
+  String get menuPlayStore;
+
   /// No description provided for @newWindowTitle.
   ///
   /// In en, this message translates to:
@@ -136,6 +166,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading...'**
   String get loadingLabel;
+
+  /// No description provided for @linkOpenError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open link'**
+  String get linkOpenError;
+
+  /// No description provided for @infoTwitterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow DocAI news and updates on X.'**
+  String get infoTwitterSubtitle;
+
+  /// No description provided for @infoPortfolioSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover @oriolgds work and projects.'**
+  String get infoPortfolioSubtitle;
+
+  /// No description provided for @infoProjectSiteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn more about DocAI on the official site.'**
+  String get infoProjectSiteSubtitle;
+
+  /// No description provided for @infoPlayStoreSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Download DocAI on Google Play.'**
+  String get infoPlayStoreSubtitle;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

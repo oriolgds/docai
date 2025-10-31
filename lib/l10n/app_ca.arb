@@ -4,6 +4,16 @@
   "chatTitle": "Xat",
   "menuHome": "Inici",
   "menuReload": "Torna a carregar",
+  "menuMoreInfo": "Més informació",
+  "menuTwitter": "Twitter",
+  "menuPortfolio": "Portfolio",
+  "menuProjectSite": "Web del projecte",
+  "menuPlayStore": "Play Store",
   "newWindowTitle": "Finestra nova",
-  "loadingLabel": "Carregant..."
+  "loadingLabel": "Carregant...",
+  "linkOpenError": "No s'ha pogut obrir l'enllaç",
+  "infoTwitterSubtitle": "Segueix les novetats de DocAI a X.",
+  "infoPortfolioSubtitle": "Descobreix la feina i els projectes de @oriolgds.",
+  "infoProjectSiteSubtitle": "Coneix més sobre DocAI al lloc oficial.",
+  "infoPlayStoreSubtitle": "Descarrega DocAI a Google Play."
 }

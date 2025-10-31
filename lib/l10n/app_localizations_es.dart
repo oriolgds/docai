@@ -21,8 +21,38 @@ class AppLocalizationsEs extends AppLocalizations {
   String get menuReload => 'Recargar';
 
   @override
+  String get menuMoreInfo => 'Más información';
+
+  @override
+  String get menuTwitter => 'Twitter';
+
+  @override
+  String get menuPortfolio => 'Portafolio';
+
+  @override
+  String get menuProjectSite => 'Web del proyecto';
+
+  @override
+  String get menuPlayStore => 'Play Store';
+
+  @override
   String get newWindowTitle => 'Nueva ventana';
 
   @override
   String get loadingLabel => 'Cargando...';
+
+  @override
+  String get linkOpenError => 'No se pudo abrir el enlace';
+
+  @override
+  String get infoTwitterSubtitle => 'Sigue las novedades de DocAI en X.';
+
+  @override
+  String get infoPortfolioSubtitle => 'Descubre el trabajo y los proyectos de @oriolgds.';
+
+  @override
+  String get infoProjectSiteSubtitle => 'Aprende más sobre DocAI en el sitio oficial.';
+
+  @override
+  String get infoPlayStoreSubtitle => 'Descarga DocAI en Google Play.';
 }

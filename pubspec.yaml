@@ -1,7 +1,7 @@
 name: docai
 description: "An app to heal the world"
 
-version: 5.0.2+31
+version: 5.0.3+32
 
 environment:
   sdk: ^3.9.0
@@ -17,6 +17,7 @@ dependencies:
   firebase_analytics: ^12.0.1
   flutter_inappwebview: ^6.1.5
   intl: ^0.20.2
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_launcher_icons: "^0.14.4"
