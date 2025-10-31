@@ -1,7 +1,7 @@
 name: docai
 description: "An app to heal the world"
 
-version: 4.2.0+28
+version: 5.0.0+29
 
 environment:
   sdk: ^3.9.0
@@ -9,28 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_localizations:
-    sdk: flutter
-  intl: any
 
-  cupertino_icons: ^1.0.8
-  supabase_flutter: ^2.10.0
   firebase_core: ^4.1.0
   firebase_crashlytics: ^5.0.1
   firebase_analytics: ^12.0.1
-  flutter_dotenv: ^5.1.0
-  google_sign_in: ^6.2.1
-  app_links: ^3.4.5
-  webview_flutter: ^4.13.0
   flutter_inappwebview: ^6.1.5
-  http: ^1.2.2
-  flutter_markdown: ^0.7.3+1
-  shared_preferences: ^2.3.3
-  js_interop: ^0.0.1
-  url_launcher: ^6.3.1
-  share_plus: ^12.0.0
-  firebase_remote_config: ^6.0.1
-  font_awesome_flutter: ^10.10.0
 
 dev_dependencies:
   flutter_launcher_icons: "^0.14.4"
@@ -40,12 +23,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  generate: true
 
   assets:
     - assets/logo/
-    - assets/system_prompt.txt
-    - ./.env
 
 flutter_launcher_icons:
   android: "launcher_icon"
