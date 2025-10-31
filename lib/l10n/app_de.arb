@@ -1,0 +1,9 @@
+{
+  "@@locale": "de",
+  "appTitle": "DocAI",
+  "chatTitle": "Chat",
+  "menuHome": "Startseite",
+  "menuReload": "Neu laden",
+  "newWindowTitle": "Neues Fenster",
+  "loadingLabel": "Wird geladen..."
+}

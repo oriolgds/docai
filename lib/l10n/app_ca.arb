@@ -1,0 +1,9 @@
+{
+  "@@locale": "ca",
+  "appTitle": "DocAI",
+  "chatTitle": "Xat",
+  "menuHome": "Inici",
+  "menuReload": "Torna a carregar",
+  "newWindowTitle": "Finestra nova",
+  "loadingLabel": "Carregant..."
+}

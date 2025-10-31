@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:docai/l10n/app_localizations.dart';
 
 class Chat2Screen extends StatefulWidget {
   const Chat2Screen({super.key});
@@ -11,7 +12,8 @@ class Chat2Screen extends StatefulWidget {
 class _Chat2ScreenState extends State<Chat2Screen> {
   InAppWebViewController? _webViewController;
   double _progress = 0;
-  String _currentUrl = 'https://docai-chat.pages.dev/';
+  static const String _homeUrl = 'https://docai-chat.pages.dev/';
+  String _currentUrl = _homeUrl;
   bool _canGoBack = false;
   bool _canGoForward = false;
   bool _isLoading = true;
@@ -28,12 +30,14 @@ class _Chat2ScreenState extends State<Chat2Screen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeArea(
+      top: false,
+      child: Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         title: Text(
-          'Chat 2',
+          AppLocalizations.of(context)!.chatTitle,
           style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w600,
@@ -75,52 +79,24 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                 : null,
           ),
           IconButton(
+            icon: const Icon(Icons.home, color: Colors.black),
+            tooltip: AppLocalizations.of(context)!.menuHome,
+            onPressed: () async {
+              setState(() {
+                _isLoading = true;
+                _currentUrl = _homeUrl;
+              });
+              await _webViewController?.loadUrl(
+                urlRequest: URLRequest(url: WebUri(_homeUrl)),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh, color: Colors.black),
+            tooltip: AppLocalizations.of(context)!.menuReload,
             onPressed: () async {
               await _webViewController?.reload();
             },
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onSelected: (value) async {
-              switch (value) {
-                case 'home':
-                  await _webViewController?.loadUrl(
-                    urlRequest: URLRequest(url: WebUri(_currentUrl)),
-                  );
-                  break;
-                case 'open_browser':
-                  final url = await _webViewController?.getUrl();
-                  if (url != null) {
-                    await _webViewController?.loadUrl(
-                      urlRequest: URLRequest(url: url),
-                    );
-                  }
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'home',
-                child: Row(
-                  children: [
-                    Icon(Icons.home, size: 20),
-                    SizedBox(width: 12),
-                    Text('Home'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'open_browser',
-                child: Row(
-                  children: [
-                    const Icon(Icons.open_in_browser, size: 20),
-                    const SizedBox(width: 12),
-                    const Text('Reload'),
-                  ],
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -182,9 +158,9 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                               ),
                               onPressed: () => Navigator.pop(context),
                             ),
-                            title: const Text(
-                              'Nueva ventana',
-                              style: TextStyle(
+                            title: Text(
+                              AppLocalizations.of(context)!.newWindowTitle,
+                              style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 16,
                               ),
@@ -223,8 +199,8 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Cargando...',
+                    Text(
+                      AppLocalizations.of(context)!.loadingLabel,
                       style: TextStyle(fontSize: 16, color: Colors.black54),
                     ),
                   ],
@@ -233,8 +209,9 @@ class _Chat2ScreenState extends State<Chat2Screen> {
             ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Future<void> _updateNavigationButtons() async {
     final canGoBack = await _webViewController?.canGoBack() ?? false;
