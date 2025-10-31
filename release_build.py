@@ -214,7 +214,7 @@ def upload_asset_thread(token: str, upload_url_template: str, file_path: Path, a
 # Concurrent Build and Upload Pipeline
 # ---------------------------------------------------------------------------
 
-def run_concurrent_build_upload(token: str, repo: str, upload_url_template: str, version: str, existing_names: set):
+def run_concurrent_build_upload(token: str, repo: str, upload_url_template: str, version: str, existing_names: set, skip_web: bool = False):
     """Execute the concurrent build and upload pipeline."""
     
     # Prepare paths
@@ -251,7 +251,7 @@ def run_concurrent_build_upload(token: str, repo: str, upload_url_template: str,
         print("[SYNC] Waiting for AAB upload to complete...")
         upload_aab_thread.join()
     
-    # Step 4: Start uploading APK while building Web
+    # Step 4: Start uploading APK (and optionally build Web)
     upload_apk_thread = None
     if apk_path.name not in existing_names and apk_path.exists():
         upload_apk_thread = threading.Thread(
@@ -263,26 +263,32 @@ def run_concurrent_build_upload(token: str, repo: str, upload_url_template: str,
     else:
         print(f"[SKIP] APK already exists in release or file not found")
     
-    # Step 5: Build Web while APK uploads
-    print("\n=== BUILDING WEB (while uploading APK) ===")
-    run(["flutter", "build", "web", "--release"])
-    
+    # Step 5: Optionally build Web while APK uploads
+    if skip_web:
+        print("[SKIP] Skipping web build and upload as requested")
+    else:
+        print("\n=== BUILDING WEB (while uploading APK) ===")
+        run(["flutter", "build", "web", "--release"])        
+
     # Wait for APK upload to complete
     if upload_apk_thread:
         print("[SYNC] Waiting for APK upload to complete...")
         upload_apk_thread.join()
     
-    # Step 6: Zip and upload Web
-    print("\n=== PREPARING AND UPLOADING WEB ===")
-    if web_dir.exists():
-        zip_dir(web_dir, web_zip)
-        
-        if web_zip.name not in existing_names:
-            upload_asset_thread(token, upload_url_template, web_zip, "Web")
-        else:
-            print(f"[SKIP] Web zip already exists in release")
+    # Step 6: Zip and upload Web (if not skipped)
+    if skip_web:
+        print("[SKIP] Web artifact creation/upload skipped")
     else:
-        print("[ERROR] Web build directory not found")
+        print("\n=== PREPARING AND UPLOADING WEB ===")
+        if web_dir.exists():
+            zip_dir(web_dir, web_zip)
+            
+            if web_zip.name not in existing_names:
+                upload_asset_thread(token, upload_url_template, web_zip, "Web")
+            else:
+                print(f"[SKIP] Web zip already exists in release")
+        else:
+            print("[ERROR] Web build directory not found")
 
 # ---------------------------------------------------------------------------
 # Main entry
@@ -292,6 +298,7 @@ def main():
     parser = argparse.ArgumentParser(description="Build Flutter release & GitHub upload with concurrent processing")
     parser.add_argument("--repo", default=os.getenv("GITHUB_REPOSITORY"), help="GitHub repository in owner/repo format")
     parser.add_argument("--token", default=os.getenv("GITHUB_TOKEN"), help="GitHub Personal Access Token with repo scope")
+    parser.add_argument("--no-web", dest="no_web", action="store_true", help="Skip building and uploading the web release artifact")
     parser.add_argument("--config", default=None, help="Path to config file (json or key=value).")
     args = parser.parse_args()
 
@@ -301,6 +308,8 @@ def main():
 
     repo = args.repo or os.getenv("GITHUB_REPOSITORY") or config.get("repo") or config.get("repository") or config.get("GITHUB_REPOSITORY")
     token = args.token or os.getenv("GITHUB_TOKEN") or config.get("token") or config.get("github_token") or config.get("GITHUB_TOKEN")
+    # CLI flag --no-web takes precedence; otherwise allow config/env via SKIP_WEB
+    skip_web = bool(args.no_web or os.getenv("SKIP_WEB") in ("1", "true", "True") or config.get("skip_web") in ("1", "true", True))
 
     if not repo or not token:
         print("ERROR: GitHub repo and token must be supplied via CLI flags, environment variables, or config file.")
@@ -324,7 +333,7 @@ def main():
         
         # STEP 2: Run concurrent build and upload pipeline
         print(f"\n=== STARTING CONCURRENT BUILD & UPLOAD PIPELINE ===")
-        run_concurrent_build_upload(token, repo, upload_url_template, version, existing_names)
+        run_concurrent_build_upload(token, repo, upload_url_template, version, existing_names, skip_web=skip_web)
 
         # STEP 3: Mark release as latest when everything is complete
         print(f"\n=== FINALIZING RELEASE ===")

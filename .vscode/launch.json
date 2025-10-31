@@ -15,7 +15,8 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "--config=my_secrets.txt"
+                "--config=my_secrets.txt",
+                "--no-web"
             ]
         }
     ]
