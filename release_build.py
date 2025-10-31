@@ -174,7 +174,8 @@ def update_release_to_latest(token: str, repo: str, release_id: int):
     }
 
     payload = {
-        "prerelease": False  # Mark as latest release
+        "prerelease": False,
+        "make_latest": "true"  # Explicitly mark as latest release
     }
 
     print(f"Updating release id={release_id} to mark as latest release...")
