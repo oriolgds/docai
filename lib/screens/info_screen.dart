@@ -85,7 +85,7 @@ class InfoScreen extends StatelessWidget {
         child: ListView.separated(
           padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
           itemCount: items.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final item = items[index];
             final cardGradient = LinearGradient(
@@ -100,7 +100,7 @@ class InfoScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: item.endColor.withOpacity(0.35),
+                    color: item.endColor.withValues(alpha: 0.35),
                     offset: const Offset(0, 8),
                     blurRadius: 18,
                   ),
@@ -114,7 +114,7 @@ class InfoScreen extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
-                      color: Colors.black.withOpacity(0.35),
+                      color: Colors.black.withValues(alpha: 0.35),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                     child: Row(
@@ -123,7 +123,7 @@ class InfoScreen extends StatelessWidget {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.22),
+                            color: Colors.white.withValues(alpha: 0.22),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Icon(
@@ -150,7 +150,7 @@ class InfoScreen extends StatelessWidget {
                               Text(
                                 item.subtitle,
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.92),
+                                  color: Colors.white.withValues(alpha: 0.92),
                                   fontSize: 13,
                                 ),
                               ),

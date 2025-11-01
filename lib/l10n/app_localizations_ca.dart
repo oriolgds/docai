@@ -42,6 +42,15 @@ class AppLocalizationsCa extends AppLocalizations {
   String get loadingLabel => 'Carregant...';
 
   @override
+  String get offlineTitle => 'Sense connexió';
+
+  @override
+  String get offlineDescription => 'Comprova la connexió i torna-ho a provar.';
+
+  @override
+  String get offlineRetry => 'Torna-ho a provar';
+
+  @override
   String get linkOpenError => 'No s\'ha pogut obrir l\'enllaç';
 
   @override
