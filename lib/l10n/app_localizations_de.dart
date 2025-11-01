@@ -42,6 +42,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get loadingLabel => 'Wird geladen...';
 
   @override
+  String get offlineTitle => 'Keine Verbindung';
+
+  @override
+  String get offlineDescription => 'Prüfe deine Verbindung und versuche es erneut.';
+
+  @override
+  String get offlineRetry => 'Erneut versuchen';
+
+  @override
   String get linkOpenError => 'Link konnte nicht geöffnet werden';
 
   @override

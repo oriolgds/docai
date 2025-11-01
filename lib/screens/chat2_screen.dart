@@ -18,6 +18,8 @@ class _Chat2ScreenState extends State<Chat2Screen> {
   bool _canGoBack = false;
   bool _canGoForward = false;
   bool _isLoading = true;
+  bool _hasError = false;
+  bool _isShowingOfflineFallback = false;
 
   final InAppWebViewSettings _settings = InAppWebViewSettings(
     javaScriptEnabled: true,
@@ -64,6 +66,12 @@ class _Chat2ScreenState extends State<Chat2Screen> {
               ),
               onPressed: _canGoBack
                   ? () async {
+                      setState(() {
+                        _isLoading = true;
+                        _hasError = false;
+                        _isShowingOfflineFallback = false;
+                        _progress = 0;
+                      });
                       await _webViewController?.goBack();
                     }
                   : null,
@@ -75,6 +83,12 @@ class _Chat2ScreenState extends State<Chat2Screen> {
               ),
               onPressed: _canGoForward
                   ? () async {
+                      setState(() {
+                        _isLoading = true;
+                        _hasError = false;
+                        _isShowingOfflineFallback = false;
+                        _progress = 0;
+                      });
                       await _webViewController?.goForward();
                     }
                   : null,
@@ -86,6 +100,9 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                 setState(() {
                   _isLoading = true;
                   _currentUrl = _homeUrl;
+                  _hasError = false;
+                  _isShowingOfflineFallback = false;
+                  _progress = 0;
                 });
                 await _webViewController?.loadUrl(
                   urlRequest: URLRequest(url: WebUri(_homeUrl)),
@@ -96,6 +113,12 @@ class _Chat2ScreenState extends State<Chat2Screen> {
               icon: const Icon(Icons.refresh, color: Colors.black),
               tooltip: AppLocalizations.of(context)!.menuReload,
               onPressed: () async {
+                setState(() {
+                  _isLoading = true;
+                  _hasError = false;
+                  _isShowingOfflineFallback = false;
+                  _progress = 0;
+                });
                 await _webViewController?.reload();
               },
             ),
@@ -114,91 +137,134 @@ class _Chat2ScreenState extends State<Chat2Screen> {
         ),
         body: Stack(
           children: [
-            InAppWebView(
-              initialUrlRequest: URLRequest(url: WebUri(_currentUrl)),
-              initialSettings: _settings,
-              onWebViewCreated: (controller) {
-                _webViewController = controller;
-              },
-              onLoadStart: (controller, url) {
-                setState(() {
-                  _currentUrl = url.toString();
-                });
-              },
-              onLoadStop: (controller, url) async {
-                setState(() {
-                  _currentUrl = url.toString();
-                  _isLoading = false;
-                });
-                _updateNavigationButtons();
-              },
-              onProgressChanged: (controller, progress) {
-                setState(() {
-                  _progress = progress / 100;
-                });
-              },
-              onUpdateVisitedHistory: (controller, url, isReload) {
-                _updateNavigationButtons();
-              },
-              shouldOverrideUrlLoading: (controller, navigationAction) async {
-                final uri = navigationAction.request.url;
-                if (navigationAction.isForMainFrame == false) {
-                  return NavigationActionPolicy.ALLOW;
-                }
-                if (uri != null && uri.toString().startsWith('http')) {
-                  return NavigationActionPolicy.ALLOW;
-                }
-                return NavigationActionPolicy.CANCEL;
-              },
-              onCreateWindow: (controller, createWindowAction) async {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return Dialog(
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.9,
-                        height: MediaQuery.of(context).size.height * 0.8,
-                        child: Column(
-                          children: [
-                            AppBar(
-                              backgroundColor: Colors.white,
-                              elevation: 1,
-                              leading: IconButton(
-                                icon: const Icon(
-                                  Icons.close,
-                                  color: Colors.black,
+            Visibility(
+              visible: !_hasError,
+              maintainState: true,
+              maintainAnimation: true,
+              maintainSize: true,
+              child: InAppWebView(
+                initialUrlRequest: URLRequest(url: WebUri(_currentUrl)),
+                initialSettings: _settings,
+                onWebViewCreated: (controller) {
+                  _webViewController = controller;
+                },
+                onLoadStart: (controller, url) {
+                  if (_isShowingOfflineFallback) {
+                    return;
+                  }
+                  setState(() {
+                    _currentUrl = url.toString();
+                    _isLoading = true;
+                    _hasError = false;
+                    _progress = 0;
+                  });
+                },
+                onLoadStop: (controller, url) async {
+                  if (_isShowingOfflineFallback) {
+                    return;
+                  }
+                  setState(() {
+                    _currentUrl = url.toString();
+                    _isLoading = false;
+                    _hasError = false;
+                    _progress = 1;
+                  });
+                  _updateNavigationButtons();
+                },
+                onProgressChanged: (controller, progress) {
+                  if (_isShowingOfflineFallback) {
+                    return;
+                  }
+                  setState(() {
+                    _progress = progress / 100;
+                  });
+                },
+                onReceivedError: (controller, request, error) async {
+                  if (!mounted || request.isForMainFrame == false) {
+                    return;
+                  }
+                  await controller.loadData(data: '<html></html>');
+                  setState(() {
+                    _isLoading = false;
+                    _hasError = true;
+                    _progress = 0;
+                    _isShowingOfflineFallback = true;
+                  });
+                },
+                onReceivedHttpError: (controller, request, response) async {
+                  if (!mounted || request.isForMainFrame == false) {
+                    return;
+                  }
+                  await controller.loadData(data: '<html></html>');
+                  setState(() {
+                    _isLoading = false;
+                    _hasError = true;
+                    _progress = 0;
+                    _isShowingOfflineFallback = true;
+                  });
+                },
+                onUpdateVisitedHistory: (controller, url, isReload) {
+                  _updateNavigationButtons();
+                },
+                shouldOverrideUrlLoading: (controller, navigationAction) async {
+                  final uri = navigationAction.request.url;
+                  if (navigationAction.isForMainFrame == false) {
+                    return NavigationActionPolicy.ALLOW;
+                  }
+                  if (uri != null && uri.toString().startsWith('http')) {
+                    return NavigationActionPolicy.ALLOW;
+                  }
+                  return NavigationActionPolicy.CANCEL;
+                },
+                onCreateWindow: (controller, createWindowAction) async {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return Dialog(
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.9,
+                          height: MediaQuery.of(context).size.height * 0.8,
+                          child: Column(
+                            children: [
+                              AppBar(
+                                backgroundColor: Colors.white,
+                                elevation: 1,
+                                leading: IconButton(
+                                  icon: const Icon(
+                                    Icons.close,
+                                    color: Colors.black,
+                                  ),
+                                  onPressed: () => Navigator.pop(context),
                                 ),
-                                onPressed: () => Navigator.pop(context),
-                              ),
-                              title: Text(
-                                AppLocalizations.of(context)!.newWindowTitle,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
+                                title: Text(
+                                  AppLocalizations.of(context)!.newWindowTitle,
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ),
-                            ),
-                            Expanded(
-                              child: InAppWebView(
-                                windowId: createWindowAction.windowId,
-                                initialSettings: _settings,
-                                shouldOverrideUrlLoading:
-                                    (controller, navigationAction) async {
-                                  return NavigationActionPolicy.ALLOW;
-                                },
-                                onCloseWindow: (controller) {
-                                  Navigator.pop(context);
-                                },
+                              Expanded(
+                                child: InAppWebView(
+                                  windowId: createWindowAction.windowId,
+                                  initialSettings: _settings,
+                                  shouldOverrideUrlLoading: (controller, navigationAction) async {
+                                    return NavigationActionPolicy.ALLOW;
+                                  },
+                                  onCloseWindow: (controller) {
+                                    Navigator.pop(context);
+                                  },
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                );
-                return true;
-              },
+                      );
+                    },
+                  );
+                  return true;
+                },
+              ),
             ),
             if (_isLoading)
               Container(
@@ -219,6 +285,58 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+            if (_hasError)
+              Container(
+                color: Colors.white,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.wifi_off,
+                          size: 64,
+                          color: Colors.black54,
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          AppLocalizations.of(context)!.offlineTitle,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          AppLocalizations.of(context)!.offlineDescription,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton(
+                          onPressed: () async {
+                            final url = _currentUrl.isNotEmpty ? _currentUrl : _homeUrl;
+                            setState(() {
+                              _isLoading = true;
+                              _hasError = false;
+                              _isShowingOfflineFallback = false;
+                              _progress = 0;
+                            });
+                            await _webViewController?.loadUrl(
+                              urlRequest: URLRequest(url: WebUri(url)),
+                            );
+                          },
+                          child: Text(AppLocalizations.of(context)!.offlineRetry),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

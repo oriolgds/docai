@@ -167,6 +167,24 @@ abstract class AppLocalizations {
   /// **'Loading...'**
   String get loadingLabel;
 
+  /// No description provided for @offlineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline'**
+  String get offlineTitle;
+
+  /// No description provided for @offlineDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get offlineDescription;
+
+  /// No description provided for @offlineRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get offlineRetry;
+
   /// No description provided for @linkOpenError.
   ///
   /// In en, this message translates to:

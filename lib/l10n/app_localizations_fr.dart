@@ -42,6 +42,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get loadingLabel => 'Chargement...';
 
   @override
+  String get offlineTitle => 'Hors ligne';
+
+  @override
+  String get offlineDescription => 'Vérifiez votre connexion et réessayez.';
+
+  @override
+  String get offlineRetry => 'Réessayer';
+
+  @override
   String get linkOpenError => 'Impossible d\'ouvrir le lien';
 
   @override
