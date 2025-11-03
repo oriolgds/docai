@@ -126,11 +126,9 @@ class _Chat2ScreenState extends State<Chat2Screen> {
               tooltip: AppLocalizations.of(context)!.menuMoreInfo,
               icon: const Icon(Icons.info_outline, color: Colors.black),
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const InfoScreen(),
-                  ),
-                );
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const InfoScreen()));
               },
             ),
           ],
@@ -217,46 +215,98 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                   return NavigationActionPolicy.CANCEL;
                 },
                 onCreateWindow: (controller, createWindowAction) async {
+                  bool popupClosed = false;
+
                   showDialog(
                     context: context,
-                    builder: (context) {
-                      return Dialog(
-                        child: SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.9,
-                          height: MediaQuery.of(context).size.height * 0.8,
-                          child: Column(
-                            children: [
-                              AppBar(
-                                backgroundColor: Colors.white,
-                                elevation: 1,
-                                leading: IconButton(
-                                  icon: const Icon(
-                                    Icons.close,
-                                    color: Colors.black,
+                    barrierDismissible: false,
+                    builder: (dialogContext) {
+                      return WillPopScope(
+                        onWillPop: () async {
+                          popupClosed = true;
+                          return true;
+                        },
+                        child: Dialog(
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            height: MediaQuery.of(context).size.height * 0.8,
+                            child: Column(
+                              children: [
+                                AppBar(
+                                  backgroundColor: Colors.white,
+                                  elevation: 1,
+                                  leading: IconButton(
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: Colors.black,
+                                    ),
+                                    onPressed: () {
+                                      popupClosed = true;
+                                      Navigator.pop(dialogContext);
+                                    },
                                   ),
-                                  onPressed: () => Navigator.pop(context),
-                                ),
-                                title: Text(
-                                  AppLocalizations.of(context)!.newWindowTitle,
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 16,
+                                  title: Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.newWindowTitle,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 16,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Expanded(
-                                child: InAppWebView(
-                                  windowId: createWindowAction.windowId,
-                                  initialSettings: _settings,
-                                  shouldOverrideUrlLoading: (controller, navigationAction) async {
-                                    return NavigationActionPolicy.ALLOW;
-                                  },
-                                  onCloseWindow: (controller) {
-                                    Navigator.pop(context);
-                                  },
+                                Expanded(
+                                  child: InAppWebView(
+                                    windowId: createWindowAction.windowId,
+                                    initialSettings: _settings,
+                                    shouldOverrideUrlLoading:
+                                        (controller, navigationAction) async {
+                                          return NavigationActionPolicy.ALLOW;
+                                        },
+                                    onLoadStop: (controller, url) async {
+                                      if (popupClosed) return;
+
+                                      // Esperar un momento y verificar el estado
+                                      await Future.delayed(
+                                        const Duration(milliseconds: 500),
+                                      );
+
+                                      try {
+                                        // Verificar si la ventana debe cerrarse
+                                        final result = await controller
+                                            .evaluateJavascript(
+                                              source: '''
+                            (function() {
+                              // Verificar si hay contenido o está vacío
+                              const body = document.body;
+                              const isEmpty = !body || body.innerText.trim().length < 10;
+                              const hasCloseIndicator = body && body.innerText.toLowerCase().includes('success');
+                              return isEmpty || hasCloseIndicator;
+                            })();
+                          ''',
+                                            );
+
+                                        if (result == true && !popupClosed) {
+                                          popupClosed = true;
+                                          if (dialogContext.mounted) {
+                                            Navigator.pop(dialogContext);
+                                          }
+                                        }
+                                      } catch (e) {
+                                        print('Error checking popup state: $e');
+                                      }
+                                    },
+                                    onCloseWindow: (controller) {
+                                      if (!popupClosed &&
+                                          dialogContext.mounted) {
+                                        popupClosed = true;
+                                        Navigator.pop(dialogContext);
+                                      }
+                                    },
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -297,11 +347,7 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.wifi_off,
-                          size: 64,
-                          color: Colors.black54,
-                        ),
+                        Icon(Icons.wifi_off, size: 64, color: Colors.black54),
                         const SizedBox(height: 24),
                         Text(
                           AppLocalizations.of(context)!.offlineTitle,
@@ -322,7 +368,9 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                         const SizedBox(height: 24),
                         FilledButton(
                           onPressed: () async {
-                            final url = _currentUrl.isNotEmpty ? _currentUrl : _homeUrl;
+                            final url = _currentUrl.isNotEmpty
+                                ? _currentUrl
+                                : _homeUrl;
                             setState(() {
                               _isLoading = true;
                               _hasError = false;
@@ -333,7 +381,9 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                               urlRequest: URLRequest(url: WebUri(url)),
                             );
                           },
-                          child: Text(AppLocalizations.of(context)!.offlineRetry),
+                          child: Text(
+                            AppLocalizations.of(context)!.offlineRetry,
+                          ),
                         ),
                       ],
                     ),
