@@ -18,5 +18,11 @@
   "infoTwitterSubtitle": "Segueix les novetats de DocAI a X.",
   "infoPortfolioSubtitle": "Descobreix la feina i els projectes de @oriolgds.",
   "infoProjectSiteSubtitle": "Coneix més sobre DocAI al lloc oficial.",
-  "infoPlayStoreSubtitle": "Descarrega DocAI a Google Play."
+  "infoPlayStoreSubtitle": "Descarrega DocAI a Google Play.",
+  "languageSelectorLabel": "Idioma",
+  "languageEnglish": "Anglès",
+  "languageCatalan": "Català",
+  "languageSpanish": "Castellà",
+  "languageGerman": "Alemany",
+  "languageFrench": "Francès"
 }

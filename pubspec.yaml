@@ -1,7 +1,7 @@
 name: docai
 description: "An app to heal the world"
 
-version: 5.0.4+33
+version: 5.0.5+34
 
 environment:
   sdk: ^3.9.0

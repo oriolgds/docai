@@ -64,4 +64,22 @@ class AppLocalizationsCa extends AppLocalizations {
 
   @override
   String get infoPlayStoreSubtitle => 'Descarrega DocAI a Google Play.';
+
+  @override
+  String get languageSelectorLabel => 'Idioma';
+
+  @override
+  String get languageEnglish => 'Anglès';
+
+  @override
+  String get languageCatalan => 'Català';
+
+  @override
+  String get languageSpanish => 'Castellà';
+
+  @override
+  String get languageGerman => 'Alemany';
+
+  @override
+  String get languageFrench => 'Francès';
 }

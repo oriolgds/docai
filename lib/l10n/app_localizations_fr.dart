@@ -64,4 +64,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get infoPlayStoreSubtitle => 'Téléchargez DocAI sur Google Play.';
+
+  @override
+  String get languageSelectorLabel => 'Langue';
+
+  @override
+  String get languageEnglish => 'Anglais';
+
+  @override
+  String get languageCatalan => 'Catalan';
+
+  @override
+  String get languageSpanish => 'Espagnol';
+
+  @override
+  String get languageGerman => 'Allemand';
+
+  @override
+  String get languageFrench => 'Français';
 }

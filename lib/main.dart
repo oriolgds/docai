@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:docai/l10n/app_localizations.dart';
+import 'package:docai/state/locale_scope.dart';
 import 'screens/chat2_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  runApp(const DocAIApp());
+
+  runApp(
+    LocaleScope(
+      controller: LocaleController(),
+      child: const DocAIApp(),
+    ),
+  );
 }
 
 class DocAIApp extends StatelessWidget {
@@ -13,6 +19,8 @@ class DocAIApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localeController = LocaleScope.of(context);
+
     return MaterialApp(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       debugShowCheckedModeBanner: false,
@@ -20,6 +28,7 @@ class DocAIApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
         useMaterial3: true,
       ),
+      locale: localeController.locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: const Chat2Screen(),

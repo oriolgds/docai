@@ -214,6 +214,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Download DocAI on Google Play.'**
   String get infoPlayStoreSubtitle;
+
+  /// No description provided for @languageSelectorLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get languageSelectorLabel;
+
+  /// No description provided for @languageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageEnglish;
+
+  /// No description provided for @languageCatalan.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalan'**
+  String get languageCatalan;
+
+  /// No description provided for @languageSpanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get languageSpanish;
+
+  /// No description provided for @languageGerman.
+  ///
+  /// In en, this message translates to:
+  /// **'German'**
+  String get languageGerman;
+
+  /// No description provided for @languageFrench.
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get languageFrench;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

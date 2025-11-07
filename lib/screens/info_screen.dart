@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:docai/l10n/app_localizations.dart';
+import 'package:docai/state/locale_scope.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class InfoScreen extends StatelessWidget {
   const InfoScreen({super.key});
@@ -15,6 +16,13 @@ class InfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
+    final localeController = LocaleScope.of(context);
+    final supportedLocales = AppLocalizations.supportedLocales;
+    final resolvedLocale = _findLocaleMatch(
+      localeController.locale ?? Localizations.localeOf(context),
+      supportedLocales,
+    );
+    final selectedLocale = _findLocaleMatch(resolvedLocale, supportedLocales);
 
     final items = [
       _InfoItem(
@@ -84,10 +92,21 @@ class InfoScreen extends StatelessWidget {
         ),
         child: ListView.separated(
           padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
-          itemCount: items.length,
+          itemCount: items.length + 1,
           separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
-            final item = items[index];
+            if (index == 0) {
+              return _LanguageSelectorCard(
+                selectedLocale: selectedLocale,
+                supportedLocales: supportedLocales,
+                onLocaleChanged: (locale) {
+                  if (locale == null) return;
+                  localeController.updateLocale(locale);
+                },
+              );
+            }
+
+            final item = items[index - 1];
             final cardGradient = LinearGradient(
               colors: [item.startColor, item.endColor],
               begin: Alignment.topLeft,
@@ -175,6 +194,13 @@ class InfoScreen extends StatelessWidget {
     );
   }
 
+  Locale _findLocaleMatch(Locale target, List<Locale> options) {
+    return options.firstWhere(
+      (locale) => locale.languageCode == target.languageCode,
+      orElse: () => options.first,
+    );
+  }
+
   Future<void> _openUrl(BuildContext context, Uri url) async {
     final launched = await launchUrl(
       url,
@@ -185,6 +211,102 @@ class InfoScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.linkOpenError)),
       );
+    }
+  }
+}
+
+class _LanguageSelectorCard extends StatelessWidget {
+  const _LanguageSelectorCard({
+    required this.selectedLocale,
+    required this.supportedLocales,
+    required this.onLocaleChanged,
+  });
+
+  final Locale selectedLocale;
+  final List<Locale> supportedLocales;
+  final ValueChanged<Locale?> onLocaleChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1DE9B6), Color(0xFF00B8A9)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF00B8A9).withValues(alpha: 0.35),
+            offset: const Offset(0, 8),
+            blurRadius: 18,
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            localizations.languageSelectorLabel,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<Locale>(
+                value: selectedLocale,
+                isExpanded: true,
+                dropdownColor: const Color(0xFF0C1324),
+                iconEnabledColor: Colors.white,
+                style: const TextStyle(color: Colors.white, fontSize: 15),
+                onChanged: onLocaleChanged,
+                items: supportedLocales.map((locale) {
+                  return DropdownMenuItem<Locale>(
+                    value: locale,
+                    child: Text(
+                      _languageName(localizations, locale),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _languageName(AppLocalizations localizations, Locale locale) {
+    switch (locale.languageCode) {
+      case 'ca':
+        return localizations.languageCatalan;
+      case 'de':
+        return localizations.languageGerman;
+      case 'es':
+        return localizations.languageSpanish;
+      case 'fr':
+        return localizations.languageFrench;
+      case 'en':
+      default:
+        return localizations.languageEnglish;
     }
   }
 }

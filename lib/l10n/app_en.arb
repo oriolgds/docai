@@ -18,5 +18,11 @@
   "infoTwitterSubtitle": "Follow DocAI news and updates on X.",
   "infoPortfolioSubtitle": "Discover @oriolgds work and projects.",
   "infoProjectSiteSubtitle": "Learn more about DocAI on the official site.",
-  "infoPlayStoreSubtitle": "Download DocAI on Google Play."
+  "infoPlayStoreSubtitle": "Download DocAI on Google Play.",
+  "languageSelectorLabel": "Language",
+  "languageEnglish": "English",
+  "languageCatalan": "Catalan",
+  "languageSpanish": "Spanish",
+  "languageGerman": "German",
+  "languageFrench": "French"
 }

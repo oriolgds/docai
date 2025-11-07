@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:docai/l10n/app_localizations.dart';
@@ -29,7 +31,39 @@ class _Chat2ScreenState extends State<Chat2Screen> {
     allowsInlineMediaPlayback: true,
     iframeAllow: "camera; microphone; geolocation",
     iframeAllowFullscreen: true,
+    disableVerticalScroll: false,
+    disableHorizontalScroll: false,
+    verticalScrollBarEnabled: true,
+    horizontalScrollBarEnabled: true,
   );
+
+  Route<void> _buildInfoRoute() {
+    return PageRouteBuilder<void>(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          const InfoScreen(),
+      transitionsBuilder:
+          (context, animation, secondaryAnimation, child) {
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.12),
+            end: Offset.zero,
+          ).animate(curvedAnimation),
+          child: FadeTransition(
+            opacity: curvedAnimation,
+            child: child,
+          ),
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 350),
+      reverseTransitionDuration: const Duration(milliseconds: 300),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +162,7 @@ class _Chat2ScreenState extends State<Chat2Screen> {
               onPressed: () {
                 Navigator.of(
                   context,
-                ).push(MaterialPageRoute(builder: (_) => const InfoScreen()));
+                ).push(_buildInfoRoute());
               },
             ),
           ],
@@ -221,15 +255,24 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                     context: context,
                     barrierDismissible: false,
                     builder: (dialogContext) {
-                      return WillPopScope(
-                        onWillPop: () async {
-                          popupClosed = true;
-                          return true;
+                      final mediaQuery = MediaQuery.of(dialogContext);
+                      final dialogWidth = math.min(
+                        mediaQuery.size.width * 0.9,
+                        720.0,
+                      );
+                      final dialogHeight = mediaQuery.size.height * 0.8;
+
+                      return PopScope(
+                        canPop: true,
+                        onPopInvokedWithResult: (didPop, result) {
+                          if (!popupClosed) {
+                            popupClosed = true;
+                          }
                         },
                         child: Dialog(
                           child: SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.9,
-                            height: MediaQuery.of(context).size.height * 0.8,
+                            width: dialogWidth,
+                            height: dialogHeight,
                             child: Column(
                               children: [
                                 AppBar(
@@ -293,7 +336,7 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                                           }
                                         }
                                       } catch (e) {
-                                        print('Error checking popup state: $e');
+                                        debugPrint('Error checking popup state: $e');
                                       }
                                     },
                                     onCloseWindow: (controller) {
@@ -398,6 +441,7 @@ class _Chat2ScreenState extends State<Chat2Screen> {
 
   Future<void> _updateNavigationButtons() async {
     final canGoBack = await _webViewController?.canGoBack() ?? false;
+
     final canGoForward = await _webViewController?.canGoForward() ?? false;
 
     setState(() {
