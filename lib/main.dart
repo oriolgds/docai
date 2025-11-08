@@ -3,12 +3,15 @@ import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/state/locale_scope.dart';
 import 'screens/chat2_screen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final localeController = LocaleController();
+  await localeController.loadSavedLocale();
 
   runApp(
     LocaleScope(
-      controller: LocaleController(),
+      controller: localeController,
       child: const DocAIApp(),
     ),
   );

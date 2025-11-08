@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/screens/info_screen.dart';
+import 'package:docai/state/locale_scope.dart';
 
 class Chat2Screen extends StatefulWidget {
   const Chat2Screen({super.key});
@@ -22,6 +23,7 @@ class _Chat2ScreenState extends State<Chat2Screen> {
   bool _isLoading = true;
   bool _hasError = false;
   bool _isShowingOfflineFallback = false;
+  LocaleController? _localeController;
 
   final InAppWebViewSettings _settings = InAppWebViewSettings(
     javaScriptEnabled: true,
@@ -41,8 +43,7 @@ class _Chat2ScreenState extends State<Chat2Screen> {
     return PageRouteBuilder<void>(
       pageBuilder: (context, animation, secondaryAnimation) =>
           const InfoScreen(),
-      transitionsBuilder:
-          (context, animation, secondaryAnimation, child) {
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final curvedAnimation = CurvedAnimation(
           parent: animation,
           curve: Curves.easeOutCubic,
@@ -54,10 +55,7 @@ class _Chat2ScreenState extends State<Chat2Screen> {
             begin: const Offset(0, 0.12),
             end: Offset.zero,
           ).animate(curvedAnimation),
-          child: FadeTransition(
-            opacity: curvedAnimation,
-            child: child,
-          ),
+          child: FadeTransition(opacity: curvedAnimation, child: child),
         );
       },
       transitionDuration: const Duration(milliseconds: 350),
@@ -67,6 +65,8 @@ class _Chat2ScreenState extends State<Chat2Screen> {
 
   @override
   Widget build(BuildContext context) {
+    _ensureLocaleListener();
+
     return SafeArea(
       top: false,
       child: Scaffold(
@@ -160,9 +160,7 @@ class _Chat2ScreenState extends State<Chat2Screen> {
               tooltip: AppLocalizations.of(context)!.menuMoreInfo,
               icon: const Icon(Icons.info_outline, color: Colors.black),
               onPressed: () {
-                Navigator.of(
-                  context,
-                ).push(_buildInfoRoute());
+                Navigator.of(context).push(_buildInfoRoute());
               },
             ),
           ],
@@ -179,6 +177,7 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                 initialSettings: _settings,
                 onWebViewCreated: (controller) {
                   _webViewController = controller;
+                  _postLocaleToWeb();
                 },
                 onLoadStart: (controller, url) {
                   if (_isShowingOfflineFallback) {
@@ -202,6 +201,7 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                     _progress = 1;
                   });
                   _updateNavigationButtons();
+                  _postLocaleToWeb();
                 },
                 onProgressChanged: (controller, progress) {
                   if (_isShowingOfflineFallback) {
@@ -336,7 +336,9 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                                           }
                                         }
                                       } catch (e) {
-                                        debugPrint('Error checking popup state: $e');
+                                        debugPrint(
+                                          'Error checking popup state: $e',
+                                        );
                                       }
                                     },
                                     onCloseWindow: (controller) {
@@ -448,5 +450,35 @@ class _Chat2ScreenState extends State<Chat2Screen> {
       _canGoBack = canGoBack;
       _canGoForward = canGoForward;
     });
+  }
+
+  void _ensureLocaleListener() {
+    final controller = LocaleScope.of(context);
+    if (identical(controller, _localeController)) {
+      return;
+    }
+
+    _localeController?.removeListener(_postLocaleToWeb);
+    _localeController = controller;
+    _localeController?.addListener(_postLocaleToWeb);
+  }
+
+  void _postLocaleToWeb() {
+    final locale = _localeController?.locale;
+    if (locale == null || _webViewController == null) {
+      return;
+    }
+
+    final localeCode = locale.toLanguageTag();
+    _webViewController!.evaluateJavascript(
+      source:
+          "window.postMessage({ type: 'appLocaleChanged', locale: '$localeCode' }, '*');",
+    );
+  }
+
+  @override
+  void dispose() {
+    _localeController?.removeListener(_postLocaleToWeb);
+    super.dispose();
   }
 }

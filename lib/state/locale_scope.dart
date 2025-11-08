@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LocaleController extends ChangeNotifier {
+  static const _localePrefKey = 'selected_locale';
   Locale? _locale;
 
   Locale? get locale => _locale;
@@ -11,6 +15,28 @@ class LocaleController extends ChangeNotifier {
     }
     _locale = locale;
     notifyListeners();
+    unawaited(_persistLocale(locale));
+  }
+
+  Future<void> loadSavedLocale() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguageCode = prefs.getString(_localePrefKey);
+    if (savedLanguageCode == null || savedLanguageCode.isEmpty) {
+      return;
+    }
+
+    final savedLocale = Locale(savedLanguageCode);
+    if (_locale == savedLocale) {
+      return;
+    }
+
+    _locale = savedLocale;
+    notifyListeners();
+  }
+
+  Future<void> _persistLocale(Locale locale) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_localePrefKey, locale.languageCode);
   }
 }
 
