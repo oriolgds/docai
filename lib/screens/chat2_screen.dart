@@ -249,8 +249,6 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                   return NavigationActionPolicy.CANCEL;
                 },
                 onCreateWindow: (controller, createWindowAction) async {
-                  bool popupClosed = false;
-
                   showDialog(
                     context: context,
                     barrierDismissible: false,
@@ -262,96 +260,46 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                       );
                       final dialogHeight = mediaQuery.size.height * 0.8;
 
-                      return PopScope(
-                        canPop: true,
-                        onPopInvokedWithResult: (didPop, result) {
-                          if (!popupClosed) {
-                            popupClosed = true;
-                          }
-                        },
-                        child: Dialog(
-                          child: SizedBox(
-                            width: dialogWidth,
-                            height: dialogHeight,
-                            child: Column(
-                              children: [
-                                AppBar(
-                                  backgroundColor: Colors.white,
-                                  elevation: 1,
-                                  leading: IconButton(
-                                    icon: const Icon(
-                                      Icons.close,
-                                      color: Colors.black,
-                                    ),
-                                    onPressed: () {
-                                      popupClosed = true;
+                      return Dialog(
+                        child: SizedBox(
+                          width: dialogWidth,
+                          height: dialogHeight,
+                          child: Column(
+                            children: [
+                              AppBar(
+                                backgroundColor: Colors.white,
+                                elevation: 1,
+                                leading: IconButton(
+                                  icon: const Icon(
+                                    Icons.close,
+                                    color: Colors.black,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(dialogContext);
+                                  },
+                                ),
+                                title: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.newWindowTitle,
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: InAppWebView(
+                                  windowId: createWindowAction.windowId,
+                                  initialSettings: _settings,
+                                  onCloseWindow: (controller) {
+                                    if (dialogContext.mounted) {
                                       Navigator.pop(dialogContext);
-                                    },
-                                  ),
-                                  title: Text(
-                                    AppLocalizations.of(
-                                      context,
-                                    )!.newWindowTitle,
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 16,
-                                    ),
-                                  ),
+                                    }
+                                  },
                                 ),
-                                Expanded(
-                                  child: InAppWebView(
-                                    windowId: createWindowAction.windowId,
-                                    initialSettings: _settings,
-                                    shouldOverrideUrlLoading:
-                                        (controller, navigationAction) async {
-                                          return NavigationActionPolicy.ALLOW;
-                                        },
-                                    onLoadStop: (controller, url) async {
-                                      if (popupClosed) return;
-
-                                      // Esperar un momento y verificar el estado
-                                      await Future.delayed(
-                                        const Duration(milliseconds: 500),
-                                      );
-
-                                      try {
-                                        // Verificar si la ventana debe cerrarse
-                                        final result = await controller
-                                            .evaluateJavascript(
-                                              source: '''
-                            (function() {
-                              // Verificar si hay contenido o está vacío
-                              const body = document.body;
-                              const isEmpty = !body || body.innerText.trim().length < 10;
-                              const hasCloseIndicator = body && body.innerText.toLowerCase().includes('success');
-                              return isEmpty || hasCloseIndicator;
-                            })();
-                          ''',
-                                            );
-
-                                        if (result == true && !popupClosed) {
-                                          popupClosed = true;
-                                          if (dialogContext.mounted) {
-                                            Navigator.pop(dialogContext);
-                                          }
-                                        }
-                                      } catch (e) {
-                                        debugPrint(
-                                          'Error checking popup state: $e',
-                                        );
-                                      }
-                                    },
-                                    onCloseWindow: (controller) {
-                                      if (!popupClosed &&
-                                          dialogContext.mounted) {
-                                        popupClosed = true;
-                                        Navigator.pop(dialogContext);
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       );
