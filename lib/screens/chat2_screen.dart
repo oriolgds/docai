@@ -26,17 +26,42 @@ class _Chat2ScreenState extends State<Chat2Screen> {
   LocaleController? _localeController;
 
   final InAppWebViewSettings _settings = InAppWebViewSettings(
+    // Core JavaScript settings
     javaScriptEnabled: true,
     javaScriptCanOpenWindowsAutomatically: true,
     supportMultipleWindows: true,
+
+    // Storage and caching - Essential for captcha and window communication
+    domStorageEnabled: true,
+    databaseEnabled: true,
+    cacheEnabled: true,
+    thirdPartyCookiesEnabled: true,
+
+    // Security and content settings
+    mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
+    allowFileAccessFromFileURLs: true,
+    allowUniversalAccessFromFileURLs: true,
+
+    // Media settings
     mediaPlaybackRequiresUserGesture: false,
     allowsInlineMediaPlayback: true,
+
+    // iFrame settings
     iframeAllow: "camera; microphone; geolocation",
     iframeAllowFullscreen: true,
+
+    // Scrolling
     disableVerticalScroll: false,
     disableHorizontalScroll: false,
     verticalScrollBarEnabled: true,
     horizontalScrollBarEnabled: true,
+
+    // Window communication settings
+    incognito: false,
+    sharedCookiesEnabled: true,
+
+    // User agent (helps with compatibility)
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
   );
 
   Route<void> _buildInfoRoute() {
@@ -252,56 +277,10 @@ class _Chat2ScreenState extends State<Chat2Screen> {
                   showDialog(
                     context: context,
                     barrierDismissible: false,
-                    builder: (dialogContext) {
-                      final mediaQuery = MediaQuery.of(dialogContext);
-                      final dialogWidth = math.min(
-                        mediaQuery.size.width * 0.9,
-                        720.0,
-                      );
-                      final dialogHeight = mediaQuery.size.height * 0.8;
-
-                      return Dialog(
-                        child: SizedBox(
-                          width: dialogWidth,
-                          height: dialogHeight,
-                          child: Column(
-                            children: [
-                              AppBar(
-                                backgroundColor: Colors.white,
-                                elevation: 1,
-                                leading: IconButton(
-                                  icon: const Icon(
-                                    Icons.close,
-                                    color: Colors.black,
-                                  ),
-                                  onPressed: () {
-                                    Navigator.pop(dialogContext);
-                                  },
-                                ),
-                                title: Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.newWindowTitle,
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: InAppWebView(
-                                  windowId: createWindowAction.windowId,
-                                  initialSettings: _settings,
-                                  onCloseWindow: (controller) {
-                                    if (dialogContext.mounted) {
-                                      Navigator.pop(dialogContext);
-                                    }
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                    builder: (BuildContext dialogContext) {
+                      return _PopupWindow(
+                        createWindowAction: createWindowAction,
+                        settings: _settings,
                       );
                     },
                   );
@@ -427,6 +406,196 @@ class _Chat2ScreenState extends State<Chat2Screen> {
   @override
   void dispose() {
     _localeController?.removeListener(_postLocaleToWeb);
+    super.dispose();
+  }
+}
+
+class _PopupWindow extends StatefulWidget {
+  final CreateWindowAction createWindowAction;
+  final InAppWebViewSettings settings;
+
+  const _PopupWindow({
+    required this.createWindowAction,
+    required this.settings,
+  });
+
+  @override
+  State<_PopupWindow> createState() => _PopupWindowState();
+}
+
+class _PopupWindowState extends State<_PopupWindow> {
+  InAppWebViewController? _popupController;
+  double _progress = 0;
+  bool _canGoBack = false;
+  bool _canGoForward = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final width = math.min(mediaQuery.size.width * 0.95, 800.0);
+    final height = mediaQuery.size.height * 0.85;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(10),
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Column(
+            children: [
+              // Toolbar with navigation controls
+              Container(
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Colors.grey.shade300,
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Back button
+                    IconButton(
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: _canGoBack ? Colors.black87 : Colors.grey,
+                      ),
+                      onPressed: _canGoBack
+                          ? () => _popupController?.goBack()
+                          : null,
+                      tooltip: 'Back',
+                    ),
+                    // Forward button
+                    IconButton(
+                      icon: Icon(
+                        Icons.arrow_forward,
+                        color: _canGoForward ? Colors.black87 : Colors.grey,
+                      ),
+                      onPressed: _canGoForward
+                          ? () => _popupController?.goForward()
+                          : null,
+                      tooltip: 'Forward',
+                    ),
+                    // Reload button
+                    IconButton(
+                      icon: const Icon(Icons.refresh, color: Colors.black87),
+                      onPressed: () => _popupController?.reload(),
+                      tooltip: 'Reload',
+                    ),
+                    const Spacer(),
+                    // Close button
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.black87),
+                      onPressed: () => Navigator.of(context).pop(),
+                      tooltip: 'Close',
+                    ),
+                  ],
+                ),
+              ),
+              // Progress bar
+              if (_progress > 0 && _progress < 1.0)
+                LinearProgressIndicator(
+                  value: _progress,
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                  minHeight: 2,
+                ),
+              // WebView
+              Expanded(
+                child: InAppWebView(
+                  windowId: widget.createWindowAction.windowId,
+                  initialSettings: widget.settings,
+                  onWebViewCreated: (controller) {
+                    _popupController = controller;
+                  },
+                  onLoadStart: (controller, url) {
+                    if (mounted) {
+                      setState(() {
+                        _progress = 0;
+                      });
+                    }
+                  },
+                  onLoadStop: (controller, url) async {
+                    if (mounted) {
+                      setState(() {
+                        _progress = 1;
+                      });
+                      await _updateNavigationButtons();
+                    }
+                  },
+                  onProgressChanged: (controller, progress) {
+                    if (mounted) {
+                      setState(() {
+                        _progress = progress / 100.0;
+                      });
+                    }
+                  },
+                  onUpdateVisitedHistory: (controller, url, isReload) async {
+                    await _updateNavigationButtons();
+                  },
+                  onCloseWindow: (controller) {
+                    if (mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  onCreateWindow: (controller, createWindowAction) async {
+                    // Support nested popups
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (dialogContext) {
+                        return _PopupWindow(
+                          createWindowAction: createWindowAction,
+                          settings: widget.settings,
+                        );
+                      },
+                    );
+                    return true;
+                  },
+                  shouldOverrideUrlLoading: (controller, navigationAction) async {
+                    return NavigationActionPolicy.ALLOW;
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _updateNavigationButtons() async {
+    if (_popupController != null) {
+      final canGoBack = await _popupController!.canGoBack();
+      final canGoForward = await _popupController!.canGoForward();
+      if (mounted) {
+        setState(() {
+          _canGoBack = canGoBack;
+          _canGoForward = canGoForward;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _popupController = null;
     super.dispose();
   }
 }

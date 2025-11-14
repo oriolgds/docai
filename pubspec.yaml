@@ -1,7 +1,7 @@
 name: docai
 description: "An app to heal the world"
 
-version: 5.0.8+37
+version: 5.1.0+37
 
 environment:
   sdk: ^3.9.0
@@ -36,7 +36,7 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/logo/logo.jpg"
+  image_path: "assets/logo/black.jpg"
   min_sdk_android: 16
   web:
     generate: true
