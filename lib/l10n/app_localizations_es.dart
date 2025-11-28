@@ -82,4 +82,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get languageFrench => 'Francés';
+
+  @override
+  String get menuSuggestions => 'Formulario de sugerencias';
+
+  @override
+  String get infoSuggestionsSubtitle => 'Comparte tus ideas para mejorar DocAI.';
 }

@@ -24,5 +24,7 @@
   "languageCatalan": "Catalan",
   "languageSpanish": "Spanish",
   "languageGerman": "German",
-  "languageFrench": "French"
+  "languageFrench": "French",
+  "menuSuggestions": "Suggestions form",
+  "infoSuggestionsSubtitle": "Share your ideas to improve DocAI."
 }

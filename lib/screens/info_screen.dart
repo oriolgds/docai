@@ -12,6 +12,7 @@ class InfoScreen extends StatelessWidget {
   static final Uri _playStoreUri = Uri.parse(
     'https://play.google.com/store/apps/details?id=com.oriolgds.doky',
   );
+  static final Uri _suggestionsUri = Uri.parse('https://forms.gle/azsDBiNcDz4bGDTP9');
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +56,14 @@ class InfoScreen extends StatelessWidget {
         subtitle: localizations.infoPlayStoreSubtitle,
         url: _playStoreUri,
         startColor: const Color(0xFF1DE9B6),
+        endColor: const Color(0xFF00C853),
+      ),
+      _InfoItem(
+        icon: Icons.feedback_outlined,
+        title: localizations.menuSuggestions,
+        subtitle: localizations.infoSuggestionsSubtitle,
+        url: _suggestionsUri,
+        startColor: const Color(0xFF00E676),
         endColor: const Color(0xFF00C853),
       ),
     ];

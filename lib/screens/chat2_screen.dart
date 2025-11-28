@@ -61,8 +61,8 @@ class _Chat2ScreenState extends State<Chat2Screen> {
     incognito: false,
     sharedCookiesEnabled: true,
 
-    // User agent (indicates webview and helps with compatibility)
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 DocAI-WebView/1.0',
+    // User agent - simular navegador Chrome real sin identificadores de WebView
+    userAgent: 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.230 Mobile Safari/537.36',
   );
 
   Route<void> _buildInfoRoute() {
@@ -201,16 +201,7 @@ class _Chat2ScreenState extends State<Chat2Screen> {
               child: InAppWebView(
                 initialUrlRequest: URLRequest(url: WebUri(_currentUrl)),
                 initialSettings: _settings,
-                initialUserScripts: UnmodifiableListView<UserScript>([
-                  UserScript(
-                    source: '''
-                      window.isWebView = true;
-                      window.webViewPlatform = 'flutter';
-                      window.webViewApp = 'DocAI';
-                    ''',
-                    injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-                  ),
-                ]),
+                // No inyectar scripts que identifiquen la WebView para evitar detección de Cloudflare
                 onWebViewCreated: (controller) {
                   _webViewController = controller;
                   _postLocaleToWeb();
@@ -532,17 +523,7 @@ class _PopupWindowState extends State<_PopupWindow> {
                 child: InAppWebView(
                   windowId: widget.createWindowAction.windowId,
                   initialSettings: widget.settings,
-                  initialUserScripts: UnmodifiableListView<UserScript>([
-                    UserScript(
-                      source: '''
-                        window.isWebView = true;
-                        window.webViewPlatform = 'flutter';
-                        window.webViewApp = 'DocAI';
-                        window.isPopupWindow = true;
-                      ''',
-                      injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-                    ),
-                  ]),
+                  // No inyectar scripts que identifiquen la WebView para evitar detección de Cloudflare
                   onWebViewCreated: (controller) {
                     _popupController = controller;
                   },

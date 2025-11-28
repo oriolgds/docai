@@ -250,6 +250,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'French'**
   String get languageFrench;
+
+  /// No description provided for @menuSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions form'**
+  String get menuSuggestions;
+
+  /// No description provided for @infoSuggestionsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your ideas to improve DocAI.'**
+  String get infoSuggestionsSubtitle;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
