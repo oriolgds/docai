@@ -262,6 +262,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share your ideas to improve DocAI.'**
   String get infoSuggestionsSubtitle;
+
+  /// No description provided for @welcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello! I\'m Doky, your medical assistant.'**
+  String get welcomeTitle;
+
+  /// No description provided for @welcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How can I help you today?'**
+  String get welcomeSubtitle;
+
+  /// No description provided for @inputPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Type your medical query...'**
+  String get inputPlaceholder;
+
+  /// No description provided for @incognitoMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Incognito'**
+  String get incognitoMode;
+
+  /// No description provided for @incognitoTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Incognito mode - won\'t save to history'**
+  String get incognitoTooltip;
+
+  /// No description provided for @selectModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a model'**
+  String get selectModel;
+
+  /// No description provided for @selectPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a specialty'**
+  String get selectPreset;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

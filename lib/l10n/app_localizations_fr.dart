@@ -88,4 +88,25 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get infoSuggestionsSubtitle => 'Partagez vos idées pour améliorer DocAI.';
+
+  @override
+  String get welcomeTitle => 'Bonjour ! Je suis Doky, votre assistant médical.';
+
+  @override
+  String get welcomeSubtitle => 'Comment puis-je vous aider aujourd\'hui ?';
+
+  @override
+  String get inputPlaceholder => 'Tapez votre question médicale...';
+
+  @override
+  String get incognitoMode => 'Incognito';
+
+  @override
+  String get incognitoTooltip => 'Mode incognito - n\'est pas enregistré dans l\'historique';
+
+  @override
+  String get selectModel => 'Sélectionner un modèle';
+
+  @override
+  String get selectPreset => 'Sélectionner une spécialité';
 }

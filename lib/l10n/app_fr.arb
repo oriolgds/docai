@@ -26,5 +26,12 @@
   "languageGerman": "Allemand",
   "languageFrench": "Français",
   "menuSuggestions": "Formulaire de suggestions",
-  "infoSuggestionsSubtitle": "Partagez vos idées pour améliorer DocAI."
+  "infoSuggestionsSubtitle": "Partagez vos idées pour améliorer DocAI.",
+  "welcomeTitle": "Bonjour ! Je suis Doky, votre assistant médical.",
+  "welcomeSubtitle": "Comment puis-je vous aider aujourd'hui ?",
+  "inputPlaceholder": "Tapez votre question médicale...",
+  "incognitoMode": "Incognito",
+  "incognitoTooltip": "Mode incognito - n'est pas enregistré dans l'historique",
+  "selectModel": "Sélectionner un modèle",
+  "selectPreset": "Sélectionner une spécialité"
 }

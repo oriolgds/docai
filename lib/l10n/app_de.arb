@@ -26,5 +26,12 @@
   "languageGerman": "Deutsch",
   "languageFrench": "Französisch",
   "menuSuggestions": "Vorschläge-Formular",
-  "infoSuggestionsSubtitle": "Teile deine Ideen zur Verbesserung von DocAI."
+  "infoSuggestionsSubtitle": "Teile deine Ideen zur Verbesserung von DocAI.",
+  "welcomeTitle": "Hallo! Ich bin Doky, dein medizinischer Assistent.",
+  "welcomeSubtitle": "Wie kann ich dir heute helfen?",
+  "inputPlaceholder": "Gib deine medizinische Frage ein...",
+  "incognitoMode": "Inkognito",
+  "incognitoTooltip": "Inkognito-Modus - wird nicht im Verlauf gespeichert",
+  "selectModel": "Modell auswählen",
+  "selectPreset": "Fachgebiet auswählen"
 }

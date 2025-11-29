@@ -12,7 +12,9 @@ class InfoScreen extends StatelessWidget {
   static final Uri _playStoreUri = Uri.parse(
     'https://play.google.com/store/apps/details?id=com.oriolgds.doky',
   );
-  static final Uri _suggestionsUri = Uri.parse('https://forms.gle/azsDBiNcDz4bGDTP9');
+  static final Uri _suggestionsUri = Uri.parse(
+    'https://forms.gle/azsDBiNcDz4bGDTP9',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -69,136 +71,93 @@ class InfoScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0C1324),
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         title: Text(
           localizations.menuMoreInfo,
           style: const TextStyle(
-            color: Colors.white,
+            color: Colors.black87,
             fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: false,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF00C853), Color(0xFF009688)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
+        iconTheme: const IconThemeData(color: Colors.black87),
+        shadowColor: Colors.black.withOpacity(0.05),
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF0C1324), Color(0xFF061020)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: ListView.separated(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
-          itemCount: items.length + 1,
-          separatorBuilder: (context, index) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return _LanguageSelectorCard(
-                selectedLocale: selectedLocale,
-                supportedLocales: supportedLocales,
-                onLocaleChanged: (locale) {
-                  if (locale == null) return;
-                  localeController.updateLocale(locale);
-                },
-              );
-            }
-
-            final item = items[index - 1];
-            final cardGradient = LinearGradient(
-              colors: [item.startColor, item.endColor],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      body: ListView.separated(
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+        itemCount: items.length + 1,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return _LanguageSelectorCard(
+              selectedLocale: selectedLocale,
+              supportedLocales: supportedLocales,
+              onLocaleChanged: (locale) {
+                if (locale == null) return;
+                localeController.updateLocale(locale);
+              },
             );
+          }
 
-            return Container(
-              decoration: BoxDecoration(
-                gradient: cardGradient,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: item.endColor.withValues(alpha: 0.35),
-                    offset: const Offset(0, 8),
-                    blurRadius: 18,
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(24),
-                  onTap: () => _openUrl(context, item.url),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(24),
-                      color: Colors.black.withValues(alpha: 0.35),
+          final item = items[index - 1];
+
+          return Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => _openUrl(context, item.url),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: item.startColor.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(item.icon, color: item.startColor, size: 24),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.22),
-                            borderRadius: BorderRadius.circular(16),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            item.title,
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                          child: Icon(
-                            item.icon,
-                            color: Colors.white,
-                            size: 26,
+                          const SizedBox(height: 4),
+                          Text(
+                            item.subtitle,
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 13,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                item.title,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                item.subtitle,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.92),
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Icon(
-                          Icons.open_in_new,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Icon(Icons.open_in_new, color: Colors.grey[600], size: 20),
+                  ],
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -211,10 +170,7 @@ class InfoScreen extends StatelessWidget {
   }
 
   Future<void> _openUrl(BuildContext context, Uri url) async {
-    final launched = await launchUrl(
-      url,
-      mode: LaunchMode.externalApplication,
-    );
+    final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
 
     if (!launched && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -239,66 +195,64 @@ class _LanguageSelectorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1DE9B6), Color(0xFF00B8A9)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF00B8A9).withValues(alpha: 0.35),
-            offset: const Offset(0, 8),
-            blurRadius: 18,
-          ),
-        ],
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.green[400]!, width: 2),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            localizations.languageSelectorLabel,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.language, color: Colors.green[600], size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  localizations.languageSelectorLabel,
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<Locale>(
-                value: selectedLocale,
-                isExpanded: true,
-                dropdownColor: const Color(0xFF0C1324),
-                iconEnabledColor: Colors.white,
-                style: const TextStyle(color: Colors.white, fontSize: 15),
-                onChanged: onLocaleChanged,
-                items: supportedLocales.map((locale) {
-                  return DropdownMenuItem<Locale>(
-                    value: locale,
-                    child: Text(
-                      _languageName(localizations, locale),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<Locale>(
+                  value: selectedLocale,
+                  isExpanded: true,
+                  dropdownColor: Colors.white,
+                  iconEnabledColor: Colors.grey[700],
+                  style: TextStyle(color: Colors.grey[800], fontSize: 15),
+                  onChanged: onLocaleChanged,
+                  items: supportedLocales.map((locale) {
+                    return DropdownMenuItem<Locale>(
+                      value: locale,
+                      child: Text(
+                        _languageName(localizations, locale),
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
