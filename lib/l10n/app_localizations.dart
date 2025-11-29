@@ -119,6 +119,18 @@ abstract class AppLocalizations {
   /// **'Home'**
   String get menuHome;
 
+  /// No description provided for @menuHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get menuHistory;
+
+  /// No description provided for @medicalSpecialty.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Specialty'**
+  String get medicalSpecialty;
+
   /// No description provided for @menuReload.
   ///
   /// In en, this message translates to:
@@ -304,6 +316,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select a specialty'**
   String get selectPreset;
+
+  /// No description provided for @presetGeneralName.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get presetGeneralName;
+
+  /// No description provided for @presetGeneralDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'General medical inquiries'**
+  String get presetGeneralDesc;
+
+  /// No description provided for @presetDiagnosisName.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnosis'**
+  String get presetDiagnosisName;
+
+  /// No description provided for @presetDiagnosisDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis of possible diagnoses'**
+  String get presetDiagnosisDesc;
+
+  /// No description provided for @presetSymptomsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptom Analysis'**
+  String get presetSymptomsName;
+
+  /// No description provided for @presetSymptomsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed evaluation'**
+  String get presetSymptomsDesc;
+
+  /// No description provided for @presetMedicationName.
+  ///
+  /// In en, this message translates to:
+  /// **'Medication'**
+  String get presetMedicationName;
+
+  /// No description provided for @presetMedicationDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Pharmacological information'**
+  String get presetMedicationDesc;
+
+  /// No description provided for @presetNutritionName.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get presetNutritionName;
+
+  /// No description provided for @presetNutritionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Dietary advice'**
+  String get presetNutritionDesc;
+
+  /// No description provided for @presetExerciseName.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise'**
+  String get presetExerciseName;
+
+  /// No description provided for @presetExerciseDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitness and physical health'**
+  String get presetExerciseDesc;
+
+  /// No description provided for @suggestionFlu.
+  ///
+  /// In en, this message translates to:
+  /// **'What are the symptoms of the flu?'**
+  String get suggestionFlu;
+
+  /// No description provided for @suggestionHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'How can I improve my health?'**
+  String get suggestionHealth;
+
+  /// No description provided for @suggestionVaccines.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me about vaccines'**
+  String get suggestionVaccines;
+
+  /// No description provided for @dialogNewChatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New chat'**
+  String get dialogNewChatTitle;
+
+  /// No description provided for @dialogChangeSpecialtyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change specialty'**
+  String get dialogChangeSpecialtyTitle;
+
+  /// No description provided for @dialogNewChatContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to start a new chat? Current history will be cleared.'**
+  String get dialogNewChatContent;
+
+  /// No description provided for @dialogChangeSpecialtyContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing specialty requires clearing current history. Do you want to continue?'**
+  String get dialogChangeSpecialtyContent;
+
+  /// No description provided for @dialogCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get dialogCancel;
+
+  /// No description provided for @dialogConfirmNewChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, new chat'**
+  String get dialogConfirmNewChat;
+
+  /// No description provided for @dialogConfirmChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, change'**
+  String get dialogConfirmChange;
+
+  /// No description provided for @chatNewConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'New conversation'**
+  String get chatNewConversation;
+
+  /// No description provided for @chatUntitled.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled'**
+  String get chatUntitled;
+
+  /// No description provided for @chatYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get chatYou;
+
+  /// No description provided for @chatDoky.
+  ///
+  /// In en, this message translates to:
+  /// **'Doky'**
+  String get chatDoky;
+
+  /// No description provided for @chatNoHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved chats'**
+  String get chatNoHistory;
+
+  /// No description provided for @chatHistoryPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Your conversations will appear here'**
+  String get chatHistoryPlaceholder;
+
+  /// No description provided for @deleteDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all chats?'**
+  String get deleteDialogTitle;
+
+  /// No description provided for @deleteDialogContent.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone. All your chat history will be permanently deleted.'**
+  String get deleteDialogContent;
+
+  /// No description provided for @deleteDialogCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get deleteDialogCancel;
+
+  /// No description provided for @deleteDialogConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete All'**
+  String get deleteDialogConfirm;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

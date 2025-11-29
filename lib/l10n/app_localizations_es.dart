@@ -18,6 +18,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get menuHome => 'Inicio';
 
   @override
+  String get menuHistory => 'Historial';
+
+  @override
+  String get medicalSpecialty => 'Especialidad Médica';
+
+  @override
   String get menuReload => 'Recargar';
 
   @override
@@ -109,4 +115,100 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get selectPreset => 'Selecciona una especialidad';
+
+  @override
+  String get presetGeneralName => 'General';
+
+  @override
+  String get presetGeneralDesc => 'Consultas médicas generales';
+
+  @override
+  String get presetDiagnosisName => 'Diagnóstico';
+
+  @override
+  String get presetDiagnosisDesc => 'Análisis de posibles diagnósticos';
+
+  @override
+  String get presetSymptomsName => 'Análisis de Síntomas';
+
+  @override
+  String get presetSymptomsDesc => 'Evaluación detallada';
+
+  @override
+  String get presetMedicationName => 'Medicación';
+
+  @override
+  String get presetMedicationDesc => 'Información farmacológica';
+
+  @override
+  String get presetNutritionName => 'Nutrición';
+
+  @override
+  String get presetNutritionDesc => 'Consejos alimenticios';
+
+  @override
+  String get presetExerciseName => 'Ejercicio';
+
+  @override
+  String get presetExerciseDesc => 'Fitness y salud física';
+
+  @override
+  String get suggestionFlu => '¿Cuáles son los síntomas de la gripe?';
+
+  @override
+  String get suggestionHealth => '¿Cómo puedo mejorar mi salud?';
+
+  @override
+  String get suggestionVaccines => 'Explícame sobre las vacunas';
+
+  @override
+  String get dialogNewChatTitle => 'Nuevo chat';
+
+  @override
+  String get dialogChangeSpecialtyTitle => 'Cambiar especialidad';
+
+  @override
+  String get dialogNewChatContent => '¿Deseas iniciar un nuevo chat? Se limpiará el historial actual.';
+
+  @override
+  String get dialogChangeSpecialtyContent => 'Para cambiar la especialidad es necesario limpiar el historial actual. ¿Deseas continuar?';
+
+  @override
+  String get dialogCancel => 'Cancelar';
+
+  @override
+  String get dialogConfirmNewChat => 'Sí, nuevo chat';
+
+  @override
+  String get dialogConfirmChange => 'Sí, cambiar';
+
+  @override
+  String get chatNewConversation => 'Nueva conversación';
+
+  @override
+  String get chatUntitled => 'Sin título';
+
+  @override
+  String get chatYou => 'Tú';
+
+  @override
+  String get chatDoky => 'Doky';
+
+  @override
+  String get chatNoHistory => 'No hay chats guardados';
+
+  @override
+  String get chatHistoryPlaceholder => 'Tus conversaciones aparecerán aquí';
+
+  @override
+  String get deleteDialogTitle => '¿Eliminar todos los chats?';
+
+  @override
+  String get deleteDialogContent => 'Esta acción no se puede deshacer. Todo tu historial de chat se eliminará permanentemente.';
+
+  @override
+  String get deleteDialogCancel => 'Cancelar';
+
+  @override
+  String get deleteDialogConfirm => 'Eliminar todo';
 }

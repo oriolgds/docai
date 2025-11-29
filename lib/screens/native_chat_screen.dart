@@ -165,7 +165,9 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   String _generateTitle() {
-    if (_messages.isEmpty) return 'Nueva conversación';
+    if (_messages.isEmpty) {
+      return AppLocalizations.of(context)!.chatNewConversation;
+    }
 
     final firstUserMessage = _messages.firstWhere(
       (m) => m.role == MessageRole.user,
@@ -308,19 +310,17 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete all chats?'),
-        content: const Text(
-          'This action cannot be undone. All your chat history will be permanently deleted.',
-        ),
+        title: Text(AppLocalizations.of(context)!.deleteDialogTitle),
+        content: Text(AppLocalizations.of(context)!.deleteDialogContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.deleteDialogCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete All'),
+            child: Text(AppLocalizations.of(context)!.deleteDialogConfirm),
           ),
         ],
       ),
@@ -523,7 +523,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           if (_currentPageIndex == 1 && _chatHistory.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.red),
-              tooltip: 'Delete all chats',
+              tooltip: AppLocalizations.of(context)!.deleteDialogConfirm,
               onPressed: _deleteAllChats,
             ),
           if (_isIncognito)
@@ -555,7 +555,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             ),
           IconButton(
             icon: const Icon(Icons.add_comment_outlined),
-            tooltip: 'New chat',
+            tooltip: AppLocalizations.of(context)!.chatNewConversation,
             onPressed: _clearChat,
           ),
           IconButton(
@@ -712,6 +712,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Widget _buildHistoryPage() {
+    final localizations = AppLocalizations.of(context)!;
     return Column(
       children: [
         Expanded(
@@ -723,7 +724,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                       Icon(Icons.history, size: 80, color: Colors.grey[300]),
                       const SizedBox(height: 24),
                       Text(
-                        'No saved chats',
+                        localizations.chatNoHistory,
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 18,
@@ -732,7 +733,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Your conversations will appear here',
+                        localizations.chatHistoryPlaceholder,
                         style: TextStyle(color: Colors.grey[500], fontSize: 14),
                       ),
                     ],
@@ -791,7 +792,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        session.title ?? 'Sin título',
+                                        session.title ??
+                                            localizations.chatUntitled,
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
@@ -824,17 +826,6 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                       size: 16,
                                       color: Colors.grey[600],
                                     ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      timeago.format(
-                                        session.updatedAt,
-                                        locale: 'es',
-                                      ),
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 13,
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ],
@@ -862,7 +853,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         children: [
           _QuickActionButton(
             icon: Icons.medical_services_outlined,
-            label: _selectedPreset.name,
+            label: _getPresetName(context, _selectedPreset),
             emoji: _selectedPreset.emoji,
             isActive: _currentPageIndex == 0,
             onTap: () {
@@ -875,13 +866,33 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           ),
           _QuickActionButton(
             icon: Icons.history_outlined,
-            label: 'History',
+            label: localizations.menuHistory,
             isActive: _currentPageIndex == 1,
             onTap: () => _switchToPage(1),
           ),
         ],
       ),
     );
+  }
+
+  String _getPresetName(BuildContext context, MedicalPreset preset) {
+    final loc = AppLocalizations.of(context)!;
+    switch (preset.id) {
+      case 'general':
+        return loc.presetGeneralName;
+      case 'diagnostico':
+        return loc.presetDiagnosisName;
+      case 'sintomas':
+        return loc.presetSymptomsName;
+      case 'medicacion':
+        return loc.presetMedicationName;
+      case 'nutricion':
+        return loc.presetNutritionName;
+      case 'ejercicio':
+        return loc.presetExerciseName;
+      default:
+        return preset.name;
+    }
   }
 }
 
@@ -901,6 +912,7 @@ class _MessageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
     return TweenAnimationBuilder(
       tween: Tween<double>(begin: 0, end: 1),
       duration: const Duration(milliseconds: 300),
@@ -939,7 +951,7 @@ class _MessageCard extends StatelessWidget {
                         right: 4,
                       ),
                       child: Text(
-                        isUser ? 'Tú' : 'Doky',
+                        isUser ? localizations.chatYou : localizations.chatDoky,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -1001,7 +1013,7 @@ class _MessageCard extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 4, left: 4, right: 4),
                       child: Text(
-                        timeago.format(message.timestamp, locale: 'es'),
+                        timeago.format(message.timestamp), // Use system locale
                         style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                       ),
                     ),
@@ -1079,9 +1091,9 @@ class _WelcomeScreen extends StatelessWidget {
     final localizations = AppLocalizations.of(context)!;
 
     final suggestions = [
-      '¿Cuáles son los síntomas de la gripe?',
-      '¿Cómo puedo mejorar mi salud?',
-      'Explícame sobre las vacunas',
+      localizations.suggestionFlu,
+      localizations.suggestionHealth,
+      localizations.suggestionVaccines,
     ];
 
     return Center(
@@ -1124,13 +1136,13 @@ class _WelcomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             Text(
-              '${preset.emoji} ${preset.name}',
+              '${preset.emoji} ${_getPresetName(context, preset)}',
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              preset.description,
+              _getPresetDescription(context, preset),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.grey[600],
@@ -1164,6 +1176,46 @@ class _WelcomeScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getPresetName(BuildContext context, MedicalPreset preset) {
+    final loc = AppLocalizations.of(context)!;
+    switch (preset.id) {
+      case 'general':
+        return loc.presetGeneralName;
+      case 'diagnostico':
+        return loc.presetDiagnosisName;
+      case 'sintomas':
+        return loc.presetSymptomsName;
+      case 'medicacion':
+        return loc.presetMedicationName;
+      case 'nutricion':
+        return loc.presetNutritionName;
+      case 'ejercicio':
+        return loc.presetExerciseName;
+      default:
+        return preset.name;
+    }
+  }
+
+  String _getPresetDescription(BuildContext context, MedicalPreset preset) {
+    final loc = AppLocalizations.of(context)!;
+    switch (preset.id) {
+      case 'general':
+        return loc.presetGeneralDesc;
+      case 'diagnostico':
+        return loc.presetDiagnosisDesc;
+      case 'sintomas':
+        return loc.presetSymptomsDesc;
+      case 'medicacion':
+        return loc.presetMedicationDesc;
+      case 'nutricion':
+        return loc.presetNutritionDesc;
+      case 'ejercicio':
+        return loc.presetExerciseDesc;
+      default:
+        return preset.description;
+    }
   }
 }
 
@@ -1444,11 +1496,11 @@ class _PresetSelectorSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 24),
             child: Text(
-              '🩺 Medical Specialty',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              '🩺 ${AppLocalizations.of(context)!.medicalSpecialty}',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 20),
@@ -1493,7 +1545,7 @@ class _PresetSelectorSheet extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  preset.name,
+                                  _getPresetName(context, preset),
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -1501,7 +1553,7 @@ class _PresetSelectorSheet extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  preset.description,
+                                  _getPresetDescription(context, preset),
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 13,
@@ -1525,6 +1577,46 @@ class _PresetSelectorSheet extends StatelessWidget {
       ),
     );
   }
+
+  String _getPresetName(BuildContext context, MedicalPreset preset) {
+    final loc = AppLocalizations.of(context)!;
+    switch (preset.id) {
+      case 'general':
+        return loc.presetGeneralName;
+      case 'diagnostico':
+        return loc.presetDiagnosisName;
+      case 'sintomas':
+        return loc.presetSymptomsName;
+      case 'medicacion':
+        return loc.presetMedicationName;
+      case 'nutricion':
+        return loc.presetNutritionName;
+      case 'ejercicio':
+        return loc.presetExerciseName;
+      default:
+        return preset.name;
+    }
+  }
+
+  String _getPresetDescription(BuildContext context, MedicalPreset preset) {
+    final loc = AppLocalizations.of(context)!;
+    switch (preset.id) {
+      case 'general':
+        return loc.presetGeneralDesc;
+      case 'diagnostico':
+        return loc.presetDiagnosisDesc;
+      case 'sintomas':
+        return loc.presetSymptomsDesc;
+      case 'medicacion':
+        return loc.presetMedicationDesc;
+      case 'nutricion':
+        return loc.presetNutritionDesc;
+      case 'ejercicio':
+        return loc.presetExerciseDesc;
+      default:
+        return preset.description;
+    }
+  }
 }
 
 // Confirm Preset Change Dialog
@@ -1541,20 +1633,28 @@ class _ConfirmPresetChangeDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text(isSamePreset ? 'Nuevo chat' : 'Cambiar especialidad'),
+      title: Text(
+        isSamePreset
+            ? AppLocalizations.of(context)!.dialogNewChatTitle
+            : AppLocalizations.of(context)!.dialogChangeSpecialtyTitle,
+      ),
       content: Text(
         isSamePreset
-            ? '¿Deseas iniciar un nuevo chat? Se limpiará el historial actual.'
-            : 'Para cambiar la especialidad es necesario limpiar el historial actual. ¿Deseas continuar?',
+            ? AppLocalizations.of(context)!.dialogNewChatContent
+            : AppLocalizations.of(context)!.dialogChangeSpecialtyContent,
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
+          child: Text(AppLocalizations.of(context)!.dialogCancel),
         ),
         ElevatedButton(
           onPressed: onConfirm,
-          child: Text(isSamePreset ? 'Sí, nuevo chat' : 'Sí, cambiar'),
+          child: Text(
+            isSamePreset
+                ? AppLocalizations.of(context)!.dialogConfirmNewChat
+                : AppLocalizations.of(context)!.dialogConfirmChange,
+          ),
         ),
       ],
     );
