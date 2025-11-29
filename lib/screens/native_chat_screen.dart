@@ -304,6 +304,37 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     }
   }
 
+  Future<void> _deleteAllChats() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete all chats?'),
+        content: const Text(
+          'This action cannot be undone. All your chat history will be permanently deleted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete All'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() {
+        _chatHistory.clear();
+        _clearChat();
+      });
+      await _saveChatHistory(); // This will save the empty list
+    }
+  }
+
   void _showModelSelector() {
     showModalBottomSheet(
       context: context,
@@ -489,6 +520,12 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const Spacer(),
+          if (_currentPageIndex == 1 && _chatHistory.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              tooltip: 'Delete all chats',
+              onPressed: _deleteAllChats,
+            ),
           if (_isIncognito)
             Container(
               margin: const EdgeInsets.only(right: 12),
@@ -727,12 +764,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                           }
                         });
                         _saveChatHistory();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Chat deleted'),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
+                        // Snackbar removed as requested
                       },
                       child: Card(
                         margin: const EdgeInsets.only(bottom: 12),
