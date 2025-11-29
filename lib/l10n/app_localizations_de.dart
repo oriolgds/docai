@@ -18,10 +18,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get menuHome => 'Startseite';
 
   @override
-  String get menuHistory => 'History';
+  String get menuHistory => 'Verlauf';
 
   @override
-  String get medicalSpecialty => 'Medical Specialty';
+  String get medicalSpecialty => 'Medizinisches Fachgebiet';
 
   @override
   String get menuReload => 'Neu laden';
@@ -117,98 +117,98 @@ class AppLocalizationsDe extends AppLocalizations {
   String get selectPreset => 'Fachgebiet auswählen';
 
   @override
-  String get presetGeneralName => 'General';
+  String get presetGeneralName => 'Allgemein';
 
   @override
-  String get presetGeneralDesc => 'General medical inquiries';
+  String get presetGeneralDesc => 'Allgemeine medizinische Anfragen';
 
   @override
-  String get presetDiagnosisName => 'Diagnosis';
+  String get presetDiagnosisName => 'Diagnose';
 
   @override
-  String get presetDiagnosisDesc => 'Analysis of possible diagnoses';
+  String get presetDiagnosisDesc => 'Analyse möglicher Diagnosen';
 
   @override
-  String get presetSymptomsName => 'Symptom Analysis';
+  String get presetSymptomsName => 'Symptomanalyse';
 
   @override
-  String get presetSymptomsDesc => 'Detailed evaluation';
+  String get presetSymptomsDesc => 'Detaillierte Auswertung';
 
   @override
-  String get presetMedicationName => 'Medication';
+  String get presetMedicationName => 'Medikamente';
 
   @override
-  String get presetMedicationDesc => 'Pharmacological information';
+  String get presetMedicationDesc => 'Pharmakologische Informationen';
 
   @override
-  String get presetNutritionName => 'Nutrition';
+  String get presetNutritionName => 'Ernährung';
 
   @override
-  String get presetNutritionDesc => 'Dietary advice';
+  String get presetNutritionDesc => 'Ernährungsberatung';
 
   @override
-  String get presetExerciseName => 'Exercise';
+  String get presetExerciseName => 'Übung';
 
   @override
-  String get presetExerciseDesc => 'Fitness and physical health';
+  String get presetExerciseDesc => 'Fitness und körperliche Gesundheit';
 
   @override
-  String get suggestionFlu => 'What are the symptoms of the flu?';
+  String get suggestionFlu => 'Was sind die Symptome einer Grippe?';
 
   @override
-  String get suggestionHealth => 'How can I improve my health?';
+  String get suggestionHealth => 'Wie kann ich meine Gesundheit verbessern?';
 
   @override
-  String get suggestionVaccines => 'Tell me about vaccines';
+  String get suggestionVaccines => 'Erzähl mir von Impfstoffen';
 
   @override
-  String get dialogNewChatTitle => 'New chat';
+  String get dialogNewChatTitle => 'Neuer Chat';
 
   @override
-  String get dialogChangeSpecialtyTitle => 'Change specialty';
+  String get dialogChangeSpecialtyTitle => 'Fachgebiet ändern';
 
   @override
-  String get dialogNewChatContent => 'Do you want to start a new chat? Current history will be cleared.';
+  String get dialogNewChatContent => 'Möchten Sie einen neuen Chat beginnen? Der aktuelle Verlauf wird gelöscht.';
 
   @override
-  String get dialogChangeSpecialtyContent => 'Changing specialty requires clearing current history. Do you want to continue?';
+  String get dialogChangeSpecialtyContent => 'Das Ändern des Fachgebiets erfordert das Löschen des aktuellen Verlaufs. Möchten Sie fortfahren?';
 
   @override
-  String get dialogCancel => 'Cancel';
+  String get dialogCancel => 'Abbrechen';
 
   @override
-  String get dialogConfirmNewChat => 'Yes, new chat';
+  String get dialogConfirmNewChat => 'Ja, neuer Chat';
 
   @override
-  String get dialogConfirmChange => 'Yes, change';
+  String get dialogConfirmChange => 'Ja, ändern';
 
   @override
-  String get chatNewConversation => 'New conversation';
+  String get chatNewConversation => 'Neue Konversation';
 
   @override
-  String get chatUntitled => 'Untitled';
+  String get chatUntitled => 'Ohne Titel';
 
   @override
-  String get chatYou => 'You';
+  String get chatYou => 'Du';
 
   @override
   String get chatDoky => 'Doky';
 
   @override
-  String get chatNoHistory => 'No saved chats';
+  String get chatNoHistory => 'Keine gespeicherten Chats';
 
   @override
-  String get chatHistoryPlaceholder => 'Your conversations will appear here';
+  String get chatHistoryPlaceholder => 'Deine Konversationen werden hier erscheinen';
 
   @override
-  String get deleteDialogTitle => 'Delete all chats?';
+  String get deleteDialogTitle => 'Alle Chats löschen?';
 
   @override
-  String get deleteDialogContent => 'This action cannot be undone. All your chat history will be permanently deleted.';
+  String get deleteDialogContent => 'Diese Aktion kann nicht rückgängig gemacht werden. Dein gesamter Chatverlauf wird dauerhaft gelöscht.';
 
   @override
-  String get deleteDialogCancel => 'Cancel';
+  String get deleteDialogCancel => 'Abbrechen';
 
   @override
-  String get deleteDialogConfirm => 'Delete All';
+  String get deleteDialogConfirm => 'Alle löschen';
 }
