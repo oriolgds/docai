@@ -296,7 +296,12 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     setState(() {
       _messages.clear();
       _currentSessionId = null;
+      _isNearBottom = true;
     });
+    // Reset FAB animation state
+    if (_fabController.isCompleted) {
+      _fabController.reverse();
+    }
   }
 
   void _showModelSelector() {
@@ -395,51 +400,54 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                   )
                                 : _buildMessagesList(),
                             // Scroll to bottom button positioned above input
-                            Positioned(
-                              bottom: 16,
-                              left: 0,
-                              right: 0,
-                              child: Center(
-                                child: ScaleTransition(
-                                  scale: _fabAnimation,
-                                  child: Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Colors.green[400]!,
-                                          Colors.green[600]!,
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.green.withOpacity(0.4),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
+                            if (_messages.isNotEmpty)
+                              Positioned(
+                                bottom: 16,
+                                left: 0,
+                                right: 0,
+                                child: Center(
+                                  child: ScaleTransition(
+                                    scale: _fabAnimation,
+                                    child: Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.green[400]!,
+                                            Colors.green[600]!,
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
                                         ),
-                                      ],
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      shape: const CircleBorder(),
-                                      child: InkWell(
-                                        customBorder: const CircleBorder(),
-                                        onTap: _scrollToBottom,
-                                        child: const Icon(
-                                          Icons.keyboard_arrow_down_rounded,
-                                          color: Colors.white,
-                                          size: 24,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.green.withOpacity(
+                                              0.4,
+                                            ),
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        shape: const CircleBorder(),
+                                        child: InkWell(
+                                          customBorder: const CircleBorder(),
+                                          onTap: _scrollToBottom,
+                                          child: const Icon(
+                                            Icons.keyboard_arrow_down_rounded,
+                                            color: Colors.white,
+                                            size: 24,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
                           ],
                         ),
                       ),
