@@ -253,10 +253,6 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         }
       });
 
-      // Only auto-scroll if user was already near the bottom
-      if (_isNearBottom) {
-        _scrollToBottom();
-      }
       await _saveChatHistory();
     } catch (e) {
       _showError('Error al generar respuesta: $e');
@@ -1528,8 +1524,8 @@ class _PresetSelectorSheet extends StatelessWidget {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(16),
                     onTap: () {
-                      onPresetSelected(preset);
                       Navigator.pop(context);
+                      onPresetSelected(preset);
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(16),
