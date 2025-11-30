@@ -153,13 +153,58 @@ class AppLocalizationsFr extends AppLocalizations {
   String get presetExerciseDesc => 'Fitness et santé physique';
 
   @override
-  String get suggestionFlu => 'Quels sont les symptômes de la grippe ?';
+  String get suggestionGeneral1 => 'Quels sont les symptômes de la grippe ?';
 
   @override
-  String get suggestionHealth => 'Comment puis-je améliorer ma santé ?';
+  String get suggestionGeneral2 => 'Comment puis-je améliorer ma santé ?';
 
   @override
-  String get suggestionVaccines => 'Parlez-moi des vaccins';
+  String get suggestionGeneral3 => 'Parlez-moi des vaccins';
+
+  @override
+  String get suggestionDiagnosis1 => 'Que signifient ces symptômes ?';
+
+  @override
+  String get suggestionDiagnosis2 => 'Interpréter mes résultats';
+
+  @override
+  String get suggestionDiagnosis3 => 'Quand dois-je consulter un médecin ?';
+
+  @override
+  String get suggestionSymptoms1 => 'J\'ai mal à la tête constamment';
+
+  @override
+  String get suggestionSymptoms2 => 'J\'ai de la fièvre et de la toux';
+
+  @override
+  String get suggestionSymptoms3 => 'Je ressens une fatigue inexpliquée';
+
+  @override
+  String get suggestionMedication1 => 'À quoi sert l\'Ibuprofène ?';
+
+  @override
+  String get suggestionMedication2 => 'Effets secondaires des antibiotiques';
+
+  @override
+  String get suggestionMedication3 => 'Comment prendre ce médicament ?';
+
+  @override
+  String get suggestionNutrition1 => 'Plan alimentaire sain';
+
+  @override
+  String get suggestionNutrition2 => 'Aliments riches en fer';
+
+  @override
+  String get suggestionNutrition3 => 'Conseils pour perdre du poids';
+
+  @override
+  String get suggestionExercise1 => 'Routine pour débutants';
+
+  @override
+  String get suggestionExercise2 => 'Exercices pour le mal de dos';
+
+  @override
+  String get suggestionExercise3 => 'Améliorer l\'endurance cardiovasculaire';
 
   @override
   String get dialogNewChatTitle => 'Nouveau chat';

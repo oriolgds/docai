@@ -153,13 +153,58 @@ class AppLocalizationsEs extends AppLocalizations {
   String get presetExerciseDesc => 'Fitness y salud física';
 
   @override
-  String get suggestionFlu => '¿Cuáles son los síntomas de la gripe?';
+  String get suggestionGeneral1 => '¿Cuáles son los síntomas de la gripe?';
 
   @override
-  String get suggestionHealth => '¿Cómo puedo mejorar mi salud?';
+  String get suggestionGeneral2 => '¿Cómo puedo mejorar mi salud?';
 
   @override
-  String get suggestionVaccines => 'Explícame sobre las vacunas';
+  String get suggestionGeneral3 => 'Explícame sobre las vacunas';
+
+  @override
+  String get suggestionDiagnosis1 => '¿Qué significan estos síntomas?';
+
+  @override
+  String get suggestionDiagnosis2 => 'Interpreta mis resultados';
+
+  @override
+  String get suggestionDiagnosis3 => '¿Cuándo debo ver a un médico?';
+
+  @override
+  String get suggestionSymptoms1 => 'Me duele la cabeza constantemente';
+
+  @override
+  String get suggestionSymptoms2 => 'Tengo fiebre y tos';
+
+  @override
+  String get suggestionSymptoms3 => 'Siento fatiga inexplicable';
+
+  @override
+  String get suggestionMedication1 => '¿Para qué sirve el Ibuprofeno?';
+
+  @override
+  String get suggestionMedication2 => 'Efectos secundarios de antibióticos';
+
+  @override
+  String get suggestionMedication3 => '¿Cómo tomar este medicamento?';
+
+  @override
+  String get suggestionNutrition1 => 'Plan de dieta saludable';
+
+  @override
+  String get suggestionNutrition2 => 'Alimentos ricos en hierro';
+
+  @override
+  String get suggestionNutrition3 => 'Consejos para perder peso';
+
+  @override
+  String get suggestionExercise1 => 'Rutina para principiantes';
+
+  @override
+  String get suggestionExercise2 => 'Ejercicios para dolor de espalda';
+
+  @override
+  String get suggestionExercise3 => 'Mejorar resistencia cardiovascular';
 
   @override
   String get dialogNewChatTitle => 'Nuevo chat';

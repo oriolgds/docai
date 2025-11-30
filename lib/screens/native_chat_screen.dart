@@ -1086,11 +1086,7 @@ class _WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
 
-    final suggestions = [
-      localizations.suggestionFlu,
-      localizations.suggestionHealth,
-      localizations.suggestionVaccines,
-    ];
+    final suggestions = _getSuggestions(context);
 
     return Center(
       child: SingleChildScrollView(
@@ -1172,6 +1168,49 @@ class _WelcomeScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  List<String> _getSuggestions(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+    switch (preset.id) {
+      case 'diagnostico':
+        return [
+          localizations.suggestionDiagnosis1,
+          localizations.suggestionDiagnosis2,
+          localizations.suggestionDiagnosis3,
+        ];
+      case 'sintomas':
+        return [
+          localizations.suggestionSymptoms1,
+          localizations.suggestionSymptoms2,
+          localizations.suggestionSymptoms3,
+        ];
+      case 'medicacion':
+        return [
+          localizations.suggestionMedication1,
+          localizations.suggestionMedication2,
+          localizations.suggestionMedication3,
+        ];
+      case 'nutricion':
+        return [
+          localizations.suggestionNutrition1,
+          localizations.suggestionNutrition2,
+          localizations.suggestionNutrition3,
+        ];
+      case 'ejercicio':
+        return [
+          localizations.suggestionExercise1,
+          localizations.suggestionExercise2,
+          localizations.suggestionExercise3,
+        ];
+      case 'general':
+      default:
+        return [
+          localizations.suggestionGeneral1,
+          localizations.suggestionGeneral2,
+          localizations.suggestionGeneral3,
+        ];
+    }
   }
 
   String _getPresetName(BuildContext context, MedicalPreset preset) {
