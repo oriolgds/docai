@@ -389,23 +389,113 @@ abstract class AppLocalizations {
   /// **'Fitness and physical health'**
   String get presetExerciseDesc;
 
-  /// No description provided for @suggestionFlu.
+  /// No description provided for @suggestionGeneral1.
   ///
   /// In en, this message translates to:
   /// **'What are the symptoms of the flu?'**
-  String get suggestionFlu;
+  String get suggestionGeneral1;
 
-  /// No description provided for @suggestionHealth.
+  /// No description provided for @suggestionGeneral2.
   ///
   /// In en, this message translates to:
   /// **'How can I improve my health?'**
-  String get suggestionHealth;
+  String get suggestionGeneral2;
 
-  /// No description provided for @suggestionVaccines.
+  /// No description provided for @suggestionGeneral3.
   ///
   /// In en, this message translates to:
   /// **'Tell me about vaccines'**
-  String get suggestionVaccines;
+  String get suggestionGeneral3;
+
+  /// No description provided for @suggestionDiagnosis1.
+  ///
+  /// In en, this message translates to:
+  /// **'What do these symptoms mean?'**
+  String get suggestionDiagnosis1;
+
+  /// No description provided for @suggestionDiagnosis2.
+  ///
+  /// In en, this message translates to:
+  /// **'Interpret my results'**
+  String get suggestionDiagnosis2;
+
+  /// No description provided for @suggestionDiagnosis3.
+  ///
+  /// In en, this message translates to:
+  /// **'When should I see a doctor?'**
+  String get suggestionDiagnosis3;
+
+  /// No description provided for @suggestionSymptoms1.
+  ///
+  /// In en, this message translates to:
+  /// **'I have a constant headache'**
+  String get suggestionSymptoms1;
+
+  /// No description provided for @suggestionSymptoms2.
+  ///
+  /// In en, this message translates to:
+  /// **'I have fever and cough'**
+  String get suggestionSymptoms2;
+
+  /// No description provided for @suggestionSymptoms3.
+  ///
+  /// In en, this message translates to:
+  /// **'I feel unexplained fatigue'**
+  String get suggestionSymptoms3;
+
+  /// No description provided for @suggestionMedication1.
+  ///
+  /// In en, this message translates to:
+  /// **'What is Ibuprofen for?'**
+  String get suggestionMedication1;
+
+  /// No description provided for @suggestionMedication2.
+  ///
+  /// In en, this message translates to:
+  /// **'Side effects of antibiotics'**
+  String get suggestionMedication2;
+
+  /// No description provided for @suggestionMedication3.
+  ///
+  /// In en, this message translates to:
+  /// **'How to take this medicine?'**
+  String get suggestionMedication3;
+
+  /// No description provided for @suggestionNutrition1.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy diet plan'**
+  String get suggestionNutrition1;
+
+  /// No description provided for @suggestionNutrition2.
+  ///
+  /// In en, this message translates to:
+  /// **'Foods rich in iron'**
+  String get suggestionNutrition2;
+
+  /// No description provided for @suggestionNutrition3.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips for losing weight'**
+  String get suggestionNutrition3;
+
+  /// No description provided for @suggestionExercise1.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine for beginners'**
+  String get suggestionExercise1;
+
+  /// No description provided for @suggestionExercise2.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercises for back pain'**
+  String get suggestionExercise2;
+
+  /// No description provided for @suggestionExercise3.
+  ///
+  /// In en, this message translates to:
+  /// **'Improve cardiovascular endurance'**
+  String get suggestionExercise3;
 
   /// No description provided for @dialogNewChatTitle.
   ///

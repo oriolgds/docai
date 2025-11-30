@@ -153,13 +153,58 @@ class AppLocalizationsCa extends AppLocalizations {
   String get presetExerciseDesc => 'Fitness i salut física';
 
   @override
-  String get suggestionFlu => 'Quins són els símptomes de la grip?';
+  String get suggestionGeneral1 => 'Quins són els símptomes de la grip?';
 
   @override
-  String get suggestionHealth => 'Com puc millorar la meva salut?';
+  String get suggestionGeneral2 => 'Com puc millorar la meva salut?';
 
   @override
-  String get suggestionVaccines => 'Parla\'m sobre les vacunes';
+  String get suggestionGeneral3 => 'Parla\'m sobre les vacunes';
+
+  @override
+  String get suggestionDiagnosis1 => 'Què signifiquen aquests símptomes?';
+
+  @override
+  String get suggestionDiagnosis2 => 'Interpreta els meus resultats';
+
+  @override
+  String get suggestionDiagnosis3 => 'Quan hauria de veure un metge?';
+
+  @override
+  String get suggestionSymptoms1 => 'Em fa mal el cap constantment';
+
+  @override
+  String get suggestionSymptoms2 => 'Tinc febre i tos';
+
+  @override
+  String get suggestionSymptoms3 => 'Sento fatiga inexplicable';
+
+  @override
+  String get suggestionMedication1 => 'Per a què serveix l\'Ibuprofèn?';
+
+  @override
+  String get suggestionMedication2 => 'Efectes secundaris dels antibiòtics';
+
+  @override
+  String get suggestionMedication3 => 'Com prendre aquest medicament?';
+
+  @override
+  String get suggestionNutrition1 => 'Pla de dieta saludable';
+
+  @override
+  String get suggestionNutrition2 => 'Aliments rics en ferro';
+
+  @override
+  String get suggestionNutrition3 => 'Consells per perdre pes';
+
+  @override
+  String get suggestionExercise1 => 'Rutina per a principiants';
+
+  @override
+  String get suggestionExercise2 => 'Exercicis per al mal d\'esquena';
+
+  @override
+  String get suggestionExercise3 => 'Millorar resistència cardiovascular';
 
   @override
   String get dialogNewChatTitle => 'Nou xat';

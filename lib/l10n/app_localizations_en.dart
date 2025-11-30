@@ -153,13 +153,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get presetExerciseDesc => 'Fitness and physical health';
 
   @override
-  String get suggestionFlu => 'What are the symptoms of the flu?';
+  String get suggestionGeneral1 => 'What are the symptoms of the flu?';
 
   @override
-  String get suggestionHealth => 'How can I improve my health?';
+  String get suggestionGeneral2 => 'How can I improve my health?';
 
   @override
-  String get suggestionVaccines => 'Tell me about vaccines';
+  String get suggestionGeneral3 => 'Tell me about vaccines';
+
+  @override
+  String get suggestionDiagnosis1 => 'What do these symptoms mean?';
+
+  @override
+  String get suggestionDiagnosis2 => 'Interpret my results';
+
+  @override
+  String get suggestionDiagnosis3 => 'When should I see a doctor?';
+
+  @override
+  String get suggestionSymptoms1 => 'I have a constant headache';
+
+  @override
+  String get suggestionSymptoms2 => 'I have fever and cough';
+
+  @override
+  String get suggestionSymptoms3 => 'I feel unexplained fatigue';
+
+  @override
+  String get suggestionMedication1 => 'What is Ibuprofen for?';
+
+  @override
+  String get suggestionMedication2 => 'Side effects of antibiotics';
+
+  @override
+  String get suggestionMedication3 => 'How to take this medicine?';
+
+  @override
+  String get suggestionNutrition1 => 'Healthy diet plan';
+
+  @override
+  String get suggestionNutrition2 => 'Foods rich in iron';
+
+  @override
+  String get suggestionNutrition3 => 'Tips for losing weight';
+
+  @override
+  String get suggestionExercise1 => 'Routine for beginners';
+
+  @override
+  String get suggestionExercise2 => 'Exercises for back pain';
+
+  @override
+  String get suggestionExercise3 => 'Improve cardiovascular endurance';
 
   @override
   String get dialogNewChatTitle => 'New chat';
