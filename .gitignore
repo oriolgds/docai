@@ -62,3 +62,4 @@ upload-keystore.jks
 app/app.zip
 app/app.zip.hash
 /supabase/.temp
+android/google-services.json
