@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
+
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,6 +16,10 @@ class LocaleController extends ChangeNotifier {
       return;
     }
     _locale = locale;
+    FirebaseAnalytics.instance.logEvent(
+      name: 'change_language',
+      parameters: {'language_code': locale.languageCode},
+    );
     notifyListeners();
     unawaited(_persistLocale(locale));
   }

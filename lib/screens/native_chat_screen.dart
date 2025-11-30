@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:docai/models/chat_message.dart';
 import 'package:docai/models/chat_session.dart';
@@ -58,6 +59,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     _inputController.addListener(() {
       setState(() {}); // Rebuild when text changes for send button
     });
+
+    FirebaseAnalytics.instance.logScreenView(screenName: 'home_screen');
   }
 
   @override
@@ -214,6 +217,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       _inputController.clear();
     });
 
+    await FirebaseAnalytics.instance.logEvent(name: 'send_message');
+
     // Only auto-scroll if user was already near the bottom
     if (_isNearBottom) {
       _scrollToBottom();
@@ -328,6 +333,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         _clearChat();
       });
       await _saveChatHistory(); // This will save the empty list
+      await FirebaseAnalytics.instance.logEvent(name: 'delete_all_history');
     }
   }
 
@@ -392,6 +398,9 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     // Open preset selector only when switching to chat page (index 0) from history
     if (index == 0 && _currentPageIndex == 1) {
       // Don't open modal when returning from history
+      FirebaseAnalytics.instance.logScreenView(screenName: 'home_screen');
+    } else if (index == 1) {
+      FirebaseAnalytics.instance.logScreenView(screenName: 'history_screen');
     }
   }
 
@@ -552,12 +561,18 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           IconButton(
             icon: const Icon(Icons.add_comment_outlined),
             tooltip: AppLocalizations.of(context)!.chatNewConversation,
-            onPressed: _clearChat,
+            onPressed: () {
+              FirebaseAnalytics.instance.logEvent(name: 'new_chat');
+              _clearChat();
+            },
           ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             tooltip: 'Info',
             onPressed: () {
+              FirebaseAnalytics.instance.logScreenView(
+                screenName: 'info_screen',
+              );
               Navigator.of(
                 context,
               ).push(MaterialPageRoute(builder: (_) => const InfoScreen()));
