@@ -374,96 +374,106 @@ class _NativeChatScreenState extends State<NativeChatScreen>
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Simple minimal header
-            _buildHeader(),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Simple minimal header
+              _buildHeader(),
 
-            // Pages with IndexedStack (no animation)
-            Expanded(
-              child: IndexedStack(
-                index: _currentPageIndex,
-                children: [
-                  // Chat page
-                  Column(
-                    children: [
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            _messages.isEmpty
-                                ? _WelcomeScreen(
-                                    preset: _selectedPreset,
-                                    onSuggestionTap: (suggestion) {
-                                      _inputController.text = suggestion;
-                                    },
-                                  )
-                                : _buildMessagesList(),
-                            // Scroll to bottom button positioned above input
-                            if (_messages.isNotEmpty)
-                              Positioned(
-                                bottom: 16,
-                                left: 0,
-                                right: 0,
-                                child: Center(
-                                  child: ScaleTransition(
-                                    scale: _fabAnimation,
-                                    child: Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Colors.green[400]!,
-                                            Colors.green[600]!,
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.green.withOpacity(
-                                              0.4,
-                                            ),
-                                            blurRadius: 12,
-                                            offset: const Offset(0, 4),
+              // Pages with IndexedStack (no animation)
+              Expanded(
+                child: IndexedStack(
+                  index: _currentPageIndex,
+                  children: [
+                    // Chat page
+                    Column(
+                      children: [
+                        Expanded(
+                          child: Stack(
+                            children: [
+                              _messages.isEmpty
+                                  ? _WelcomeScreen(
+                                      preset: _selectedPreset,
+                                      onSuggestionTap: (suggestion) {
+                                        _inputController.text = suggestion;
+                                      },
+                                    )
+                                  : _buildMessagesList(),
+                              // Scroll to bottom button positioned above input
+                              if (_messages.isNotEmpty)
+                                Positioned(
+                                  bottom: 16,
+                                  left: 0,
+                                  right: 0,
+                                  child: Center(
+                                    child: ScaleTransition(
+                                      scale: _fabAnimation,
+                                      child: Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.green[400]!,
+                                              Colors.green[600]!,
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
                                           ),
-                                        ],
-                                      ),
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        shape: const CircleBorder(),
-                                        child: InkWell(
-                                          customBorder: const CircleBorder(),
-                                          onTap: _scrollToBottom,
-                                          child: const Icon(
-                                            Icons.keyboard_arrow_down_rounded,
-                                            color: Colors.white,
-                                            size: 24,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.green.withOpacity(
+                                                0.4,
+                                              ),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          shape: const CircleBorder(),
+                                          child: InkWell(
+                                            customBorder: const CircleBorder(),
+                                            onTap: _scrollToBottom,
+                                            child: const Icon(
+                                              Icons.keyboard_arrow_down_rounded,
+                                              color: Colors.white,
+                                              size: 24,
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      _buildInputArea(localizations),
-                    ],
-                  ),
+                        _buildInputArea(localizations),
+                      ],
+                    ),
 
-                  // History page
-                  _buildHistoryPage(),
-                ],
+                    // History page
+                    _buildHistoryPage(),
+                  ],
+                ),
               ),
-            ),
 
-            // Bottom quick actions bar (always visible)
-            _buildQuickActionsBar(localizations),
-          ],
+              // Bottom quick actions bar (always visible)
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                child: MediaQuery.of(context).viewInsets.bottom == 0
+                    ? _buildQuickActionsBar(localizations)
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
         ),
       ),
     );
