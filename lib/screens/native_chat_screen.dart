@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:uuid/uuid.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:docai/state/theme_scope.dart';
 
 class NativeChatScreen extends StatefulWidget {
   const NativeChatScreen({super.key});
@@ -375,7 +376,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.opaque,
@@ -447,7 +448,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.green.withOpacity(0.4),
+                                  color: Colors.green.withValues(alpha: 0.4),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
@@ -487,8 +488,10 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     return Container(
       width: 64,
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(right: BorderSide(color: Colors.grey[200]!, width: 1)),
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          right: BorderSide(color: Theme.of(context).dividerColor, width: 1),
+        ),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -558,13 +561,34 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                         _isIncognito ? Icons.visibility_off : Icons.visibility,
                         color: _isIncognito
                             ? Colors.amber[700]
-                            : Colors.grey[600],
+                            : Theme.of(context).iconTheme.color,
                       ),
                       tooltip: _isIncognito
                           ? 'Incognito Mode ON'
                           : 'Incognito Mode OFF',
                       onPressed: () {
                         setState(() => _isIncognito = !_isIncognito);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    // Theme toggle
+                    IconButton(
+                      icon: Icon(
+                        ThemeScope.of(context).themeMode == ThemeMode.system
+                            ? Icons.brightness_auto
+                            : ThemeScope.of(context).themeMode ==
+                                  ThemeMode.light
+                            ? Icons.light_mode_outlined
+                            : Icons.dark_mode_outlined,
+                      ),
+                      tooltip:
+                          ThemeScope.of(context).themeMode == ThemeMode.system
+                          ? 'System Theme'
+                          : ThemeScope.of(context).themeMode == ThemeMode.light
+                          ? 'Light Theme'
+                          : 'Dark Theme',
+                      onPressed: () {
+                        ThemeScope.of(context).toggleTheme();
                       },
                     ),
                     const SizedBox(height: 8),
@@ -595,10 +619,10 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -621,11 +645,30 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           IconButton(
             icon: Icon(
               _isIncognito ? Icons.visibility_off : Icons.visibility,
-              color: _isIncognito ? Colors.amber[700] : Colors.grey[600],
+              color: _isIncognito
+                  ? Colors.amber[700]
+                  : Theme.of(context).iconTheme.color,
             ),
             tooltip: _isIncognito ? 'Incognito Mode ON' : 'Incognito Mode OFF',
             onPressed: () {
               setState(() => _isIncognito = !_isIncognito);
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              ThemeScope.of(context).themeMode == ThemeMode.system
+                  ? Icons.brightness_auto
+                  : ThemeScope.of(context).themeMode == ThemeMode.light
+                  ? Icons.light_mode_outlined
+                  : Icons.dark_mode_outlined,
+            ),
+            tooltip: ThemeScope.of(context).themeMode == ThemeMode.system
+                ? 'System Theme'
+                : ThemeScope.of(context).themeMode == ThemeMode.light
+                ? 'Light Theme'
+                : 'Dark Theme',
+            onPressed: () {
+              ThemeScope.of(context).toggleTheme();
             },
           ),
           IconButton(
@@ -683,10 +726,10 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -699,7 +742,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             child: Container(
               constraints: const BoxConstraints(maxHeight: 120),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: TextField(
@@ -710,7 +753,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                 textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
                   hintText: localizations.inputPlaceholder,
-                  hintStyle: TextStyle(color: Colors.grey[600]),
+                  hintStyle: TextStyle(color: Theme.of(context).hintColor),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -737,18 +780,25 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Widget _buildSendButton() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: _isGenerating
-              ? [Colors.grey[400]!, Colors.grey[500]!]
-              : [Colors.green[400]!, Colors.green[600]!],
+              ? [
+                  isDark ? Colors.grey[700]! : Colors.grey[400]!,
+                  isDark ? Colors.grey[600]! : Colors.grey[500]!,
+                ]
+              : [
+                  isDark ? Colors.green[700]! : Colors.green[400]!,
+                  isDark ? Colors.green[900]! : Colors.green[600]!,
+                ],
         ),
         shape: BoxShape.circle,
         boxShadow: [
           if (!_isGenerating)
             BoxShadow(
-              color: Colors.green.withOpacity(0.3),
+              color: Colors.green.withValues(alpha: isDark ? 0.2 : 0.3),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -768,11 +818,15 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   Widget _buildVoiceButton() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         shape: BoxShape.circle,
       ),
       child: IconButton(
-        icon: Icon(Icons.mic_none, color: Colors.grey[700], size: 22),
+        icon: Icon(
+          Icons.mic_none,
+          color: Theme.of(context).iconTheme.color,
+          size: 22,
+        ),
         onPressed: () {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Voice input coming soon!')),
@@ -783,15 +837,22 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Widget _buildResponseLengthToggle() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = _isLongResponse ? Colors.blue : Colors.green;
+    final backgroundColor = isDark
+        ? activeColor.withValues(alpha: 0.2)
+        : (_isLongResponse ? Colors.blue[100] : Colors.green[100]);
+    final iconColor = isDark
+        ? activeColor[300]
+        : (_isLongResponse ? Colors.blue[700] : Colors.green[700]);
+
     return Container(
       decoration: BoxDecoration(
-        color: _isLongResponse ? Colors.blue[100] : Colors.green[100],
+        color: backgroundColor,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: (_isLongResponse ? Colors.blue : Colors.green).withOpacity(
-              0.3,
-            ),
+            color: activeColor.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -800,7 +861,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       child: IconButton(
         icon: Icon(
           _isLongResponse ? Icons.article : Icons.bolt,
-          color: _isLongResponse ? Colors.blue[700] : Colors.green[700],
+          color: iconColor,
           size: 20,
         ),
         tooltip: _isLongResponse ? 'Long Response' : 'Fast Response',
@@ -958,8 +1019,10 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey[200]!, width: 1)),
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1119,10 +1182,15 @@ class _MessageCard extends StatelessWidget {
   }
 
   Widget _buildMessageBubble(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final userBubbleColor = isDark ? Colors.green[800] : Colors.green[500];
+    final assistantBubbleColor = isDark ? Colors.grey[800] : Colors.white;
+    final codeBackgroundColor = isDark ? Colors.black26 : Colors.grey[100];
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isUser ? Colors.green[500] : Colors.white,
+        color: isUser ? userBubbleColor : assistantBubbleColor,
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(20),
           topRight: const Radius.circular(20),
@@ -1131,7 +1199,7 @@ class _MessageCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1151,18 +1219,18 @@ class _MessageCard extends StatelessWidget {
           : MarkdownBody(
               data: message.content,
               styleSheet: MarkdownStyleSheet(
-                p: const TextStyle(
-                  color: Colors.black87,
+                p: TextStyle(
+                  color: isDark ? Colors.grey[200] : Colors.black87,
                   fontSize: 15,
                   height: 1.4,
                 ),
                 code: TextStyle(
-                  backgroundColor: Colors.grey[100],
-                  color: Colors.green[700],
+                  backgroundColor: codeBackgroundColor,
+                  color: isDark ? Colors.green[300] : Colors.green[700],
                   fontFamily: 'monospace',
                 ),
                 codeblockDecoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: codeBackgroundColor,
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -1256,7 +1324,7 @@ class _WelcomeScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildLogo(),
+                    _buildLogo(context),
                     const SizedBox(height: 24),
                     Text(
                       '${preset.emoji} ${_getPresetName(context, preset)}',
@@ -1271,7 +1339,7 @@ class _WelcomeScreen extends StatelessWidget {
                       _getPresetDescription(context, preset),
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                         fontSize: 15,
                         height: 1.4,
                       ),
@@ -1289,7 +1357,10 @@ class _WelcomeScreen extends StatelessWidget {
                     Text(
                       localizations.welcomeSubtitle,
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
@@ -1328,7 +1399,7 @@ class _WelcomeScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildLogo(),
+            _buildLogo(context),
             const SizedBox(height: 32),
             Text(
               '${preset.emoji} ${_getPresetName(context, preset)}',
@@ -1340,7 +1411,7 @@ class _WelcomeScreen extends StatelessWidget {
               _getPresetDescription(context, preset),
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.grey[600],
+                color: Theme.of(context).textTheme.bodyMedium?.color,
                 fontSize: 15,
                 height: 1.4,
               ),
@@ -1355,7 +1426,10 @@ class _WelcomeScreen extends StatelessWidget {
             Text(
               localizations.welcomeSubtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 32),
             ...suggestions.map((suggestion) {
@@ -1373,7 +1447,7 @@ class _WelcomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLogo() {
+  Widget _buildLogo(BuildContext context) {
     return TweenAnimationBuilder(
       tween: Tween<double>(begin: 0, end: 1),
       duration: const Duration(milliseconds: 800),
@@ -1386,11 +1460,13 @@ class _WelcomeScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.green[50],
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.green[900]!.withValues(alpha: 0.3)
+              : Colors.green[50],
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.green.withOpacity(0.2),
+              color: Colors.green.withValues(alpha: 0.2),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -1507,12 +1583,12 @@ class _SuggestionChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: Theme.of(context).dividerColor),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -1565,7 +1641,9 @@ class _QuickActionButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: isActive
               ? BoxDecoration(
-                  color: Colors.green[50],
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.green[900]!.withValues(alpha: 0.3)
+                      : Colors.green[50],
                   borderRadius: BorderRadius.circular(12),
                 )
               : null,
@@ -1578,7 +1656,11 @@ class _QuickActionButton extends StatelessWidget {
                 Icon(
                   icon,
                   size: 24,
-                  color: isActive ? Colors.green[700] : Colors.grey[700],
+                  color: isActive
+                      ? (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.green[300]
+                            : Colors.green[700])
+                      : Theme.of(context).iconTheme.color,
                 ),
               ],
               const SizedBox(height: 4),
@@ -1586,7 +1668,11 @@ class _QuickActionButton extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontSize: 12,
-                  color: isActive ? Colors.green[700] : Colors.grey[700],
+                  color: isActive
+                      ? (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.green[300]
+                            : Colors.green[700])
+                      : Theme.of(context).textTheme.bodyMedium?.color,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                 ),
                 maxLines: 1,
@@ -1619,9 +1705,9 @@ class _PresetSelectorSheet extends StatelessWidget {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1687,10 +1773,18 @@ class _PresetSelectorSheet extends StatelessWidget {
           ? EdgeInsets.zero
           : const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       decoration: BoxDecoration(
-        color: isSelected ? Colors.green[50] : Colors.white,
+        color: isSelected
+            ? (Theme.of(context).brightness == Brightness.dark
+                  ? Colors.green[900]!.withValues(alpha: 0.3)
+                  : Colors.green[50])
+            : Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isSelected ? Colors.green[300]! : Colors.grey[300]!,
+          color: isSelected
+              ? (Theme.of(context).brightness == Brightness.dark
+                    ? Colors.green[700]!
+                    : Colors.green[300]!)
+              : Theme.of(context).dividerColor,
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -1747,7 +1841,9 @@ class _PresetSelectorSheet extends StatelessWidget {
                           Text(
                             _getPresetDescription(context, preset),
                             style: TextStyle(
-                              color: Colors.grey[600],
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.color,
                               fontSize: 13,
                             ),
                           ),
