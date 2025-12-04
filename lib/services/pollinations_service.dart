@@ -20,11 +20,12 @@ class PollinationsService {
       if (response.statusCode == 200) {
         final dynamic decoded = json.decode(response.body);
 
-        // The API returns either an array or an object with model names as keys
+        // The API returns an array of model objects with "name" property
         if (decoded is List) {
-          return decoded.cast<String>();
+          // Extract the "name" field from each model object
+          return decoded.map((model) => model['name'] as String).toList();
         } else if (decoded is Map) {
-          // Extract model names from object keys
+          // Extract model names from object keys (alternative format)
           return decoded.keys.cast<String>().toList();
         } else {
           // Fallback to common models if format is unexpected
