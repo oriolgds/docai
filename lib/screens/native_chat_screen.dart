@@ -914,6 +914,9 @@ class _MessageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final useMobileLayout = !isUser && isMobile;
+
     return TweenAnimationBuilder(
       tween: Tween<double>(begin: 0, end: 1),
       duration: const Duration(milliseconds: 300),
@@ -928,106 +931,140 @@ class _MessageCard extends StatelessWidget {
       },
       child: Padding(
         padding: const EdgeInsets.only(bottom: 20),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: isUser
-              ? MainAxisAlignment.end
-              : MainAxisAlignment.start,
-          children: [
-            if (!isUser && showAvatar) ...[
-              _buildAvatar(),
-              const SizedBox(width: 12),
-            ],
-            Flexible(
-              child: Column(
-                crossAxisAlignment: isUser
-                    ? CrossAxisAlignment.end
-                    : CrossAxisAlignment.start,
+        child: useMobileLayout
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (showAvatar) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        bottom: 6,
-                        left: 4,
-                        right: 4,
-                      ),
-                      child: Text(
-                        isUser ? localizations.chatYou : localizations.chatDoky,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                    ),
-                  ],
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isUser ? Colors.green[500] : Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(20),
-                        topRight: const Radius.circular(20),
-                        bottomLeft: Radius.circular(isUser ? 20 : 4),
-                        bottomRight: Radius.circular(isUser ? 4 : 20),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                    Row(
+                      children: [
+                        _buildAvatar(),
+                        const SizedBox(width: 8),
+                        Text(
+                          localizations.chatDoky,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[800],
+                          ),
                         ),
                       ],
                     ),
-                    child: message.content.isEmpty && isGenerating
-                        ? _buildTypingIndicator()
-                        : isUser
-                        ? Text(
-                            message.content,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                              height: 1.4,
+                    const SizedBox(height: 6),
+                  ],
+                  _buildMessageBubble(context),
+                  _buildTimestamp(),
+                ],
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: isUser
+                    ? MainAxisAlignment.end
+                    : MainAxisAlignment.start,
+                children: [
+                  if (!isUser && showAvatar) ...[
+                    _buildAvatar(),
+                    const SizedBox(width: 12),
+                  ],
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: isUser
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      children: [
+                        if (showAvatar) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: 6,
+                              left: 4,
+                              right: 4,
                             ),
-                          )
-                        : MarkdownBody(
-                            data: message.content,
-                            styleSheet: MarkdownStyleSheet(
-                              p: const TextStyle(
-                                color: Colors.black87,
-                                fontSize: 15,
-                                height: 1.4,
-                              ),
-                              code: TextStyle(
-                                backgroundColor: Colors.grey[100],
-                                color: Colors.green[700],
-                                fontFamily: 'monospace',
-                              ),
-                              codeblockDecoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(8),
+                            child: Text(
+                              isUser
+                                  ? localizations.chatYou
+                                  : localizations.chatDoky,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[700],
                               ),
                             ),
                           ),
-                  ),
-                  if (!isGenerating) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4, left: 4, right: 4),
-                      child: Text(
-                        timeago.format(message.timestamp), // Use system locale
-                        style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-                      ),
+                        ],
+                        _buildMessageBubble(context),
+                        _buildTimestamp(),
+                      ],
                     ),
+                  ),
+                  if (isUser && showAvatar) ...[
+                    const SizedBox(width: 12),
+                    _buildAvatar(),
                   ],
                 ],
               ),
-            ),
-            if (isUser && showAvatar) ...[
-              const SizedBox(width: 12),
-              _buildAvatar(),
-            ],
-          ],
+      ),
+    );
+  }
+
+  Widget _buildMessageBubble(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isUser ? Colors.green[500] : Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: const Radius.circular(20),
+          topRight: const Radius.circular(20),
+          bottomLeft: Radius.circular(isUser ? 20 : 4),
+          bottomRight: Radius.circular(isUser ? 4 : 20),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: message.content.isEmpty && isGenerating
+          ? _buildTypingIndicator()
+          : isUser
+          ? Text(
+              message.content,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                height: 1.4,
+              ),
+            )
+          : MarkdownBody(
+              data: message.content,
+              styleSheet: MarkdownStyleSheet(
+                p: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 15,
+                  height: 1.4,
+                ),
+                code: TextStyle(
+                  backgroundColor: Colors.grey[100],
+                  color: Colors.green[700],
+                  fontFamily: 'monospace',
+                ),
+                codeblockDecoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+    );
+  }
+
+  Widget _buildTimestamp() {
+    if (isGenerating) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, left: 4, right: 4),
+      child: Text(
+        timeago.format(message.timestamp),
+        style: TextStyle(fontSize: 11, color: Colors.grey[500]),
       ),
     );
   }
