@@ -371,6 +371,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -378,103 +380,213 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.opaque,
         child: SafeArea(
-          child: Column(
-            children: [
-              // Simple minimal header
-              _buildHeader(),
-
-              // Pages with IndexedStack (no animation)
-              Expanded(
-                child: IndexedStack(
-                  index: _currentPageIndex,
+          child: isLandscape
+              ? Row(
                   children: [
-                    // Chat page
-                    Column(
-                      children: [
-                        Expanded(
-                          child: Stack(
-                            children: [
-                              _messages.isEmpty
-                                  ? _WelcomeScreen(
-                                      preset: _selectedPreset,
-                                      onSuggestionTap: (suggestion) {
-                                        _inputController.text = suggestion;
-                                      },
-                                    )
-                                  : _buildMessagesList(),
-                              // Scroll to bottom button positioned above input
-                              if (_messages.isNotEmpty)
-                                Positioned(
-                                  bottom: 16,
-                                  left: 0,
-                                  right: 0,
-                                  child: Center(
-                                    child: ScaleTransition(
-                                      scale: _fabAnimation,
-                                      child: Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Colors.green[400]!,
-                                              Colors.green[600]!,
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.green.withOpacity(
-                                                0.4,
-                                              ),
-                                              blurRadius: 12,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Material(
-                                          color: Colors.transparent,
-                                          shape: const CircleBorder(),
-                                          child: InkWell(
-                                            customBorder: const CircleBorder(),
-                                            onTap: _scrollToBottom,
-                                            child: const Icon(
-                                              Icons.keyboard_arrow_down_rounded,
-                                              color: Colors.white,
-                                              size: 24,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                    _buildSideNav(localizations),
+                    Expanded(child: _buildMainContent(localizations)),
+                  ],
+                )
+              : Column(
+                  children: [
+                    _buildHeader(),
+                    Expanded(child: _buildMainContent(localizations)),
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                      child: MediaQuery.of(context).viewInsets.bottom == 0
+                          ? _buildQuickActionsBar(localizations)
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainContent(AppLocalizations localizations) {
+    return IndexedStack(
+      index: _currentPageIndex,
+      children: [
+        // Chat page
+        Column(
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  _messages.isEmpty
+                      ? _WelcomeScreen(
+                          preset: _selectedPreset,
+                          onSuggestionTap: (suggestion) {
+                            _inputController.text = suggestion;
+                          },
+                        )
+                      : _buildMessagesList(),
+                  // Scroll to bottom button positioned above input
+                  if (_messages.isNotEmpty)
+                    Positioned(
+                      bottom: 16,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: ScaleTransition(
+                          scale: _fabAnimation,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.green[400]!,
+                                  Colors.green[600]!,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.green.withOpacity(0.4),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
                                 ),
-                            ],
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              shape: const CircleBorder(),
+                              child: InkWell(
+                                customBorder: const CircleBorder(),
+                                onTap: _scrollToBottom,
+                                child: const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                        _buildInputArea(localizations),
-                      ],
+                      ),
                     ),
+                ],
+              ),
+            ),
+            _buildInputArea(localizations),
+          ],
+        ),
 
-                    // History page
-                    _buildHistoryPage(),
+        // History page
+        _buildHistoryPage(),
+      ],
+    );
+  }
+
+  Widget _buildSideNav(AppLocalizations localizations) {
+    return Container(
+      width: 64,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(right: BorderSide(color: Colors.grey[200]!, width: 1)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Doky',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    IconButton(
+                      icon: const Icon(Icons.add_comment_outlined),
+                      tooltip: localizations.chatNewConversation,
+                      onPressed: () {
+                        FirebaseAnalytics.instance.logEvent(name: 'new_chat');
+                        _clearChat();
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    IconButton(
+                      icon: Text(
+                        _selectedPreset.emoji,
+                        style: const TextStyle(fontSize: 22),
+                      ),
+                      tooltip: _getPresetName(context, _selectedPreset),
+                      onPressed: () {
+                        if (_currentPageIndex != 0) {
+                          _switchToPage(0);
+                        } else {
+                          _showPresetSelector();
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    IconButton(
+                      icon: Icon(
+                        Icons.history_outlined,
+                        color: _currentPageIndex == 1
+                            ? Colors.green[700]
+                            : Colors.grey[700],
+                      ),
+                      tooltip: localizations.menuHistory,
+                      onPressed: () => _switchToPage(1),
+                    ),
+                    if (_currentPageIndex == 1 && _chatHistory.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
+                        tooltip: localizations.deleteDialogConfirm,
+                        onPressed: _deleteAllChats,
+                      ),
+                    ],
+                    const Spacer(),
+                    IconButton(
+                      icon: Icon(
+                        _isIncognito ? Icons.visibility_off : Icons.visibility,
+                        color: _isIncognito
+                            ? Colors.amber[700]
+                            : Colors.grey[600],
+                      ),
+                      tooltip: _isIncognito
+                          ? 'Incognito Mode ON'
+                          : 'Incognito Mode OFF',
+                      onPressed: () {
+                        setState(() => _isIncognito = !_isIncognito);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    IconButton(
+                      icon: const Icon(Icons.info_outline),
+                      tooltip: 'Info',
+                      onPressed: () {
+                        FirebaseAnalytics.instance.logScreenView(
+                          screenName: 'info_screen',
+                        );
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const InfoScreen()),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
-
-              // Bottom quick actions bar (always visible)
-              AnimatedSize(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-                child: MediaQuery.of(context).viewInsets.bottom == 0
-                    ? _buildQuickActionsBar(localizations)
-                    : const SizedBox.shrink(),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -1416,9 +1528,12 @@ class _PresetSelectorSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.7,
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -1447,75 +1562,119 @@ class _PresetSelectorSheet extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Flexible(
-            child: ListView(
-              shrinkWrap: true,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: MedicalPreset.presets.map((preset) {
-                final isSelected = preset.id == selectedPreset.id;
-                return Container(
-                  margin: const EdgeInsets.symmetric(
-                    vertical: 6,
-                    horizontal: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.green[50] : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isSelected
-                          ? Colors.green[300]!
-                          : Colors.grey[300]!,
-                      width: isSelected ? 2 : 1,
-                    ),
-                  ),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () {
-                      Navigator.pop(context);
-                      onPresetSelected(preset);
+            child: isLandscape
+                ? GridView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 1.5,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                    itemCount: MedicalPreset.presets.length,
+                    itemBuilder: (context, index) {
+                      final preset = MedicalPreset.presets[index];
+                      return _buildPresetItem(context, preset, true);
                     },
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Text(
-                            preset.emoji,
-                            style: const TextStyle(fontSize: 32),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _getPresetName(context, preset),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _getPresetDescription(context, preset),
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (isSelected)
-                            Icon(Icons.check_circle, color: Colors.green[600]),
-                        ],
-                      ),
-                    ),
+                  )
+                : ListView(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    children: MedicalPreset.presets.map((preset) {
+                      return _buildPresetItem(context, preset, false);
+                    }).toList(),
                   ),
-                );
-              }).toList(),
-            ),
           ),
           const SizedBox(height: 16),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPresetItem(
+    BuildContext context,
+    MedicalPreset preset,
+    bool isGrid,
+  ) {
+    final isSelected = preset.id == selectedPreset.id;
+    return Container(
+      margin: isGrid
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.green[50] : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected ? Colors.green[300]! : Colors.grey[300]!,
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          Navigator.pop(context);
+          onPresetSelected(preset);
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: isGrid
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(preset.emoji, style: const TextStyle(fontSize: 32)),
+                    const SizedBox(height: 8),
+                    Text(
+                      _getPresetName(context, preset),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (isSelected) ...[
+                      const SizedBox(height: 4),
+                      Icon(
+                        Icons.check_circle,
+                        color: Colors.green[600],
+                        size: 16,
+                      ),
+                    ],
+                  ],
+                )
+              : Row(
+                  children: [
+                    Text(preset.emoji, style: const TextStyle(fontSize: 32)),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _getPresetName(context, preset),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _getPresetDescription(context, preset),
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (isSelected)
+                      Icon(Icons.check_circle, color: Colors.green[600]),
+                  ],
+                ),
+        ),
       ),
     );
   }
