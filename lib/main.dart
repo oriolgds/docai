@@ -3,6 +3,7 @@ import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/state/locale_scope.dart';
 import 'package:docai/state/theme_scope.dart';
 import 'package:docai/screens/native_chat_screen.dart';
+import 'package:docai/screens/splash_screen.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import 'dart:ui';
@@ -20,29 +21,93 @@ Future<void> main() async {
   timeago.setLocaleMessages('fr', timeago.FrMessages());
   timeago.setLocaleMessages('en', timeago.EnMessages());
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(const DocAIAppWrapper());
+}
 
-  // Pass all uncaught "fatal" errors from the framework to Crashlytics
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+class DocAIAppWrapper extends StatefulWidget {
+  const DocAIAppWrapper({super.key});
 
-  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
-  PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
+  @override
+  State<DocAIAppWrapper> createState() => _DocAIAppWrapperState();
+}
 
-  final localeController = LocaleController();
-  await localeController.loadSavedLocale();
+class _DocAIAppWrapperState extends State<DocAIAppWrapper> {
+  bool _isInitialized = false;
+  LocaleController? _localeController;
+  ThemeController? _themeController;
 
-  final themeController = ThemeController();
-  await themeController.loadSavedThemeMode();
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
+  }
 
-  runApp(
-    LocaleScope(
-      controller: localeController,
-      child: ThemeScope(controller: themeController, child: const DocAIApp()),
-    ),
-  );
+  Future<void> _initialize() async {
+    // Perform all initialization tasks
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+
+    // Pass all uncaught "fatal" errors from the framework to Crashlytics
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+    // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+
+    final localeController = LocaleController();
+    await localeController.loadSavedLocale();
+
+    final themeController = ThemeController();
+    await themeController.loadSavedThemeMode();
+
+    // Update state to transition from splash screen
+    if (mounted) {
+      setState(() {
+        _localeController = localeController;
+        _themeController = themeController;
+        _isInitialized = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Show a basic MaterialApp with splash screen while initializing
+    if (!_isInitialized ||
+        _localeController == null ||
+        _themeController == null) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+          useMaterial3: true,
+        ),
+        darkTheme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.green,
+            brightness: Brightness.dark,
+            surface: const Color(0xFF121212),
+          ),
+          scaffoldBackgroundColor: const Color(0xFF121212),
+          useMaterial3: true,
+        ),
+        home: SplashScreen(
+          onInitializationComplete: () {
+            // This callback is for future use if needed
+          },
+        ),
+      );
+    }
+
+    // Once initialized, show the full app
+    return LocaleScope(
+      controller: _localeController!,
+      child: ThemeScope(controller: _themeController!, child: const DocAIApp()),
+    );
+  }
 }
 
 class DocAIApp extends StatelessWidget {
