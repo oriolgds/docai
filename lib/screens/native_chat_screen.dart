@@ -29,7 +29,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
 
   MedicalPreset _selectedPreset = MedicalPreset.presets.first;
   bool _isLongResponse =
-      false; // false = fast (512 tokens), true = long (2048 tokens)
+      false; // false = fast (256 tokens), true = long (2048 tokens)
   bool _isGenerating = false;
   bool _isIncognito = false;
   List<ChatSession> _chatHistory = [];
@@ -282,7 +282,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         messages: apiMessages,
         model: 'openai',
         temperature: 1.0,
-        maxTokens: _isLongResponse ? 2048 : 512,
+        maxTokens: _isLongResponse ? 2048 : 256,
       );
 
       setState(() {
