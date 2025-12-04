@@ -70,21 +70,24 @@ class InfoScreen extends StatelessWidget {
       ),
     ];
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Text(
           localizations.menuMoreInfo,
-          style: const TextStyle(
-            color: Colors.black87,
+          style: TextStyle(
+            color: Theme.of(context).textTheme.titleLarge?.color,
             fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: false,
-        iconTheme: const IconThemeData(color: Colors.black87),
-        shadowColor: Colors.black.withOpacity(0.05),
+        iconTheme: Theme.of(context).iconTheme,
+        shadowColor: Colors.black.withValues(alpha: 0.05),
       ),
       body: ListView.separated(
         padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
@@ -104,8 +107,12 @@ class InfoScreen extends StatelessWidget {
 
           final item = items[index - 1];
 
+          final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+          final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
           return Card(
             elevation: 2,
+            color: cardColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -120,7 +127,7 @@ class InfoScreen extends StatelessWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: item.startColor.withOpacity(0.15),
+                        color: item.startColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(item.icon, color: item.startColor, size: 24),
@@ -133,8 +140,8 @@ class InfoScreen extends StatelessWidget {
                         children: [
                           Text(
                             item.title,
-                            style: const TextStyle(
-                              color: Colors.black87,
+                            style: TextStyle(
+                              color: textColor,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -143,7 +150,7 @@ class InfoScreen extends StatelessWidget {
                           Text(
                             item.subtitle,
                             style: TextStyle(
-                              color: Colors.grey[600],
+                              color: subtitleColor,
                               fontSize: 13,
                             ),
                           ),
@@ -151,7 +158,7 @@ class InfoScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Icon(Icons.open_in_new, color: Colors.grey[600], size: 20),
+                    Icon(Icons.open_in_new, color: subtitleColor, size: 20),
                   ],
                 ),
               ),
@@ -195,11 +202,20 @@ class _LanguageSelectorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final dropdownColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+
     return Card(
       elevation: 2,
+      color: cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.green[400]!, width: 2),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.primary,
+          width: 2,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -209,12 +225,16 @@ class _LanguageSelectorCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.language, color: Colors.green[600], size: 24),
+                Icon(
+                  Icons.language,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 24,
+                ),
                 const SizedBox(width: 12),
                 Text(
                   localizations.languageSelectorLabel,
-                  style: const TextStyle(
-                    color: Colors.black87,
+                  style: TextStyle(
+                    color: textColor,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -224,7 +244,9 @@ class _LanguageSelectorCard extends StatelessWidget {
             const SizedBox(height: 12),
             Container(
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.grey[100],
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -232,17 +254,19 @@ class _LanguageSelectorCard extends StatelessWidget {
                 child: DropdownButton<Locale>(
                   value: selectedLocale,
                   isExpanded: true,
-                  dropdownColor: Colors.white,
-                  iconEnabledColor: Colors.grey[700],
-                  style: TextStyle(color: Colors.grey[800], fontSize: 15),
+                  dropdownColor: dropdownColor,
+                  iconEnabledColor: isDark
+                      ? Colors.grey[400]
+                      : Colors.grey[700],
+                  style: TextStyle(color: textColor, fontSize: 15),
                   onChanged: onLocaleChanged,
                   items: supportedLocales.map((locale) {
                     return DropdownMenuItem<Locale>(
                       value: locale,
                       child: Text(
                         _languageName(localizations, locale),
-                        style: const TextStyle(
-                          color: Colors.black87,
+                        style: TextStyle(
+                          color: textColor,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

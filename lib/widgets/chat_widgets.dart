@@ -29,7 +29,7 @@ class PresetSelectorSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -77,7 +77,7 @@ class PresetSelectorSheet extends StatelessWidget {
                   border: Border.all(
                     color: isSelected
                         ? Colors.transparent
-                        : Colors.white.withOpacity(0.1),
+                        : Colors.white.withValues(alpha: 0.1),
                   ),
                 ),
                 child: Material(
@@ -110,7 +110,7 @@ class PresetSelectorSheet extends StatelessWidget {
                                 Text(
                                   preset.description,
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: Colors.white.withValues(alpha: 0.7),
                                     fontSize: 13,
                                   ),
                                 ),
@@ -183,7 +183,7 @@ class ModelSelectorSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -239,7 +239,7 @@ class ModelSelectorSheet extends StatelessWidget {
                     border: Border.all(
                       color: isSelected
                           ? Colors.transparent
-                          : Colors.white.withOpacity(0.1),
+                          : Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                   child: Material(
@@ -350,13 +350,13 @@ class HistoryDrawer extends StatelessWidget {
                         Icon(
                           Icons.history,
                           size: 64,
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'No hay chats guardados',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                             fontSize: 16,
                           ),
                         ),
@@ -404,7 +404,7 @@ class HistoryDrawer extends StatelessWidget {
                               color: const Color(0xFF2D2633),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.1),
+                                color: Colors.white.withValues(alpha: 0.1),
                               ),
                             ),
                             child: Material(
@@ -449,8 +449,8 @@ class HistoryDrawer extends StatelessWidget {
                                           Icon(
                                             Icons.chat_bubble_outline,
                                             size: 14,
-                                            color: Colors.white.withOpacity(
-                                              0.5,
+                                            color: Colors.white.withValues(
+                                              alpha: 0.5,
                                             ),
                                           ),
                                           const SizedBox(width: 4),
@@ -467,8 +467,8 @@ class HistoryDrawer extends StatelessWidget {
                                           Icon(
                                             Icons.access_time,
                                             size: 14,
-                                            color: Colors.white.withOpacity(
-                                              0.5,
+                                            color: Colors.white.withValues(
+                                              alpha: 0.5,
                                             ),
                                           ),
                                           const SizedBox(width: 4),
