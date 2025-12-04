@@ -661,39 +661,30 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Widget _buildResponseLengthToggle() {
-    return GestureDetector(
-      onTap: () {
-        setState(() => _isLongResponse = !_isLongResponse);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: _isLongResponse ? Colors.blue[50] : Colors.green[50],
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: _isLongResponse ? Colors.blue[300]! : Colors.green[300]!,
-            width: 1.5,
+    return Container(
+      decoration: BoxDecoration(
+        color: _isLongResponse ? Colors.blue[100] : Colors.green[100],
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: (_isLongResponse ? Colors.blue : Colors.green).withOpacity(
+              0.3,
+            ),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(
+          _isLongResponse ? Icons.article : Icons.bolt,
+          color: _isLongResponse ? Colors.blue[700] : Colors.green[700],
+          size: 20,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              _isLongResponse ? Icons.article : Icons.bolt,
-              size: 16,
-              color: _isLongResponse ? Colors.blue[700] : Colors.green[700],
-            ),
-            const SizedBox(width: 4),
-            Text(
-              _isLongResponse ? 'Long' : 'Fast',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: _isLongResponse ? Colors.blue[700] : Colors.green[700],
-              ),
-            ),
-          ],
-        ),
+        tooltip: _isLongResponse ? 'Long Response' : 'Fast Response',
+        onPressed: () {
+          setState(() => _isLongResponse = !_isLongResponse);
+        },
       ),
     );
   }
