@@ -3,7 +3,7 @@ import 'package:docai/models/chat_message.dart';
 class ChatSession {
   final String id;
   final List<ChatMessage> messages;
-  final String model;
+  final bool isLongResponse; // Response length preference
   final String preset;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -12,7 +12,7 @@ class ChatSession {
   ChatSession({
     required this.id,
     required this.messages,
-    required this.model,
+    this.isLongResponse = false,
     required this.preset,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -22,14 +22,14 @@ class ChatSession {
 
   ChatSession copyWith({
     List<ChatMessage>? messages,
-    String? model,
+    bool? isLongResponse,
     String? preset,
     String? title,
   }) {
     return ChatSession(
       id: id,
       messages: messages ?? this.messages,
-      model: model ?? this.model,
+      isLongResponse: isLongResponse ?? this.isLongResponse,
       preset: preset ?? this.preset,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
@@ -40,7 +40,7 @@ class ChatSession {
   Map<String, dynamic> toJson() => {
     'id': id,
     'messages': messages.map((m) => m.toJson()).toList(),
-    'model': model,
+    'isLongResponse': isLongResponse,
     'preset': preset,
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
@@ -52,7 +52,7 @@ class ChatSession {
     messages: (json['messages'] as List)
         .map((m) => ChatMessage.fromJson(m as Map<String, dynamic>))
         .toList(),
-    model: json['model'] as String,
+    isLongResponse: json['isLongResponse'] as bool? ?? false,
     preset: json['preset'] as String,
     createdAt: DateTime.parse(json['createdAt'] as String),
     updatedAt: DateTime.parse(json['updatedAt'] as String),

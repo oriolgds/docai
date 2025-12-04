@@ -26,9 +26,9 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
 
-  List<String> _availableModels = [];
-  String _selectedModel = 'openai';
   MedicalPreset _selectedPreset = MedicalPreset.presets.first;
+  bool _isLongResponse =
+      false; // false = fast (512 tokens), true = long (2048 tokens)
   bool _isGenerating = false;
   bool _isIncognito = false;
   List<ChatSession> _chatHistory = [];
@@ -42,7 +42,6 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   @override
   void initState() {
     super.initState();
-    _loadModels();
     _loadChatHistory();
 
     _fabController = AnimationController(
@@ -96,23 +95,6 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     }
   }
 
-  Future<void> _loadModels() async {
-    try {
-      final models = await _service.fetchModels();
-      setState(() {
-        _availableModels = models;
-        if (models.isNotEmpty && !models.contains(_selectedModel)) {
-          _selectedModel = models.first;
-        }
-      });
-    } catch (e) {
-      debugPrint('Error loading models: $e');
-      setState(() {
-        _availableModels = ['openai', 'mistral', 'llama'];
-      });
-    }
-  }
-
   Future<void> _loadChatHistory() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -139,7 +121,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       final session = ChatSession(
         id: _currentSessionId ?? const Uuid().v4(),
         messages: List.from(_messages),
-        model: _selectedModel,
+        isLongResponse: _isLongResponse,
         preset: _selectedPreset.id,
         title: _generateTitle(),
       );
@@ -191,7 +173,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     setState(() {
       _messages.clear();
       _messages.addAll(session.messages);
-      _selectedModel = session.model;
+      _isLongResponse = session.isLongResponse;
       _selectedPreset = MedicalPreset.getById(session.preset);
       _currentSessionId = session.id;
       _isIncognito = false;
@@ -242,8 +224,9 @@ class _NativeChatScreenState extends State<NativeChatScreen>
 
       final response = await _service.generateText(
         messages: apiMessages,
-        model: _selectedModel,
+        model: 'openai',
         temperature: 1.0,
+        maxTokens: _isLongResponse ? 2048 : 512,
       );
 
       setState(() {
@@ -337,25 +320,6 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     }
   }
 
-  void _showModelSelector() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _ModelAndPrivacySheet(
-        selectedModel: _selectedModel,
-        isIncognito: _isIncognito,
-        availableModels: _availableModels,
-        onModelChanged: (model) {
-          setState(() => _selectedModel = model);
-        },
-        onIncognitoChanged: (value) {
-          setState(() => _isIncognito = value);
-        },
-      ),
-    );
-  }
-
   void _showPresetSelector() {
     showModalBottomSheet(
       context: context,
@@ -410,96 +374,106 @@ class _NativeChatScreenState extends State<NativeChatScreen>
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Simple minimal header
-            _buildHeader(),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Simple minimal header
+              _buildHeader(),
 
-            // Pages with IndexedStack (no animation)
-            Expanded(
-              child: IndexedStack(
-                index: _currentPageIndex,
-                children: [
-                  // Chat page
-                  Column(
-                    children: [
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            _messages.isEmpty
-                                ? _WelcomeScreen(
-                                    preset: _selectedPreset,
-                                    onSuggestionTap: (suggestion) {
-                                      _inputController.text = suggestion;
-                                    },
-                                  )
-                                : _buildMessagesList(),
-                            // Scroll to bottom button positioned above input
-                            if (_messages.isNotEmpty)
-                              Positioned(
-                                bottom: 16,
-                                left: 0,
-                                right: 0,
-                                child: Center(
-                                  child: ScaleTransition(
-                                    scale: _fabAnimation,
-                                    child: Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Colors.green[400]!,
-                                            Colors.green[600]!,
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.green.withOpacity(
-                                              0.4,
-                                            ),
-                                            blurRadius: 12,
-                                            offset: const Offset(0, 4),
+              // Pages with IndexedStack (no animation)
+              Expanded(
+                child: IndexedStack(
+                  index: _currentPageIndex,
+                  children: [
+                    // Chat page
+                    Column(
+                      children: [
+                        Expanded(
+                          child: Stack(
+                            children: [
+                              _messages.isEmpty
+                                  ? _WelcomeScreen(
+                                      preset: _selectedPreset,
+                                      onSuggestionTap: (suggestion) {
+                                        _inputController.text = suggestion;
+                                      },
+                                    )
+                                  : _buildMessagesList(),
+                              // Scroll to bottom button positioned above input
+                              if (_messages.isNotEmpty)
+                                Positioned(
+                                  bottom: 16,
+                                  left: 0,
+                                  right: 0,
+                                  child: Center(
+                                    child: ScaleTransition(
+                                      scale: _fabAnimation,
+                                      child: Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.green[400]!,
+                                              Colors.green[600]!,
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
                                           ),
-                                        ],
-                                      ),
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        shape: const CircleBorder(),
-                                        child: InkWell(
-                                          customBorder: const CircleBorder(),
-                                          onTap: _scrollToBottom,
-                                          child: const Icon(
-                                            Icons.keyboard_arrow_down_rounded,
-                                            color: Colors.white,
-                                            size: 24,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.green.withOpacity(
+                                                0.4,
+                                              ),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          shape: const CircleBorder(),
+                                          child: InkWell(
+                                            customBorder: const CircleBorder(),
+                                            onTap: _scrollToBottom,
+                                            child: const Icon(
+                                              Icons.keyboard_arrow_down_rounded,
+                                              color: Colors.white,
+                                              size: 24,
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      _buildInputArea(localizations),
-                    ],
-                  ),
+                        _buildInputArea(localizations),
+                      ],
+                    ),
 
-                  // History page
-                  _buildHistoryPage(),
-                ],
+                    // History page
+                    _buildHistoryPage(),
+                  ],
+                ),
               ),
-            ),
 
-            // Bottom quick actions bar (always visible)
-            _buildQuickActionsBar(localizations),
-          ],
+              // Bottom quick actions bar (always visible)
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                child: MediaQuery.of(context).viewInsets.bottom == 0
+                    ? _buildQuickActionsBar(localizations)
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -531,33 +505,17 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               tooltip: AppLocalizations.of(context)!.deleteDialogConfirm,
               onPressed: _deleteAllChats,
             ),
-          if (_isIncognito)
-            Container(
-              margin: const EdgeInsets.only(right: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.amber[100],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.visibility_off,
-                    size: 16,
-                    color: Colors.amber[900],
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Incógnito',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.amber[900],
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+          // Incognito mode toggle
+          IconButton(
+            icon: Icon(
+              _isIncognito ? Icons.visibility_off : Icons.visibility,
+              color: _isIncognito ? Colors.amber[700] : Colors.grey[600],
             ),
+            tooltip: _isIncognito ? 'Incognito Mode ON' : 'Incognito Mode OFF',
+            onPressed: () {
+              setState(() => _isIncognito = !_isIncognito);
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.add_comment_outlined),
             tooltip: AppLocalizations.of(context)!.chatNewConversation,
@@ -652,18 +610,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           ),
           const SizedBox(width: 8),
           if (hasText) ...[
-            // Model selector button
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                icon: Icon(Icons.tune, color: Colors.grey[700], size: 20),
-                tooltip: 'Model & Settings',
-                onPressed: _showModelSelector,
-              ),
-            ),
+            // Response length toggle button
+            _buildResponseLengthToggle(),
             const SizedBox(width: 8),
             // Send button
             _buildSendButton(),
@@ -717,6 +665,35 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Voice input coming soon!')),
           );
+        },
+      ),
+    );
+  }
+
+  Widget _buildResponseLengthToggle() {
+    return Container(
+      decoration: BoxDecoration(
+        color: _isLongResponse ? Colors.blue[100] : Colors.green[100],
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: (_isLongResponse ? Colors.blue : Colors.green).withOpacity(
+              0.3,
+            ),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(
+          _isLongResponse ? Icons.article : Icons.bolt,
+          color: _isLongResponse ? Colors.blue[700] : Colors.green[700],
+          size: 20,
+        ),
+        tooltip: _isLongResponse ? 'Long Response' : 'Fast Response',
+        onPressed: () {
+          setState(() => _isLongResponse = !_isLongResponse);
         },
       ),
     );
@@ -1385,141 +1362,6 @@ class _QuickActionButton extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-// Model & Privacy Settings Sheet
-class _ModelAndPrivacySheet extends StatelessWidget {
-  final String selectedModel;
-  final bool isIncognito;
-  final List<String> availableModels;
-  final ValueChanged<String> onModelChanged;
-  final ValueChanged<bool> onIncognitoChanged;
-
-  const _ModelAndPrivacySheet({
-    required this.selectedModel,
-    required this.isIncognito,
-    required this.availableModels,
-    required this.onModelChanged,
-    required this.onIncognitoChanged,
-  });
-
-  String _getModelDisplayName(String model) {
-    final names = {
-      'openai': 'OpenAI (GPT-4o-mini)',
-      'mistral': 'Mistral Large',
-      'llama': 'Llama 3',
-      'claude': 'Claude',
-      'gemini': 'Gemini',
-    };
-    return names[model.toLowerCase()] ?? model.toUpperCase();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.7,
-      ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              '⚙️ Model & Privacy',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Flexible(
-            child: ListView(
-              shrinkWrap: true,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              children: [
-                // AI Model Section
-                Row(
-                  children: [
-                    Icon(Icons.psychology, size: 20, color: Colors.grey[700]),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'AI Model',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ...availableModels.map((model) {
-                  return RadioListTile<String>(
-                    value: model,
-                    groupValue: selectedModel,
-                    onChanged: (value) {
-                      if (value != null) {
-                        onModelChanged(value);
-                        Navigator.pop(context);
-                      }
-                    },
-                    title: Text(_getModelDisplayName(model)),
-                    dense: true,
-                    activeColor: Colors.blue[600],
-                  );
-                }),
-
-                const Divider(height: 32),
-
-                // Privacy Section
-                Row(
-                  children: [
-                    Icon(Icons.lock_outline, size: 20, color: Colors.grey[700]),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Privacy',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                SwitchListTile(
-                  value: isIncognito,
-                  onChanged: (value) {
-                    onIncognitoChanged(value);
-                    Navigator.pop(context);
-                  },
-                  title: const Text('Incognito Mode'),
-                  subtitle: const Text(
-                    "Messages won't be saved to history",
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  activeThumbColor: Colors.green[600],
-                ),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
