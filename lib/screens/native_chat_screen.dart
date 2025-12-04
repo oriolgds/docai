@@ -29,13 +29,14 @@ class _NativeChatScreenState extends State<NativeChatScreen>
 
   MedicalPreset _selectedPreset = MedicalPreset.presets.first;
   bool _isLongResponse =
-      false; // false = fast (512 tokens), true = long (2048 tokens)
+      false; // false = fast (256 tokens), true = long (2048 tokens)
   bool _isGenerating = false;
   bool _isIncognito = false;
   List<ChatSession> _chatHistory = [];
   String? _currentSessionId;
   int _currentPageIndex = 0; // 0 = chat, 1 = history
   bool _isNearBottom = true; // Track if user is near bottom
+  List<String> _currentSuggestions = []; // AI-generated follow-up suggestions
 
   late AnimationController _fabController;
   late Animation<double> _fabAnimation;
@@ -124,7 +125,10 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         messages: List.from(_messages),
         isLongResponse: _isLongResponse,
         preset: _selectedPreset.id,
-        title: _generateTitle(),
+        title: await _generateTitle(),
+        followUpSuggestions: _currentSuggestions.isNotEmpty
+            ? _currentSuggestions
+            : null,
       );
 
       _currentSessionId = session.id;
@@ -150,11 +154,60 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     }
   }
 
-  String _generateTitle() {
+  Future<void> _generateFollowUpSuggestions() async {
+    try {
+      // Only generate suggestions after assistant has responded (at least 2 messages and last is assistant)
+      if (_messages.length < 2) return;
+      if (_messages.last.role != MessageRole.assistant) return;
+
+      final conversationHistory = [
+        {'role': 'system', 'content': _selectedPreset.systemPrompt},
+        ..._messages.map((m) => m.toApiFormat()),
+      ];
+
+      // Get current language from locale
+      final language = Localizations.localeOf(context).languageCode;
+
+      final suggestions = await _service.generateFollowUpSuggestions(
+        conversationHistory: conversationHistory,
+        language: language,
+      );
+
+      setState(() {
+        _currentSuggestions = suggestions;
+      });
+    } catch (e) {
+      debugPrint('Error generating follow-up suggestions: $e');
+    }
+  }
+
+  Future<String> _generateTitle() async {
     if (_messages.isEmpty) {
       return AppLocalizations.of(context)!.chatNewConversation;
     }
 
+    // Use AI to generate title if we have at least one complete exchange
+    if (_messages.length >= 2) {
+      try {
+        final conversationHistory = _messages
+            .map((m) => m.toApiFormat())
+            .toList();
+
+        // Get current language from locale
+        final language = Localizations.localeOf(context).languageCode;
+
+        final title = await _service.generateConversationTitle(
+          conversationHistory: conversationHistory,
+          language: language,
+        );
+        return title;
+      } catch (e) {
+        debugPrint('Error generating AI title: $e');
+        // Fall back to first message on error
+      }
+    }
+
+    // Fallback: use first user message
     final firstUserMessage = _messages.firstWhere(
       (m) => m.role == MessageRole.user,
       orElse: () => _messages.first,
@@ -179,6 +232,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       _currentSessionId = session.id;
       _isIncognito = false;
       _currentPageIndex = 0; // Switch back to chat page
+      _currentSuggestions = session.followUpSuggestions ?? [];
     });
 
     _scrollToBottom();
@@ -198,6 +252,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       _messages.add(userMessage);
       _isGenerating = true;
       _inputController.clear();
+      _currentSuggestions = []; // Clear suggestions when sending a new message
     });
 
     await FirebaseAnalytics.instance.logEvent(name: 'send_message');
@@ -227,7 +282,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         messages: apiMessages,
         model: 'openai',
         temperature: 1.0,
-        maxTokens: _isLongResponse ? 2048 : 512,
+        maxTokens: _isLongResponse ? 2048 : 256,
       );
 
       setState(() {
@@ -241,6 +296,9 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           );
         }
       });
+
+      // Generate follow-up suggestions asynchronously
+      _generateFollowUpSuggestions();
 
       await _saveChatHistory();
     } catch (e) {
@@ -284,6 +342,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       _messages.clear();
       _currentSessionId = null;
       _isNearBottom = true;
+      _currentSuggestions = [];
     });
     // Reset FAB animation state
     if (_fabController.isCompleted) {
@@ -696,8 +755,21 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      itemCount: _messages.length,
+      itemCount: _messages.length + (_currentSuggestions.isNotEmpty ? 1 : 0),
       itemBuilder: (context, index) {
+        // Show follow-up suggestions after the last message
+        if (index == _messages.length && _currentSuggestions.isNotEmpty) {
+          return Padding(
+            padding: const EdgeInsets.only(left: 52, top: 8),
+            child: _FollowUpSuggestions(
+              suggestions: _currentSuggestions,
+              onSuggestionTap: (suggestion) {
+                _inputController.text = suggestion;
+              },
+            ),
+          );
+        }
+
         final message = _messages[index];
         final isUser = message.role == MessageRole.user;
         final showAvatar =
@@ -1603,6 +1675,91 @@ class _SuggestionChip extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// Follow-up Suggestions Widget
+class _FollowUpSuggestions extends StatelessWidget {
+  final List<String> suggestions;
+  final ValueChanged<String> onSuggestionTap;
+
+  const _FollowUpSuggestions({
+    required this.suggestions,
+    required this.onSuggestionTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            '💡 Follow up',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+        ),
+        ...suggestions.map((suggestion) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: InkWell(
+              onTap: () => onSuggestionTap(suggestion),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.green[900]!.withValues(alpha: 0.2)
+                      : Colors.green[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.green[700]!.withValues(alpha: 0.3)
+                        : Colors.green[200]!,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      size: 16,
+                      color: isDark ? Colors.green[300] : Colors.green[700],
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        suggestion,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.green[200] : Colors.green[900],
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 12,
+                      color: isDark ? Colors.green[400] : Colors.green[600],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 }

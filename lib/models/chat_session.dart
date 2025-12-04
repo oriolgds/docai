@@ -8,6 +8,7 @@ class ChatSession {
   final DateTime createdAt;
   final DateTime updatedAt;
   String? title;
+  List<String>? followUpSuggestions; // AI-generated follow-up suggestions
 
   ChatSession({
     required this.id,
@@ -17,6 +18,7 @@ class ChatSession {
     DateTime? createdAt,
     DateTime? updatedAt,
     this.title,
+    this.followUpSuggestions,
   }) : createdAt = createdAt ?? DateTime.now(),
        updatedAt = updatedAt ?? DateTime.now();
 
@@ -25,6 +27,7 @@ class ChatSession {
     bool? isLongResponse,
     String? preset,
     String? title,
+    List<String>? followUpSuggestions,
   }) {
     return ChatSession(
       id: id,
@@ -34,6 +37,7 @@ class ChatSession {
       createdAt: createdAt,
       updatedAt: DateTime.now(),
       title: title ?? this.title,
+      followUpSuggestions: followUpSuggestions ?? this.followUpSuggestions,
     );
   }
 
@@ -45,6 +49,7 @@ class ChatSession {
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
     'title': title,
+    'followUpSuggestions': followUpSuggestions,
   };
 
   factory ChatSession.fromJson(Map<String, dynamic> json) => ChatSession(
@@ -57,5 +62,8 @@ class ChatSession {
     createdAt: DateTime.parse(json['createdAt'] as String),
     updatedAt: DateTime.parse(json['updatedAt'] as String),
     title: json['title'] as String?,
+    followUpSuggestions: (json['followUpSuggestions'] as List<dynamic>?)
+        ?.map((e) => e as String)
+        .toList(),
   );
 }
