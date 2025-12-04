@@ -837,6 +837,19 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                       size: 16,
                                       color: Colors.grey[600],
                                     ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      timeago.format(
+                                        session.updatedAt,
+                                        locale: Localizations.localeOf(
+                                          context,
+                                        ).languageCode,
+                                      ),
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 13,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ],
@@ -1500,7 +1513,7 @@ class _ModelAndPrivacySheet extends StatelessWidget {
                     "Messages won't be saved to history",
                     style: TextStyle(fontSize: 12),
                   ),
-                  activeColor: Colors.green[600],
+                  activeThumbColor: Colors.green[600],
                 ),
                 const SizedBox(height: 24),
               ],
