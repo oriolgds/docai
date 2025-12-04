@@ -559,9 +559,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                     IconButton(
                       icon: Icon(
                         _isIncognito ? Icons.visibility_off : Icons.visibility,
-                        color: _isIncognito
-                            ? Colors.amber[700]
-                            : Theme.of(context).iconTheme.color,
+                        color: _isIncognito ? Colors.amber[700] : null,
                       ),
                       tooltip: _isIncognito
                           ? 'Incognito Mode ON'
@@ -645,9 +643,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           IconButton(
             icon: Icon(
               _isIncognito ? Icons.visibility_off : Icons.visibility,
-              color: _isIncognito
-                  ? Colors.amber[700]
-                  : Theme.of(context).iconTheme.color,
+              color: _isIncognito ? Colors.amber[700] : null,
             ),
             tooltip: _isIncognito ? 'Incognito Mode ON' : 'Incognito Mode OFF',
             onPressed: () {
@@ -822,11 +818,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         shape: BoxShape.circle,
       ),
       child: IconButton(
-        icon: Icon(
-          Icons.mic_none,
-          color: Theme.of(context).iconTheme.color,
-          size: 22,
-        ),
+        icon: const Icon(Icons.mic_none, size: 22),
         onPressed: () {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Voice input coming soon!')),
@@ -1660,7 +1652,7 @@ class _QuickActionButton extends StatelessWidget {
                       ? (Theme.of(context).brightness == Brightness.dark
                             ? Colors.green[300]
                             : Colors.green[700])
-                      : Theme.of(context).iconTheme.color,
+                      : null,
                 ),
               ],
               const SizedBox(height: 4),
