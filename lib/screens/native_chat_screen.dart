@@ -1239,8 +1239,88 @@ class _WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
-
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
     final suggestions = _getSuggestions(context);
+
+    if (isLandscape) {
+      return Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Left side: Logo and Info
+              Expanded(
+                flex: 4,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildLogo(),
+                    const SizedBox(height: 24),
+                    Text(
+                      '${preset.emoji} ${_getPresetName(context, preset)}',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _getPresetDescription(context, preset),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      localizations.welcomeTitle,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      localizations.welcomeSubtitle,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 32),
+              // Right side: Suggestions in 2 columns
+              Expanded(
+                flex: 5,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: suggestions.map((suggestion) {
+                        return SizedBox(
+                          width: (constraints.maxWidth - 12) / 2,
+                          child: _SuggestionChip(
+                            text: suggestion,
+                            onTap: () => onSuggestionTap(suggestion),
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Center(
       child: SingleChildScrollView(
@@ -1248,38 +1328,7 @@ class _WelcomeScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TweenAnimationBuilder(
-              tween: Tween<double>(begin: 0, end: 1),
-              duration: const Duration(milliseconds: 800),
-              builder: (context, double value, child) {
-                return Transform.scale(
-                  scale: value,
-                  child: Opacity(opacity: value, child: child),
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.green.withOpacity(0.2),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/logo/logo compress.png',
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
+            _buildLogo(),
             const SizedBox(height: 32),
             Text(
               '${preset.emoji} ${_getPresetName(context, preset)}',
@@ -1319,6 +1368,41 @@ class _WelcomeScreen extends StatelessWidget {
               );
             }),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogo() {
+    return TweenAnimationBuilder(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 800),
+      builder: (context, double value, child) {
+        return Transform.scale(
+          scale: value,
+          child: Opacity(opacity: value, child: child),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.green[50],
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.green.withOpacity(0.2),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: ClipOval(
+          child: Image.asset(
+            'assets/logo/logo compress.png',
+            width: 100,
+            height: 100,
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );
