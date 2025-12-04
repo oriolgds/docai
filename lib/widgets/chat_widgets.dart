@@ -9,6 +9,7 @@ class PresetSelectorSheet extends StatelessWidget {
   final ValueChanged<MedicalPreset> onPresetSelected;
 
   const PresetSelectorSheet({
+    super.key,
     required this.selectedPreset,
     required this.onPresetSelected,
   });
@@ -139,6 +140,7 @@ class ModelSelectorSheet extends StatelessWidget {
   final ValueChanged<String> onModelSelected;
 
   const ModelSelectorSheet({
+    super.key,
     required this.availableModels,
     required this.selectedModel,
     required this.onModelSelected,
@@ -291,6 +293,7 @@ class HistoryDrawer extends StatelessWidget {
   final VoidCallback onClearAll;
 
   const HistoryDrawer({
+    super.key,
     required this.chatHistory,
     required this.onSessionSelected,
     required this.onDeleteSession,
@@ -503,7 +506,7 @@ class HistoryDrawer extends StatelessWidget {
 class ConfirmNewChatDialog extends StatelessWidget {
   final VoidCallback onConfirm;
 
-  const ConfirmNewChatDialog({required this.onConfirm});
+  const ConfirmNewChatDialog({super.key, required this.onConfirm});
 
   @override
   Widget build(BuildContext context) {
@@ -544,7 +547,7 @@ class ConfirmNewChatDialog extends StatelessWidget {
 class ConfirmPresetChangeDialog extends StatelessWidget {
   final VoidCallback onConfirm;
 
-  const ConfirmPresetChangeDialog({required this.onConfirm});
+  const ConfirmPresetChangeDialog({super.key, required this.onConfirm});
 
   @override
   Widget build(BuildContext context) {
@@ -580,7 +583,7 @@ class ConfirmPresetChangeDialog extends StatelessWidget {
 class ConfirmDeleteAllDialog extends StatelessWidget {
   final VoidCallback onConfirm;
 
-  const ConfirmDeleteAllDialog({required this.onConfirm});
+  const ConfirmDeleteAllDialog({super.key, required this.onConfirm});
 
   @override
   Widget build(BuildContext context) {

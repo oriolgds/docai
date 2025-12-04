@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/state/locale_scope.dart';
 import 'package:docai/screens/native_chat_screen.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 import 'dart:ui';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,6 +11,13 @@ import 'package:docai/firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize timeago locales for all supported languages
+  timeago.setLocaleMessages('es', timeago.EsMessages());
+  timeago.setLocaleMessages('ca', timeago.CaMessages());
+  timeago.setLocaleMessages('de', timeago.DeMessages());
+  timeago.setLocaleMessages('fr', timeago.FrMessages());
+  timeago.setLocaleMessages('en', timeago.EnMessages());
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
