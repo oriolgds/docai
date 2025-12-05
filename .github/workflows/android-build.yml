@@ -3,8 +3,6 @@ name: Build Android APK and AAB
 on:
   push:
     branches: [ main ]  # Solo main para reducir ejecuciones
-  pull_request:
-    branches: [ main, develop ]
   workflow_dispatch:
     inputs:
       build_type:
