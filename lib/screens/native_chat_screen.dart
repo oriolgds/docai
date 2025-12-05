@@ -112,11 +112,22 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     }
   }
 
+  Future<void> _persistChatHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final historyJson = _chatHistory
+          .map((session) => jsonEncode(session.toJson()))
+          .toList();
+      await prefs.setStringList('chat_history', historyJson);
+    } catch (e) {
+      debugPrint('Error persisting chat history: $e');
+    }
+  }
+
   Future<void> _saveChatHistory() async {
     if (_isIncognito || _messages.isEmpty) return;
 
     try {
-      final prefs = await SharedPreferences.getInstance();
       final sessionId = _currentSessionId ?? const Uuid().v4();
       _currentSessionId = sessionId;
 
@@ -144,10 +155,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       }
 
       // Save to disk immediately with provisional title
-      final historyJson = _chatHistory
-          .map((session) => jsonEncode(session.toJson()))
-          .toList();
-      await prefs.setStringList('chat_history', historyJson);
+      await _persistChatHistory();
 
       // Trigger UI update to show in history immediately
       setState(() {});
@@ -185,7 +193,6 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       final aiTitle = await _generateTitle();
 
       // Update the session with AI-generated title
-      final prefs = await SharedPreferences.getInstance();
       final existingIndex = _chatHistory.indexWhere((s) => s.id == sessionId);
 
       if (existingIndex != -1) {
@@ -194,10 +201,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         );
 
         // Save updated history
-        final historyJson = _chatHistory
-            .map((session) => jsonEncode(session.toJson()))
-            .toList();
-        await prefs.setStringList('chat_history', historyJson);
+        await _persistChatHistory();
 
         // Update UI
         setState(() {});
@@ -423,7 +427,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         _chatHistory.clear();
         _clearChat();
       });
-      await _saveChatHistory(); // This will save the empty list
+      await _persistChatHistory(); // This will save the empty list
       await FirebaseAnalytics.instance.logEvent(name: 'delete_all_history');
     }
   }
@@ -1051,7 +1055,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                             _clearChat();
                           }
                         });
-                        _saveChatHistory();
+                        _persistChatHistory();
                         // Snackbar removed as requested
                       },
                       child: Card(
