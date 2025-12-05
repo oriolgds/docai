@@ -117,38 +117,94 @@ class _NativeChatScreenState extends State<NativeChatScreen>
 
     try {
       final prefs = await SharedPreferences.getInstance();
+      final sessionId = _currentSessionId ?? const Uuid().v4();
+      _currentSessionId = sessionId;
 
-      final session = ChatSession(
-        id: _currentSessionId ?? const Uuid().v4(),
+      // First, save with provisional title immediately
+      final provisionalSession = ChatSession(
+        id: sessionId,
         messages: List.from(_messages),
         isLongResponse: _isLongResponse,
         preset: _selectedPreset.id,
-        title: await _generateTitle(),
+        title: _getProvisionalTitle(),
         followUpSuggestions: _currentSuggestions.isNotEmpty
             ? _currentSuggestions
             : null,
       );
 
-      _currentSessionId = session.id;
-
-      final existingIndex = _chatHistory.indexWhere((s) => s.id == session.id);
+      final existingIndex = _chatHistory.indexWhere((s) => s.id == sessionId);
       if (existingIndex != -1) {
-        _chatHistory[existingIndex] = session;
+        _chatHistory[existingIndex] = provisionalSession;
       } else {
-        _chatHistory.insert(0, session);
+        _chatHistory.insert(0, provisionalSession);
       }
 
       if (_chatHistory.length > 50) {
         _chatHistory = _chatHistory.sublist(0, 50);
       }
 
+      // Save to disk immediately with provisional title
       final historyJson = _chatHistory
           .map((session) => jsonEncode(session.toJson()))
           .toList();
-
       await prefs.setStringList('chat_history', historyJson);
+
+      // Trigger UI update to show in history immediately
+      setState(() {});
+
+      // Generate AI title asynchronously and update
+      _generateAndUpdateTitle(sessionId);
     } catch (e) {
       debugPrint('Error saving chat history: $e');
+    }
+  }
+
+  String _getProvisionalTitle() {
+    if (_messages.isEmpty) {
+      return AppLocalizations.of(context)!.chatNewConversation;
+    }
+
+    // Use first user message as provisional title
+    final firstUserMessage = _messages.firstWhere(
+      (m) => m.role == MessageRole.user,
+      orElse: () => _messages.first,
+    );
+
+    final title = firstUserMessage.content.substring(
+      0,
+      firstUserMessage.content.length > 50
+          ? 50
+          : firstUserMessage.content.length,
+    );
+
+    return title.length < firstUserMessage.content.length ? '$title...' : title;
+  }
+
+  Future<void> _generateAndUpdateTitle(String sessionId) async {
+    try {
+      final aiTitle = await _generateTitle();
+
+      // Update the session with AI-generated title
+      final prefs = await SharedPreferences.getInstance();
+      final existingIndex = _chatHistory.indexWhere((s) => s.id == sessionId);
+
+      if (existingIndex != -1) {
+        _chatHistory[existingIndex] = _chatHistory[existingIndex].copyWith(
+          title: aiTitle,
+        );
+
+        // Save updated history
+        final historyJson = _chatHistory
+            .map((session) => jsonEncode(session.toJson()))
+            .toList();
+        await prefs.setStringList('chat_history', historyJson);
+
+        // Update UI
+        setState(() {});
+      }
+    } catch (e) {
+      debugPrint('Error updating with AI title: $e');
+      // If AI title generation fails, keep the provisional title
     }
   }
 
@@ -180,45 +236,31 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Future<String> _generateTitle() async {
-    if (_messages.isEmpty) {
-      return AppLocalizations.of(context)!.chatNewConversation;
+    // This method now only handles AI title generation
+    // Fallback to provisional title is handled by _getProvisionalTitle()
+
+    if (_messages.isEmpty || _messages.length < 2) {
+      return _getProvisionalTitle();
     }
 
-    // Use AI to generate title if we have at least one complete exchange
-    if (_messages.length >= 2) {
-      try {
-        final conversationHistory = _messages
-            .map((m) => m.toApiFormat())
-            .toList();
+    try {
+      final conversationHistory = _messages
+          .map((m) => m.toApiFormat())
+          .toList();
 
-        // Get current language from locale
-        final language = Localizations.localeOf(context).languageCode;
+      // Get current language from locale
+      final language = Localizations.localeOf(context).languageCode;
 
-        final title = await _service.generateConversationTitle(
-          conversationHistory: conversationHistory,
-          language: language,
-        );
-        return title;
-      } catch (e) {
-        debugPrint('Error generating AI title: $e');
-        // Fall back to first message on error
-      }
+      final title = await _service.generateConversationTitle(
+        conversationHistory: conversationHistory,
+        language: language,
+      );
+      return title;
+    } catch (e) {
+      debugPrint('Error generating AI title: $e');
+      // Fall back to provisional title on error
+      return _getProvisionalTitle();
     }
-
-    // Fallback: use first user message
-    final firstUserMessage = _messages.firstWhere(
-      (m) => m.role == MessageRole.user,
-      orElse: () => _messages.first,
-    );
-
-    final title = firstUserMessage.content.substring(
-      0,
-      firstUserMessage.content.length > 50
-          ? 50
-          : firstUserMessage.content.length,
-    );
-
-    return title.length < firstUserMessage.content.length ? '$title...' : title;
   }
 
   void _loadChatSession(ChatSession session) {
@@ -624,14 +666,20 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                     IconButton(
                       icon: Icon(
                         _isIncognito ? Icons.visibility_off : Icons.visibility,
-                        color: _isIncognito ? Colors.amber[700] : null,
+                        color: _isIncognito
+                            ? Colors.amber[700]
+                            : (_messages.isNotEmpty ? Colors.grey : null),
                       ),
-                      tooltip: _isIncognito
-                          ? 'Incognito Mode ON'
-                          : 'Incognito Mode OFF',
-                      onPressed: () {
-                        setState(() => _isIncognito = !_isIncognito);
-                      },
+                      tooltip: _messages.isNotEmpty
+                          ? 'Cannot change incognito mode during conversation'
+                          : (_isIncognito
+                                ? 'Incognito Mode ON'
+                                : 'Incognito Mode OFF'),
+                      onPressed: _messages.isEmpty
+                          ? () {
+                              setState(() => _isIncognito = !_isIncognito);
+                            }
+                          : null,
                     ),
                     const SizedBox(height: 8),
                     // Theme toggle
@@ -709,14 +757,18 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             IconButton(
               icon: Icon(
                 _isIncognito ? Icons.visibility_off : Icons.visibility,
-                color: _isIncognito ? Colors.amber[700] : null,
+                color: _isIncognito
+                    ? Colors.amber[700]
+                    : (_messages.isNotEmpty ? Colors.grey : null),
               ),
-              tooltip: _isIncognito
-                  ? 'Incognito Mode ON'
-                  : 'Incognito Mode OFF',
-              onPressed: () {
-                setState(() => _isIncognito = !_isIncognito);
-              },
+              tooltip: _messages.isNotEmpty
+                  ? 'Cannot change incognito mode during conversation'
+                  : (_isIncognito ? 'Incognito Mode ON' : 'Incognito Mode OFF'),
+              onPressed: _messages.isEmpty
+                  ? () {
+                      setState(() => _isIncognito = !_isIncognito);
+                    }
+                  : null,
             ),
           IconButton(
             icon: Icon(
