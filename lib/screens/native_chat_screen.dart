@@ -701,16 +701,19 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               onPressed: _deleteAllChats,
             ),
           // Incognito mode toggle
-          IconButton(
-            icon: Icon(
-              _isIncognito ? Icons.visibility_off : Icons.visibility,
-              color: _isIncognito ? Colors.amber[700] : null,
+          if (_currentPageIndex == 0)
+            IconButton(
+              icon: Icon(
+                _isIncognito ? Icons.visibility_off : Icons.visibility,
+                color: _isIncognito ? Colors.amber[700] : null,
+              ),
+              tooltip: _isIncognito
+                  ? 'Incognito Mode ON'
+                  : 'Incognito Mode OFF',
+              onPressed: () {
+                setState(() => _isIncognito = !_isIncognito);
+              },
             ),
-            tooltip: _isIncognito ? 'Incognito Mode ON' : 'Incognito Mode OFF',
-            onPressed: () {
-              setState(() => _isIncognito = !_isIncognito);
-            },
-          ),
           IconButton(
             icon: Icon(
               ThemeScope.of(context).themeMode == ThemeMode.system
@@ -728,14 +731,15 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               ThemeScope.of(context).toggleTheme();
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.add_comment_outlined),
-            tooltip: AppLocalizations.of(context)!.chatNewConversation,
-            onPressed: () {
-              FirebaseAnalytics.instance.logEvent(name: 'new_chat');
-              _clearChat();
-            },
-          ),
+          if (_currentPageIndex == 0)
+            IconButton(
+              icon: const Icon(Icons.add_comment_outlined),
+              tooltip: AppLocalizations.of(context)!.chatNewConversation,
+              onPressed: () {
+                FirebaseAnalytics.instance.logEvent(name: 'new_chat');
+                _clearChat();
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             tooltip: 'Info',
