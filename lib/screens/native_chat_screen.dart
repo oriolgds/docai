@@ -88,13 +88,9 @@ class _NativeChatScreenState extends State<NativeChatScreen>
 
       // Show/hide FAB based on scroll position
       if (distanceFromBottom > 200) {
-        if (!_fabController.isCompleted) {
-          _fabController.forward();
-        }
+        _fabController.forward();
       } else {
-        if (_fabController.isCompleted) {
-          _fabController.reverse();
-        }
+        _fabController.reverse();
       }
     }
   }
@@ -237,7 +233,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       _currentSuggestions = session.followUpSuggestions ?? [];
     });
 
-    _scrollToBottom();
+    _scrollToTop();
   }
 
   Future<void> _sendMessage() async {
@@ -329,6 +325,14 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
+      }
+    });
+  }
+
+  void _scrollToTop() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(0);
       }
     });
   }
