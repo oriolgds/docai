@@ -1581,7 +1581,7 @@ class _WelcomeScreen extends StatelessWidget {
         ),
         child: ClipOval(
           child: Image.asset(
-            'assets/logo/logo compress.png',
+            'assets/logo/xmas.webp',
             width: 100,
             height: 100,
             fit: BoxFit.cover,
