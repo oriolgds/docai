@@ -210,49 +210,62 @@ Examples of BAD suggestions (what the chatbot would ask):
     required List<Map<String, dynamic>> conversationHistory,
     String language = 'en',
   }) async {
-    try {
-      // Map language codes to full language names
-      final languageNames = {
-        'en': 'English',
-        'es': 'Spanish',
-        'fr': 'French',
-        'de': 'German',
-        'ca': 'Catalan',
-      };
+    int attempts = 0;
+    while (attempts < 3) {
+      try {
+        attempts++;
+        // Map language codes to full language names
+        final languageNames = {
+          'en': 'English',
+          'es': 'Spanish',
+          'fr': 'French',
+          'de': 'German',
+          'ca': 'Catalan',
+        };
 
-      final languageName = languageNames[language] ?? 'English';
+        final languageName = languageNames[language] ?? 'English';
 
-      final systemPrompt =
-          '''Generate a very short, concise title (maximum 50 characters) that summarizes this conversation.
+        final systemPrompt =
+            '''Generate a very short, concise title (maximum 50 characters) that summarizes this conversation.
 The title should capture the main topic or question.
 Generate the title in $languageName.
 Return ONLY the title text, without quotes or any formatting.''';
 
-      final messages = [
-        {'role': 'system', 'content': systemPrompt},
-        ...conversationHistory.take(4), // Only use first 2 exchanges
-        {'role': 'user', 'content': 'Generate a title for this conversation.'},
-      ];
+        final messages = [
+          {'role': 'system', 'content': systemPrompt},
+          ...conversationHistory.take(4), // Only use first 2 exchanges
+          {
+            'role': 'user',
+            'content': 'Generate a title for this conversation.',
+          },
+        ];
 
-      final response = await generateText(
-        messages: messages,
-        model: 'openai',
-        temperature: 1,
-        maxTokens: 30,
-      );
+        final response = await generateText(
+          messages: messages,
+          model: 'openai',
+          temperature: 1,
+          maxTokens: 30,
+        );
 
-      final title = response.trim().replaceAll('"', '').replaceAll("'", '');
+        final title = response.trim().replaceAll('"', '').replaceAll("'", '');
 
-      // Ensure title doesn't exceed 50 characters
-      if (title.length > 50) {
-        return '${title.substring(0, 47)}...';
+        // Ensure title doesn't exceed 50 characters
+        if (title.length > 50) {
+          return '${title.substring(0, 47)}...';
+        }
+
+        return title.isNotEmpty ? title : 'Untitled Conversation';
+      } catch (e) {
+        debugPrint(
+          'Error generating conversation title (attempt $attempts): $e',
+        );
+        if (attempts >= 3) {
+          return 'Untitled Conversation';
+        }
+        await Future.delayed(const Duration(seconds: 1));
       }
-
-      return title.isNotEmpty ? title : 'Untitled Conversation';
-    } catch (e) {
-      debugPrint('Error generating conversation title: $e');
-      return 'Untitled Conversation';
     }
+    return 'Untitled Conversation';
   }
 
   void dispose() {
