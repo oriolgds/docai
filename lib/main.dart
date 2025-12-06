@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/state/locale_scope.dart';
 import 'package:docai/state/theme_scope.dart';
@@ -44,32 +45,65 @@ class _DocAIAppWrapperState extends State<DocAIAppWrapper> {
 
   Future<void> _initialize() async {
     // Perform all initialization tasks
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    try {
+      if (!Platform.isWindows) {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
 
-    // Pass all uncaught "fatal" errors from the framework to Crashlytics
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+        // Pass all uncaught "fatal" errors from the framework to Crashlytics
+        FlutterError.onError =
+            FirebaseCrashlytics.instance.recordFlutterFatalError;
 
-    // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
-    PlatformDispatcher.instance.onError = (error, stack) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      return true;
-    };
+        // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+        PlatformDispatcher.instance.onError = (error, stack) {
+          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+          return true;
+        };
+      } else {
+        // Attempt to initialize Firebase Core on Windows if configured,
+        // but skip Crashlytics as it is not supported.
+        try {
+          await Firebase.initializeApp(
+            options: DefaultFirebaseOptions.currentPlatform,
+          ).timeout(const Duration(seconds: 5));
+        } catch (e) {
+          debugPrint(
+            "Firebase initialization failed on Windows (likely missing configuration): $e",
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Firebase initialization failed: $e");
+    }
 
-    final localeController = LocaleController();
-    await localeController.loadSavedLocale();
+    try {
+      final localeController = LocaleController();
+      await localeController.loadSavedLocale();
 
-    final themeController = ThemeController();
-    await themeController.loadSavedThemeMode();
+      final themeController = ThemeController();
+      await themeController.loadSavedThemeMode();
 
-    // Update state to transition from splash screen
-    if (mounted) {
-      setState(() {
-        _localeController = localeController;
-        _themeController = themeController;
-        _isInitialized = true;
-      });
+      // Update state to transition from splash screen
+      if (mounted) {
+        setState(() {
+          _localeController = localeController;
+          _themeController = themeController;
+          _isInitialized = true;
+        });
+      }
+    } catch (e) {
+      debugPrint("Critical initialization failed: $e");
+      // Even if critical init fails, we should probably try to show the app or an error screen
+      // For now, let's just try to set initialized to true to avoid stuck splash
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+          // Fallback controllers if loading failed
+          _localeController = LocaleController();
+          _themeController = ThemeController();
+        });
+      }
     }
   }
 

@@ -15,7 +15,7 @@ dependencies:
   firebase_core: ^4.1.0
   firebase_crashlytics: ^5.0.1
   firebase_analytics: ^12.0.1
-  flutter_inappwebview: ^6.1.5
+
   intl: ^0.20.2
   url_launcher: ^6.3.1
   shared_preferences: ^2.3.2
@@ -30,6 +30,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  msix: ^3.16.7
 
 flutter:
   uses-material-design: true
@@ -55,3 +56,13 @@ flutter_launcher_icons:
   macos:
     generate: true
     image_path: "assets/logo/xmas.png"
+
+# MSIX Configuration for Microsoft Store
+msix_config:
+  display_name: "DocAI"
+  publisher_display_name: "Oriol Giner Díaz"
+  identity_name: "oriolgds.docai"
+  publisher: "CN=oriolgds"
+  msix_version: 1.0.0.0
+  store: true
+  architecture: x64

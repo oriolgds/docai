@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:async';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -16,10 +17,12 @@ class LocaleController extends ChangeNotifier {
       return;
     }
     _locale = locale;
-    FirebaseAnalytics.instance.logEvent(
-      name: 'change_language',
-      parameters: {'language_code': locale.languageCode},
-    );
+    if (!Platform.isWindows) {
+      FirebaseAnalytics.instance.logEvent(
+        name: 'change_language',
+        parameters: {'language_code': locale.languageCode},
+      );
+    }
     notifyListeners();
     unawaited(_persistLocale(locale));
   }

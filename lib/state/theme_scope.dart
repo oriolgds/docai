@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:async';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -17,10 +18,12 @@ class ThemeController extends ChangeNotifier {
       return;
     }
     _themeMode = mode;
-    FirebaseAnalytics.instance.logEvent(
-      name: 'change_theme',
-      parameters: {'theme_mode': mode.toString()},
-    );
+    if (!Platform.isWindows) {
+      FirebaseAnalytics.instance.logEvent(
+        name: 'change_theme',
+        parameters: {'theme_mode': mode.toString()},
+      );
+    }
     notifyListeners();
     unawaited(_persistThemeMode(mode));
   }

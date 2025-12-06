@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -81,7 +82,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       setState(() {}); // Rebuild when text changes for send button
     });
 
-    FirebaseAnalytics.instance.logScreenView(screenName: 'home_screen');
+    _safeLogScreenView(screenName: 'home_screen');
   }
 
   void _startListening() async {
@@ -156,6 +157,22 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     _fabController.dispose();
     _micController.dispose();
     super.dispose();
+  }
+
+  Future<void> _safeLogEvent({
+    required String name,
+    Map<String, Object>? parameters,
+  }) async {
+    if (Platform.isWindows) return;
+    await FirebaseAnalytics.instance.logEvent(
+      name: name,
+      parameters: parameters,
+    );
+  }
+
+  Future<void> _safeLogScreenView({required String screenName}) async {
+    if (Platform.isWindows) return;
+    await FirebaseAnalytics.instance.logScreenView(screenName: screenName);
   }
 
   void _onScroll() {
@@ -382,7 +399,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       _currentSuggestions = []; // Clear suggestions when sending a new message
     });
 
-    await FirebaseAnalytics.instance.logEvent(name: 'send_message');
+    await _safeLogEvent(name: 'send_message');
 
     // Only auto-scroll if user was already near the bottom
     if (_isNearBottom) {
@@ -511,7 +528,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         _clearChat();
       });
       await _persistChatHistory(); // This will save the empty list
-      await FirebaseAnalytics.instance.logEvent(name: 'delete_all_history');
+      await _safeLogEvent(name: 'delete_all_history');
     }
   }
 
@@ -557,9 +574,9 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     // Open preset selector only when switching to chat page (index 0) from history
     if (index == 0 && _currentPageIndex == 1) {
       // Don't open modal when returning from history
-      FirebaseAnalytics.instance.logScreenView(screenName: 'home_screen');
+      _safeLogScreenView(screenName: 'home_screen');
     } else if (index == 1) {
-      FirebaseAnalytics.instance.logScreenView(screenName: 'history_screen');
+      _safeLogScreenView(screenName: 'history_screen');
     }
   }
 
@@ -708,7 +725,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                       icon: const Icon(Icons.add_comment_outlined),
                       tooltip: localizations.chatNewConversation,
                       onPressed: () {
-                        FirebaseAnalytics.instance.logEvent(name: 'new_chat');
+                        _safeLogEvent(name: 'new_chat');
                         _clearChat();
                       },
                     ),
@@ -794,9 +811,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                       icon: const Icon(Icons.info_outline),
                       tooltip: 'Info',
                       onPressed: () {
-                        FirebaseAnalytics.instance.logScreenView(
-                          screenName: 'info_screen',
-                        );
+                        _safeLogScreenView(screenName: 'info_screen');
                         Navigator.of(context).push(
                           MaterialPageRoute(builder: (_) => const InfoScreen()),
                         );
@@ -879,7 +894,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               icon: const Icon(Icons.add_comment_outlined),
               tooltip: AppLocalizations.of(context)!.chatNewConversation,
               onPressed: () {
-                FirebaseAnalytics.instance.logEvent(name: 'new_chat');
+                _safeLogEvent(name: 'new_chat');
                 _clearChat();
               },
             ),
@@ -887,9 +902,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             icon: const Icon(Icons.info_outline),
             tooltip: 'Info',
             onPressed: () {
-              FirebaseAnalytics.instance.logScreenView(
-                screenName: 'info_screen',
-              );
+              _safeLogScreenView(screenName: 'info_screen');
               Navigator.of(
                 context,
               ).push(MaterialPageRoute(builder: (_) => const InfoScreen()));
