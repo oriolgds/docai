@@ -1,7 +1,7 @@
 name: docai
 description: "An app to heal the world"
 
-version: 6.1.13+58
+version: 6.1.14+59
 
 environment:
   sdk: ^3.9.0
@@ -23,6 +23,7 @@ dependencies:
   flutter_markdown: ^0.7.7+1
   uuid: ^4.5.1
   timeago: ^3.7.0
+  speech_to_text: ^7.3.0
 
 dev_dependencies:
   flutter_launcher_icons: "^0.14.4"

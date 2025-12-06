@@ -14,6 +14,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:uuid/uuid.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:docai/state/theme_scope.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class NativeChatScreen extends StatefulWidget {
   const NativeChatScreen({super.key});
@@ -40,8 +41,15 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   bool _isNearBottom = true; // Track if user is near bottom
   List<String> _currentSuggestions = []; // AI-generated follow-up suggestions
 
+  final stt.SpeechToText _speechToText = stt.SpeechToText();
+  bool _speechEnabled = false;
+  bool _isListening = false;
+
   late AnimationController _fabController;
   late Animation<double> _fabAnimation;
+
+  late AnimationController _micController;
+  late Animation<double> _micPulseAnimation;
 
   @override
   void initState() {
@@ -52,6 +60,16 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+
+    _micController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _micPulseAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.2,
+    ).animate(CurvedAnimation(parent: _micController, curve: Curves.easeInOut));
 
     _fabAnimation = CurvedAnimation(
       parent: _fabController,
@@ -66,12 +84,40 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     FirebaseAnalytics.instance.logScreenView(screenName: 'home_screen');
   }
 
+  void _startListening() async {
+    await _speechToText.listen(
+      onResult: (result) {
+        setState(() {
+          _inputController.text = result.recognizedWords;
+          if (result.finalResult) {
+            _isListening = false;
+          }
+        });
+      },
+      localeId: Localizations.localeOf(context).languageCode,
+    );
+    setState(() {
+      _isListening = true;
+      _micController.repeat(reverse: true);
+    });
+  }
+
+  void _stopListening() async {
+    await _speechToText.stop();
+    setState(() {
+      _isListening = false;
+      _micController.stop();
+      _micController.reset();
+    });
+  }
+
   @override
   void dispose() {
     _service.dispose();
     _inputController.dispose();
     _scrollController.dispose();
     _fabController.dispose();
+    _micController.dispose();
     super.dispose();
   }
 
@@ -950,19 +996,79 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Widget _buildVoiceButton() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        shape: BoxShape.circle,
-      ),
-      child: IconButton(
-        icon: const Icon(Icons.mic_none, size: 22),
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Voice input coming soon!')),
-          );
-        },
-      ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AnimatedBuilder(
+      animation: _micPulseAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _isListening ? _micPulseAnimation.value : 1.0,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: _isListening
+                  ? LinearGradient(
+                      colors: [Colors.redAccent, Colors.red],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              color: _isListening
+                  ? null
+                  : Theme.of(context).colorScheme.surfaceContainerHighest,
+              shape: BoxShape.circle,
+              boxShadow: _isListening
+                  ? [
+                      BoxShadow(
+                        color: Colors.red.withValues(alpha: 0.5),
+                        blurRadius: 10 * _micPulseAnimation.value,
+                        spreadRadius: 2,
+                      ),
+                    ]
+                  : [],
+            ),
+            child: IconButton(
+              icon: Icon(
+                _isListening ? Icons.mic : Icons.mic_none,
+                size: 24,
+                color: _isListening
+                    ? Colors.white
+                    : (isDark ? Colors.grey[400] : Colors.grey[700]),
+              ),
+              onPressed: () async {
+                if (!_speechEnabled) {
+                  bool available = await _speechToText.initialize(
+                    onError: (val) => debugPrint('onError: $val'),
+                    onStatus: (val) => debugPrint('onStatus: $val'),
+                  );
+                  if (available) {
+                    setState(() {
+                      _speechEnabled = true;
+                    });
+                    _startListening();
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Speech recognition not available or permission denied.',
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                  return;
+                }
+
+                if (_speechToText.isListening) {
+                  _stopListening();
+                } else {
+                  _startListening();
+                }
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 
