@@ -70,9 +70,6 @@ class InfoScreen extends StatelessWidget {
       ),
     ];
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -87,84 +84,76 @@ class InfoScreen extends StatelessWidget {
         ),
         centerTitle: false,
         iconTheme: Theme.of(context).iconTheme,
-        shadowColor: Colors.black.withValues(alpha: 0.05),
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
-        itemCount: items.length + 1,
-        separatorBuilder: (context, index) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return _LanguageSelectorCard(
-              selectedLocale: selectedLocale,
-              supportedLocales: supportedLocales,
-              onLocaleChanged: (locale) {
-                if (locale == null) return;
-                localeController.updateLocale(locale);
-              },
-            );
-          }
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 800;
+              final crossAxisCount = isWide ? 2 : 1;
 
-          final item = items[index - 1];
-
-          final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-          final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
-
-          return Card(
-            elevation: 2,
-            color: cardColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => _openUrl(context, item.url),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: item.startColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(item.icon, color: item.startColor, size: 24),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            item.title,
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            item.subtitle,
-                            style: TextStyle(
-                              color: subtitleColor,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
+              return CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                    sliver: SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 24),
+                        child: _LanguageSelectorCard(
+                          selectedLocale: selectedLocale,
+                          supportedLocales: supportedLocales,
+                          onLocaleChanged: (locale) {
+                            if (locale == null) return;
+                            localeController.updateLocale(locale);
+                          },
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Icon(Icons.open_in_new, color: subtitleColor, size: 20),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    sliver: isWide
+                        ? SliverGrid(
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                  childAspectRatio: 3.5,
+                                ),
+                            delegate: SliverChildBuilderDelegate((
+                              context,
+                              index,
+                            ) {
+                              final item = items[index];
+                              return _InfoCard(
+                                item: item,
+                                onTap: () => _openUrl(context, item.url),
+                              );
+                            }, childCount: items.length),
+                          )
+                        : SliverList(
+                            delegate: SliverChildBuilderDelegate((
+                              context,
+                              index,
+                            ) {
+                              final item = items[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: _InfoCard(
+                                  item: item,
+                                  onTap: () => _openUrl(context, item.url),
+                                ),
+                              );
+                            }, childCount: items.length),
+                          ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -201,79 +190,60 @@ class _LanguageSelectorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final dropdownColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final borderColor = Theme.of(context).colorScheme.primary;
 
     return Card(
-      elevation: 2,
+      elevation: 0,
       color: cardColor,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.primary,
-          width: 2,
-        ),
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: borderColor.withValues(alpha: 0.3), width: 1.5),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.language,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 24,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: borderColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.language, color: borderColor, size: 24),
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  localizations.languageSelectorLabel,
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    localizations.languageSelectorLabel,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<Locale>(
-                  value: selectedLocale,
-                  isExpanded: true,
-                  dropdownColor: dropdownColor,
-                  iconEnabledColor: isDark
-                      ? Colors.grey[400]
-                      : Colors.grey[700],
-                  style: TextStyle(color: textColor, fontSize: 15),
-                  onChanged: onLocaleChanged,
-                  items: supportedLocales.map((locale) {
-                    return DropdownMenuItem<Locale>(
-                      value: locale,
-                      child: Text(
-                        _languageName(localizations, locale),
-                        style: TextStyle(
-                          color: textColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 10,
+              children: supportedLocales.map((locale) {
+                final isSelected = locale == selectedLocale;
+                return _LanguageChip(
+                  label: _languageName(localizations, locale),
+                  isSelected: isSelected,
+                  onTap: () => onLocaleChanged(locale),
+                );
+              }).toList(),
             ),
           ],
         ),
@@ -298,6 +268,72 @@ class _LanguageSelectorCard extends StatelessWidget {
   }
 }
 
+class _LanguageChip extends StatelessWidget {
+  const _LanguageChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
+
+    final backgroundColor = isSelected
+        ? primaryColor
+        : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100]!);
+
+    final textColor = isSelected
+        ? Colors.white
+        : (isDark ? Colors.grey[300] : Colors.grey[800]);
+
+    final borderColor = isSelected
+        ? primaryColor
+        : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[300]!);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: borderColor),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: primaryColor.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: textColor,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _InfoItem {
   const _InfoItem({
     required this.icon,
@@ -314,4 +350,84 @@ class _InfoItem {
   final Uri url;
   final Color startColor;
   final Color endColor;
+}
+
+class _InfoCard extends StatelessWidget {
+  const _InfoCard({required this.item, required this.onTap});
+
+  final _InfoItem item;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final textColor = isDark ? Colors.white : Colors.black87;
+
+    return Card(
+      elevation: 0,
+      color: cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.grey[200]!,
+        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: item.startColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(item.icon, color: item.startColor, size: 28),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      item.title,
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      item.subtitle,
+                      style: TextStyle(
+                        color: subtitleColor,
+                        fontSize: 14,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: subtitleColor!.withValues(alpha: 0.5),
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
