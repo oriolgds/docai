@@ -42,6 +42,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get menuPlayStore => 'Play Store';
 
   @override
+  String get menuUpdateAvailable => 'Update available';
+
+  @override
   String get newWindowTitle => 'Nueva ventana';
 
   @override
