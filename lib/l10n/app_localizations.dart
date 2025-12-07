@@ -167,6 +167,12 @@ abstract class AppLocalizations {
   /// **'Play Store'**
   String get menuPlayStore;
 
+  /// No description provided for @menuUpdateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get menuUpdateAvailable;
+
   /// No description provided for @newWindowTitle.
   ///
   /// In en, this message translates to:

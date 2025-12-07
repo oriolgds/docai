@@ -15,6 +15,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:uuid/uuid.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:docai/state/theme_scope.dart';
+import 'package:in_app_update/in_app_update.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class NativeChatScreen extends StatefulWidget {
@@ -45,6 +46,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   final stt.SpeechToText _speechToText = stt.SpeechToText();
   bool _speechEnabled = false;
   bool _isListening = false;
+  bool _updateAvailable = false;
 
   late AnimationController _fabController;
   late Animation<double> _fabAnimation;
@@ -55,6 +57,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   @override
   void initState() {
     super.initState();
+    _checkForUpdate();
     _loadChatHistory();
 
     _fabController = AnimationController(
@@ -83,6 +86,20 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     });
 
     _safeLogScreenView(screenName: 'home_screen');
+  }
+
+  Future<void> _checkForUpdate() async {
+    if (Platform.isAndroid) {
+      try {
+        final info = await InAppUpdate.checkForUpdate();
+        setState(() {
+          _updateAvailable =
+              info.updateAvailability == UpdateAvailability.updateAvailable;
+        });
+      } catch (e) {
+        debugPrint('Error checking for update: $e');
+      }
+    }
   }
 
   void _startListening() async {
@@ -1332,6 +1349,18 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             isActive: _currentPageIndex == 1,
             onTap: () => _switchToPage(1),
           ),
+          if (_updateAvailable)
+            _QuickActionButton(
+              icon: Icons.system_update,
+              label: localizations.menuUpdateAvailable,
+              isActive: false,
+              onTap: () {
+                InAppUpdate.performImmediateUpdate().catchError((e) {
+                  _showError(e.toString());
+                  return AppUpdateResult.inAppUpdateFailed;
+                });
+              },
+            ),
         ],
       ),
     );
