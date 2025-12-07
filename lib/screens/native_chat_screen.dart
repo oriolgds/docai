@@ -85,21 +85,58 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   void _startListening() async {
-    await _speechToText.listen(
-      onResult: (result) {
-        setState(() {
-          _inputController.text = result.recognizedWords;
-          if (result.finalResult) {
-            _isListening = false;
+    bool available = await _speechToText.initialize(
+      onError: (val) => debugPrint('STT Error: $val'),
+      onStatus: (val) {
+        if (val == 'done' || val == 'notListening') {
+          if (mounted) {
+            setState(() {
+              _isListening = false;
+              _micController.stop();
+              _micController.reset();
+            });
           }
-        });
+        }
       },
-      localeId: Localizations.localeOf(context).languageCode,
     );
-    setState(() {
-      _isListening = true;
-      _micController.repeat(reverse: true);
-    });
+
+    if (available) {
+      final currentCode = Localizations.localeOf(context).languageCode;
+      String localeId = currentCode;
+
+      try {
+        final locales = await _speechToText.locales();
+        final matchedLocale = locales.firstWhere(
+          (locale) => locale.localeId.startsWith(currentCode),
+          orElse: () => locales.first,
+        );
+        localeId = matchedLocale.localeId;
+      } catch (e) {
+        debugPrint('Error getting locales: $e');
+      }
+
+      await _speechToText.listen(
+        onResult: (result) {
+          setState(() {
+            _inputController.text = result.recognizedWords;
+            if (result.finalResult) {
+              _isListening = false;
+              _micController.stop();
+              _micController.reset();
+            }
+          });
+        },
+        localeId: localeId,
+        pauseFor: const Duration(seconds: 2),
+      );
+
+      setState(() {
+        _isListening = true;
+        _micController.repeat(reverse: true);
+      });
+    } else {
+      debugPrint("Speech recognition not available");
+    }
   }
 
   void _stopListening() async {
@@ -944,14 +981,14 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             ),
           ),
           const SizedBox(width: 8),
-          if (hasText) ...[
+          if (hasText && !_isListening) ...[
             // Response length toggle button
             _buildResponseLengthToggle(),
             const SizedBox(width: 8),
             // Send button
             _buildSendButton(),
           ] else ...[
-            // Voice button (placeholder)
+            // Voice button
             _buildVoiceButton(),
           ],
         ],
