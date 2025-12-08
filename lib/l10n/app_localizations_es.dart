@@ -295,4 +295,34 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get contentCopied => 'Contenido copiado al portapapeles';
+
+  @override
+  String get menuMyReports => 'Mis Reportes';
+
+  @override
+  String get reportStatusPending => 'Pendiente';
+
+  @override
+  String get reportStatusSolved => 'Resuelto';
+
+  @override
+  String get reportStatusRefused => 'Rechazado';
+
+  @override
+  String get reportSuccessTitle => 'Reporte Recibido';
+
+  @override
+  String get reportSuccessContent => 'Gracias por tu reporte. Lo revisaremos pronto. Puedes ver su estado en \'Mis Reportes\'.';
+
+  @override
+  String get reportViewReports => 'Ver Mis Reportes';
+
+  @override
+  String get reportsTitle => 'Mis Reportes';
+
+  @override
+  String get noReportsFound => 'No se encontraron reportes';
+
+  @override
+  String get errorLoadingReports => 'Error al cargar reportes';
 }

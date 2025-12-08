@@ -95,5 +95,15 @@
   "reportButtonLabel": "Report",
   "reportSuccess": "Report submitted successfully",
   "reportError": "Error submitting report",
-  "contentCopied": "Content copied to clipboard"
+  "contentCopied": "Content copied to clipboard",
+  "menuMyReports": "My Reports",
+  "reportStatusPending": "Pending",
+  "reportStatusSolved": "Solved",
+  "reportStatusRefused": "Refused",
+  "reportSuccessTitle": "Report Received",
+  "reportSuccessContent": "Thank you for your report. We will review it shortly. You can track its status in 'My Reports'.",
+  "reportViewReports": "View My Reports",
+  "reportsTitle": "My Reports",
+  "noReportsFound": "No reports found",
+  "errorLoadingReports": "Error loading reports"
 }

@@ -10,6 +10,7 @@ import 'package:docai/models/medical_preset.dart';
 import 'package:docai/services/pollinations_service.dart';
 import 'package:docai/screens/info_screen.dart';
 import 'package:docai/l10n/app_localizations.dart';
+import 'package:docai/screens/reports_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:uuid/uuid.dart';
@@ -838,6 +839,18 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                       },
                     ),
                     const SizedBox(height: 8),
+                    IconButton(
+                      icon: const Icon(Icons.flag_outlined),
+                      tooltip: localizations.menuMyReports,
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const ReportsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -926,6 +939,15 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               Navigator.of(
                 context,
               ).push(MaterialPageRoute(builder: (_) => const InfoScreen()));
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.flag_outlined),
+            tooltip: AppLocalizations.of(context)!.menuMyReports,
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const ReportsScreen()));
             },
           ),
         ],
@@ -1468,13 +1490,43 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                               messageId: message.id,
                               messageContent: message.content,
                               reason: selectedReason!,
-                              userId: 'anonymous',
                             );
                             if (mounted) {
                               messenger.showSnackBar(
                                 SnackBar(
                                   content: Text(localizations.reportSuccess),
                                   backgroundColor: Colors.green,
+                                ),
+                              );
+
+                              // Show success dialog with navigation
+                              showDialog(
+                                context: this.context, // Use parent context
+                                builder: (context) => AlertDialog(
+                                  title: Text(localizations.reportSuccessTitle),
+                                  content: Text(
+                                    localizations.reportSuccessContent,
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('OK'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                        Navigator.of(this.context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const ReportsScreen(),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                        localizations.reportViewReports,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               );
                             }

@@ -676,6 +676,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Content copied to clipboard'**
   String get contentCopied;
+
+  /// No description provided for @menuMyReports.
+  ///
+  /// In en, this message translates to:
+  /// **'My Reports'**
+  String get menuMyReports;
+
+  /// No description provided for @reportStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get reportStatusPending;
+
+  /// No description provided for @reportStatusSolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Solved'**
+  String get reportStatusSolved;
+
+  /// No description provided for @reportStatusRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'Refused'**
+  String get reportStatusRefused;
+
+  /// No description provided for @reportSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report Received'**
+  String get reportSuccessTitle;
+
+  /// No description provided for @reportSuccessContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for your report. We will review it shortly. You can track its status in \'My Reports\'.'**
+  String get reportSuccessContent;
+
+  /// No description provided for @reportViewReports.
+  ///
+  /// In en, this message translates to:
+  /// **'View My Reports'**
+  String get reportViewReports;
+
+  /// No description provided for @reportsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Reports'**
+  String get reportsTitle;
+
+  /// No description provided for @noReportsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No reports found'**
+  String get noReportsFound;
+
+  /// No description provided for @errorLoadingReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading reports'**
+  String get errorLoadingReports;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
