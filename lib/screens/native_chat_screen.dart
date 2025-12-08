@@ -106,6 +106,20 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     }
   }
 
+  Future<void> _handleUpdate() async {
+    try {
+      await InAppUpdate.performImmediateUpdate();
+    } catch (e) {
+      if (e.toString().contains('USER_CANCELED') ||
+          e.toString().contains('User denied')) {
+        return;
+      }
+      _showError(e.toString());
+      // Re-check availability to reset state if needed
+      _checkForUpdate();
+    }
+  }
+
   void _startListening() async {
     bool available = await _speechToText.initialize(
       onError: (val) => debugPrint('STT Error: $val'),
@@ -1381,12 +1395,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               icon: Icons.system_update,
               label: localizations.menuUpdateAvailable,
               isActive: false,
-              onTap: () {
-                InAppUpdate.performImmediateUpdate().catchError((e) {
-                  _showError(e.toString());
-                  return AppUpdateResult.inAppUpdateFailed;
-                });
-              },
+              onTap: _handleUpdate,
             ),
         ],
       ),
