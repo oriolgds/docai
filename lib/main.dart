@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/state/locale_scope.dart';
@@ -51,15 +52,27 @@ class _DocAIAppWrapperState extends State<DocAIAppWrapper> {
           options: DefaultFirebaseOptions.currentPlatform,
         );
 
-        // Pass all uncaught "fatal" errors from the framework to Crashlytics
-        FlutterError.onError =
-            FirebaseCrashlytics.instance.recordFlutterFatalError;
+        if (kDebugMode) {
+          // Disable Crashlytics collection in debug mode
+          await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+            false,
+          );
+        } else {
+          // Enable Crashlytics collection in non-debug modes
+          await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+            true,
+          );
 
-        // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
-        PlatformDispatcher.instance.onError = (error, stack) {
-          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-          return true;
-        };
+          // Pass all uncaught "fatal" errors from the framework to Crashlytics
+          FlutterError.onError =
+              FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+          // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+          PlatformDispatcher.instance.onError = (error, stack) {
+            FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+            return true;
+          };
+        }
       } else {
         // Attempt to initialize Firebase Core on Windows if configured,
         // but skip Crashlytics as it is not supported.

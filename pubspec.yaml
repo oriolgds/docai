@@ -25,6 +25,7 @@ dependencies:
   timeago: ^3.7.0
   speech_to_text: ^7.3.0
   in_app_update: ^4.2.5
+  cloud_firestore: ^6.1.0
 
 dev_dependencies:
   flutter_launcher_icons: "^0.14.4"
@@ -64,6 +65,6 @@ msix_config:
   publisher_display_name: "Oriol Giner"
   identity_name: "OriolGiner.Docai"
   publisher: "CN=2A1BF35C-B236-4EA2-9703-E3FBAD46CF55"
-  msix_version: 1.0.0.0
+  msix_version: 2.0.0.0
   store: true
   architecture: x64

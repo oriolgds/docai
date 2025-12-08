@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /reports/{reportId} {
+      allow create: if true; // Allow anyone to create a report
+      allow read: if true; // Allow users to see their reports
+      allow update, delete: if false; // Users cannot modify or delete reports
+    }
+  }
+}

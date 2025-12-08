@@ -42,7 +42,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get menuPlayStore => 'Play Store';
 
   @override
-  String get menuUpdateAvailable => 'Update available';
+  String get menuUpdateAvailable => 'Actualización disponible';
 
   @override
   String get newWindowTitle => 'Nueva ventana';
@@ -259,4 +259,70 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deleteDialogConfirm => 'Eliminar todo';
+
+  @override
+  String get deleteDialogConfirmed => 'Todos los chats han sido eliminados';
+
+  @override
+  String get reportContent => 'Reportar contenido';
+
+  @override
+  String get copyContent => 'Copiar contenido';
+
+  @override
+  String get reportDialogTitle => 'Reportar contenido';
+
+  @override
+  String get reportReasonInappropriate => 'Contenido inapropiado';
+
+  @override
+  String get reportReasonIncorrect => 'Información incorrecta';
+
+  @override
+  String get reportReasonHarmful => 'Dañino o peligroso';
+
+  @override
+  String get reportReasonOther => 'Otro';
+
+  @override
+  String get reportButtonLabel => 'Reportar';
+
+  @override
+  String get reportSuccess => 'Reporte enviado exitosamente';
+
+  @override
+  String get reportError => 'Error al enviar el reporte';
+
+  @override
+  String get contentCopied => 'Contenido copiado al portapapeles';
+
+  @override
+  String get menuMyReports => 'Mis Reportes';
+
+  @override
+  String get reportStatusPending => 'Pendiente';
+
+  @override
+  String get reportStatusSolved => 'Resuelto';
+
+  @override
+  String get reportStatusRefused => 'Rechazado';
+
+  @override
+  String get reportSuccessTitle => 'Reporte Recibido';
+
+  @override
+  String get reportSuccessContent => 'Gracias por tu reporte. Lo revisaremos pronto. Puedes ver su estado en \'Mis Reportes\'.';
+
+  @override
+  String get reportViewReports => 'Ver Mis Reportes';
+
+  @override
+  String get reportsTitle => 'Mis Reportes';
+
+  @override
+  String get noReportsFound => 'No se encontraron reportes';
+
+  @override
+  String get errorLoadingReports => 'Error al cargar reportes';
 }

@@ -259,4 +259,70 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get deleteDialogConfirm => 'Tout supprimer';
+
+  @override
+  String get deleteDialogConfirmed => 'All chats deleted';
+
+  @override
+  String get reportContent => 'Report content';
+
+  @override
+  String get copyContent => 'Copy content';
+
+  @override
+  String get reportDialogTitle => 'Report content';
+
+  @override
+  String get reportReasonInappropriate => 'Inappropriate content';
+
+  @override
+  String get reportReasonIncorrect => 'Incorrect information';
+
+  @override
+  String get reportReasonHarmful => 'Harmful or dangerous';
+
+  @override
+  String get reportReasonOther => 'Other';
+
+  @override
+  String get reportButtonLabel => 'Report';
+
+  @override
+  String get reportSuccess => 'Report submitted successfully';
+
+  @override
+  String get reportError => 'Error submitting report';
+
+  @override
+  String get contentCopied => 'Content copied to clipboard';
+
+  @override
+  String get menuMyReports => 'My Reports';
+
+  @override
+  String get reportStatusPending => 'Pending';
+
+  @override
+  String get reportStatusSolved => 'Solved';
+
+  @override
+  String get reportStatusRefused => 'Refused';
+
+  @override
+  String get reportSuccessTitle => 'Report Received';
+
+  @override
+  String get reportSuccessContent => 'Thank you for your report. We will review it shortly. You can track its status in \'My Reports\'.';
+
+  @override
+  String get reportViewReports => 'View My Reports';
+
+  @override
+  String get reportsTitle => 'My Reports';
+
+  @override
+  String get noReportsFound => 'No reports found';
+
+  @override
+  String get errorLoadingReports => 'Error loading reports';
 }
