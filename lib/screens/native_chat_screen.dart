@@ -17,6 +17,8 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'package:docai/state/theme_scope.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:flutter/services.dart';
+import 'package:docai/services/firestore_service.dart';
 
 class NativeChatScreen extends StatefulWidget {
   const NativeChatScreen({super.key});
@@ -28,6 +30,7 @@ class NativeChatScreen extends StatefulWidget {
 class _NativeChatScreenState extends State<NativeChatScreen>
     with TickerProviderStateMixin {
   final PollinationsService _service = PollinationsService();
+  final FirestoreService _firestoreService = FirestoreService();
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
@@ -962,6 +965,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               _isGenerating &&
               index == _messages.length - 1 &&
               message.role == MessageRole.assistant,
+          onCopy: () => _copyToClipboard(message.content),
+          onReport: () => _reportMessage(message),
         );
       },
     );
@@ -1385,6 +1390,114 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         return preset.name;
     }
   }
+
+  void _copyToClipboard(String content) {
+    Clipboard.setData(ClipboardData(text: content));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.contentCopied),
+        behavior: SnackBarBehavior.floating,
+        width: 300,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _reportMessage(ChatMessage message) {
+    final localizations = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        String? selectedReason;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(localizations.reportDialogTitle),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    RadioListTile<String>(
+                      title: Text(localizations.reportReasonInappropriate),
+                      value: 'inappropriate',
+                      groupValue: selectedReason,
+                      onChanged: (value) =>
+                          setState(() => selectedReason = value),
+                    ),
+                    RadioListTile<String>(
+                      title: Text(localizations.reportReasonIncorrect),
+                      value: 'incorrect',
+                      groupValue: selectedReason,
+                      onChanged: (value) =>
+                          setState(() => selectedReason = value),
+                    ),
+                    RadioListTile<String>(
+                      title: Text(localizations.reportReasonHarmful),
+                      value: 'harmful',
+                      groupValue: selectedReason,
+                      onChanged: (value) =>
+                          setState(() => selectedReason = value),
+                    ),
+                    RadioListTile<String>(
+                      title: Text(localizations.reportReasonOther),
+                      value: 'other',
+                      groupValue: selectedReason,
+                      onChanged: (value) =>
+                          setState(() => selectedReason = value),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: Text(localizations.dialogCancel),
+                ),
+                TextButton(
+                  onPressed: selectedReason == null
+                      ? null
+                      : () async {
+                          Navigator.pop(dialogContext);
+                          // Capture the messenger using the valid parent context (this.context from state)
+                          // before the async gap/context invalidation.
+                          final messenger = ScaffoldMessenger.of(this.context);
+
+                          try {
+                            await _firestoreService.saveReport(
+                              messageId: message.id,
+                              messageContent: message.content,
+                              reason: selectedReason!,
+                              userId: 'anonymous',
+                            );
+                            if (mounted) {
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(localizations.reportSuccess),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(localizations.reportError),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                  child: Text(localizations.reportButtonLabel),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
 // Message Card Widget
@@ -1393,12 +1506,16 @@ class _MessageCard extends StatelessWidget {
   final bool isUser;
   final bool showAvatar;
   final bool isGenerating;
+  final VoidCallback? onCopy;
+  final VoidCallback? onReport;
 
   const _MessageCard({
     required this.message,
     required this.isUser,
     required this.showAvatar,
     this.isGenerating = false,
+    this.onCopy,
+    this.onReport,
   });
 
   @override
@@ -1443,6 +1560,8 @@ class _MessageCard extends StatelessWidget {
                     const SizedBox(height: 6),
                   ],
                   _buildMessageBubble(context),
+                  if (!isUser && !isGenerating && message.content.isNotEmpty)
+                    _buildActionButtons(context),
                   _buildTimestamp(),
                 ],
               )
@@ -1482,6 +1601,10 @@ class _MessageCard extends StatelessWidget {
                           ),
                         ],
                         _buildMessageBubble(context),
+                        if (!isUser &&
+                            !isGenerating &&
+                            message.content.isNotEmpty)
+                          _buildActionButtons(context),
                         _buildTimestamp(),
                       ],
                     ),
@@ -1586,6 +1709,60 @@ class _MessageCard extends StatelessWidget {
 
   Widget _buildTypingIndicator() {
     return const _TypingIndicator();
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, left: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _ActionButton(
+            icon: Icons.copy_rounded,
+            tooltip: localizations.copyContent,
+            onTap: onCopy,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          _ActionButton(
+            icon: Icons.flag_outlined,
+            tooltip: localizations.reportContent,
+            onTap: onReport,
+            size: 16,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onTap;
+  final double size;
+
+  const _ActionButton({
+    required this.icon,
+    required this.tooltip,
+    this.onTap,
+    this.size = 18,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(4),
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Icon(icon, size: size, color: Colors.grey[400]),
+        ),
+      ),
+    );
   }
 }
 

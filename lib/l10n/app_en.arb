@@ -83,5 +83,17 @@
   "deleteDialogTitle": "Delete all chats?",
   "deleteDialogContent": "This action cannot be undone. All your chat history will be permanently deleted.",
   "deleteDialogCancel": "Cancel",
-  "deleteDialogConfirm": "Delete All"
+  "deleteDialogConfirm": "Delete All",
+  "deleteDialogConfirmed": "All chats deleted",
+  "reportContent": "Report content",
+  "copyContent": "Copy content",
+  "reportDialogTitle": "Report content",
+  "reportReasonInappropriate": "Inappropriate content",
+  "reportReasonIncorrect": "Incorrect information",
+  "reportReasonHarmful": "Harmful or dangerous",
+  "reportReasonOther": "Other",
+  "reportButtonLabel": "Report",
+  "reportSuccess": "Report submitted successfully",
+  "reportError": "Error submitting report",
+  "contentCopied": "Content copied to clipboard"
 }

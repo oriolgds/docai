@@ -604,6 +604,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete All'**
   String get deleteDialogConfirm;
+
+  /// No description provided for @deleteDialogConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'All chats deleted'**
+  String get deleteDialogConfirmed;
+
+  /// No description provided for @reportContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Report content'**
+  String get reportContent;
+
+  /// No description provided for @copyContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy content'**
+  String get copyContent;
+
+  /// No description provided for @reportDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report content'**
+  String get reportDialogTitle;
+
+  /// No description provided for @reportReasonInappropriate.
+  ///
+  /// In en, this message translates to:
+  /// **'Inappropriate content'**
+  String get reportReasonInappropriate;
+
+  /// No description provided for @reportReasonIncorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect information'**
+  String get reportReasonIncorrect;
+
+  /// No description provided for @reportReasonHarmful.
+  ///
+  /// In en, this message translates to:
+  /// **'Harmful or dangerous'**
+  String get reportReasonHarmful;
+
+  /// No description provided for @reportReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get reportReasonOther;
+
+  /// No description provided for @reportButtonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get reportButtonLabel;
+
+  /// No description provided for @reportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Report submitted successfully'**
+  String get reportSuccess;
+
+  /// No description provided for @reportError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error submitting report'**
+  String get reportError;
+
+  /// No description provided for @contentCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Content copied to clipboard'**
+  String get contentCopied;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -82,5 +82,18 @@
   "deleteDialogTitle": "¿Eliminar todos los chats?",
   "deleteDialogContent": "Esta acción no se puede deshacer. Todo tu historial de chat se eliminará permanentemente.",
   "deleteDialogCancel": "Cancelar",
-  "deleteDialogConfirm": "Eliminar todo"
+  "deleteDialogConfirm": "Eliminar todo",
+  "deleteDialogConfirmed": "Todos los chats han sido eliminados",
+  "menuUpdateAvailable": "Actualización disponible",
+  "reportContent": "Reportar contenido",
+  "copyContent": "Copiar contenido",
+  "reportDialogTitle": "Reportar contenido",
+  "reportReasonInappropriate": "Contenido inapropiado",
+  "reportReasonIncorrect": "Información incorrecta",
+  "reportReasonHarmful": "Dañino o peligroso",
+  "reportReasonOther": "Otro",
+  "reportButtonLabel": "Reportar",
+  "reportSuccess": "Reporte enviado exitosamente",
+  "reportError": "Error al enviar el reporte",
+  "contentCopied": "Contenido copiado al portapapeles"
 }

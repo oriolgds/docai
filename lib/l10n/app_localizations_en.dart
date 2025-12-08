@@ -259,4 +259,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteDialogConfirm => 'Delete All';
+
+  @override
+  String get deleteDialogConfirmed => 'All chats deleted';
+
+  @override
+  String get reportContent => 'Report content';
+
+  @override
+  String get copyContent => 'Copy content';
+
+  @override
+  String get reportDialogTitle => 'Report content';
+
+  @override
+  String get reportReasonInappropriate => 'Inappropriate content';
+
+  @override
+  String get reportReasonIncorrect => 'Incorrect information';
+
+  @override
+  String get reportReasonHarmful => 'Harmful or dangerous';
+
+  @override
+  String get reportReasonOther => 'Other';
+
+  @override
+  String get reportButtonLabel => 'Report';
+
+  @override
+  String get reportSuccess => 'Report submitted successfully';
+
+  @override
+  String get reportError => 'Error submitting report';
+
+  @override
+  String get contentCopied => 'Content copied to clipboard';
 }
