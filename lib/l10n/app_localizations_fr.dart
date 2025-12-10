@@ -42,7 +42,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get menuPlayStore => 'Play Store';
 
   @override
-  String get menuUpdateAvailable => 'Update available';
+  String get menuUpdateAvailable => 'Mise à jour disponible';
 
   @override
   String get newWindowTitle => 'Nouvelle fenêtre';
@@ -261,68 +261,74 @@ class AppLocalizationsFr extends AppLocalizations {
   String get deleteDialogConfirm => 'Tout supprimer';
 
   @override
-  String get deleteDialogConfirmed => 'All chats deleted';
+  String get deleteDialogConfirmed => 'Tous les chats supprimés';
 
   @override
-  String get reportContent => 'Report content';
+  String get reportContent => 'Signaler un contenu';
 
   @override
-  String get copyContent => 'Copy content';
+  String get copyContent => 'Copier le contenu';
 
   @override
-  String get reportDialogTitle => 'Report content';
+  String get reportDialogTitle => 'Signaler un contenu';
 
   @override
-  String get reportReasonInappropriate => 'Inappropriate content';
+  String get reportReasonInappropriate => 'Contenu inapproprié';
 
   @override
-  String get reportReasonIncorrect => 'Incorrect information';
+  String get reportReasonIncorrect => 'Informations incorrectes';
 
   @override
-  String get reportReasonHarmful => 'Harmful or dangerous';
+  String get reportReasonHarmful => 'Nuisible ou dangereux';
 
   @override
-  String get reportReasonOther => 'Other';
+  String get reportReasonOther => 'Autre';
 
   @override
-  String get reportButtonLabel => 'Report';
+  String get reportButtonLabel => 'Signaler';
 
   @override
-  String get reportSuccess => 'Report submitted successfully';
+  String get reportSuccess => 'Signalement envoyé avec succès';
 
   @override
-  String get reportError => 'Error submitting report';
+  String get reportError => 'Erreur lors de l\'envoi du signalement';
 
   @override
-  String get contentCopied => 'Content copied to clipboard';
+  String get contentCopied => 'Contenu copié dans le presse-papiers';
 
   @override
-  String get menuMyReports => 'My Reports';
+  String get menuMyReports => 'Mes signalements';
 
   @override
-  String get reportStatusPending => 'Pending';
+  String get reportStatusPending => 'En attente';
 
   @override
-  String get reportStatusSolved => 'Solved';
+  String get reportStatusSolved => 'Résolu';
 
   @override
-  String get reportStatusRefused => 'Refused';
+  String get reportStatusRefused => 'Refusé';
 
   @override
-  String get reportSuccessTitle => 'Report Received';
+  String get reportSuccessTitle => 'Signalement reçu';
 
   @override
-  String get reportSuccessContent => 'Thank you for your report. We will review it shortly. You can track its status in \'My Reports\'.';
+  String get reportSuccessContent => 'Merci pour votre signalement. Nous l\'examinerons sous peu. Vous pouvez suivre son statut dans \'Mes signalements\'.';
 
   @override
-  String get reportViewReports => 'View My Reports';
+  String get reportViewReports => 'Voir mes signalements';
 
   @override
-  String get reportsTitle => 'My Reports';
+  String get reportsTitle => 'Mes signalements';
 
   @override
-  String get noReportsFound => 'No reports found';
+  String get noReportsFound => 'Aucun signalement trouvé';
 
   @override
-  String get errorLoadingReports => 'Error loading reports';
+  String get errorLoadingReports => 'Erreur lors du chargement des signalements';
+
+  @override
+  String get updateError => 'Échec de la mise à jour';
+
+  @override
+  String get upgradeApp => 'Mettre à jour';
 }

@@ -105,5 +105,7 @@
   "reportViewReports": "Voir mes signalements",
   "reportsTitle": "Mes signalements",
   "noReportsFound": "Aucun signalement trouvé",
-  "errorLoadingReports": "Erreur lors du chargement des signalements"
+  "errorLoadingReports": "Erreur lors du chargement des signalements",
+  "updateError": "Échec de la mise à jour",
+  "upgradeApp": "Mettre à jour"
 }

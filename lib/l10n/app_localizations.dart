@@ -736,6 +736,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error loading reports'**
   String get errorLoadingReports;
+
+  /// No description provided for @updateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Update failed'**
+  String get updateError;
+
+  /// No description provided for @upgradeApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Update app'**
+  String get upgradeApp;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

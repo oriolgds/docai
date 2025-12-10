@@ -112,9 +112,14 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     } catch (e) {
       if (e.toString().contains('USER_CANCELED') ||
           e.toString().contains('User denied')) {
+        // Even if cancelled, re-check to reset state if needed
+        _checkForUpdate();
         return;
       }
-      _showError(e.toString());
+
+      final localizations = AppLocalizations.of(context);
+      _showError(localizations?.updateError ?? 'Update failed');
+
       // Re-check availability to reset state if needed
       _checkForUpdate();
     }
@@ -1393,7 +1398,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           if (_updateAvailable)
             _QuickActionButton(
               icon: Icons.system_update,
-              label: localizations.menuUpdateAvailable,
+              label: localizations.upgradeApp,
               isActive: false,
               onTap: _handleUpdate,
             ),

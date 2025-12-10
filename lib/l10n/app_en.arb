@@ -105,5 +105,7 @@
   "reportViewReports": "View My Reports",
   "reportsTitle": "My Reports",
   "noReportsFound": "No reports found",
-  "errorLoadingReports": "Error loading reports"
+  "errorLoadingReports": "Error loading reports",
+  "updateError": "Update failed",
+  "upgradeApp": "Update app"
 }

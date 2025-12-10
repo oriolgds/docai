@@ -325,4 +325,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorLoadingReports => 'Error loading reports';
+
+  @override
+  String get updateError => 'Update failed';
+
+  @override
+  String get upgradeApp => 'Update app';
 }
