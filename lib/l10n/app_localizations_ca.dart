@@ -42,7 +42,7 @@ class AppLocalizationsCa extends AppLocalizations {
   String get menuPlayStore => 'Play Store';
 
   @override
-  String get menuUpdateAvailable => 'Update available';
+  String get menuUpdateAvailable => 'Actualització disponible';
 
   @override
   String get newWindowTitle => 'Finestra nova';
@@ -261,68 +261,74 @@ class AppLocalizationsCa extends AppLocalizations {
   String get deleteDialogConfirm => 'Esborrar tot';
 
   @override
-  String get deleteDialogConfirmed => 'All chats deleted';
+  String get deleteDialogConfirmed => 'Tots els xats eliminats';
 
   @override
-  String get reportContent => 'Report content';
+  String get reportContent => 'Informar de contingut';
 
   @override
-  String get copyContent => 'Copy content';
+  String get copyContent => 'Copiar contingut';
 
   @override
-  String get reportDialogTitle => 'Report content';
+  String get reportDialogTitle => 'Informar de contingut';
 
   @override
-  String get reportReasonInappropriate => 'Inappropriate content';
+  String get reportReasonInappropriate => 'Contingut inadequat';
 
   @override
-  String get reportReasonIncorrect => 'Incorrect information';
+  String get reportReasonIncorrect => 'Informació incorrecta';
 
   @override
-  String get reportReasonHarmful => 'Harmful or dangerous';
+  String get reportReasonHarmful => 'Perjudical o perillós';
 
   @override
-  String get reportReasonOther => 'Other';
+  String get reportReasonOther => 'Altre';
 
   @override
-  String get reportButtonLabel => 'Report';
+  String get reportButtonLabel => 'Informar';
 
   @override
-  String get reportSuccess => 'Report submitted successfully';
+  String get reportSuccess => 'Informe enviat correctament';
 
   @override
-  String get reportError => 'Error submitting report';
+  String get reportError => 'Error en enviar l\'informe';
 
   @override
-  String get contentCopied => 'Content copied to clipboard';
+  String get contentCopied => 'Contingut copiat al porta-retalls';
 
   @override
-  String get menuMyReports => 'My Reports';
+  String get menuMyReports => 'Els meus informes';
 
   @override
-  String get reportStatusPending => 'Pending';
+  String get reportStatusPending => 'Pendent';
 
   @override
-  String get reportStatusSolved => 'Solved';
+  String get reportStatusSolved => 'Resolt';
 
   @override
-  String get reportStatusRefused => 'Refused';
+  String get reportStatusRefused => 'Rebutjat';
 
   @override
-  String get reportSuccessTitle => 'Report Received';
+  String get reportSuccessTitle => 'Informe rebut';
 
   @override
-  String get reportSuccessContent => 'Thank you for your report. We will review it shortly. You can track its status in \'My Reports\'.';
+  String get reportSuccessContent => 'Gràcies pel vostre informe. El revisarem ben aviat. Podeu fer-ne el seguiment a \'Els meus informes\'.';
 
   @override
-  String get reportViewReports => 'View My Reports';
+  String get reportViewReports => 'Veure els meus informes';
 
   @override
-  String get reportsTitle => 'My Reports';
+  String get reportsTitle => 'Els meus informes';
 
   @override
-  String get noReportsFound => 'No reports found';
+  String get noReportsFound => 'No s\'han trobat informes';
 
   @override
-  String get errorLoadingReports => 'Error loading reports';
+  String get errorLoadingReports => 'Error en carregar els informes';
+
+  @override
+  String get updateError => 'Error en l\'actualització';
+
+  @override
+  String get upgradeApp => 'Actualitzar app';
 }

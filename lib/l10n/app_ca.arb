@@ -105,5 +105,7 @@
   "reportViewReports": "Veure els meus informes",
   "reportsTitle": "Els meus informes",
   "noReportsFound": "No s'han trobat informes",
-  "errorLoadingReports": "Error en carregar els informes"
+  "errorLoadingReports": "Error en carregar els informes",
+  "updateError": "Error en l'actualització",
+  "upgradeApp": "Actualitzar app"
 }

@@ -42,7 +42,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get menuPlayStore => 'Play Store';
 
   @override
-  String get menuUpdateAvailable => 'Update available';
+  String get menuUpdateAvailable => 'Update verfügbar';
 
   @override
   String get newWindowTitle => 'Neues Fenster';
@@ -261,68 +261,74 @@ class AppLocalizationsDe extends AppLocalizations {
   String get deleteDialogConfirm => 'Alle löschen';
 
   @override
-  String get deleteDialogConfirmed => 'All chats deleted';
+  String get deleteDialogConfirmed => 'Alle Chats gelöscht';
 
   @override
-  String get reportContent => 'Report content';
+  String get reportContent => 'Inhalt melden';
 
   @override
-  String get copyContent => 'Copy content';
+  String get copyContent => 'Inhalt kopieren';
 
   @override
-  String get reportDialogTitle => 'Report content';
+  String get reportDialogTitle => 'Inhalt melden';
 
   @override
-  String get reportReasonInappropriate => 'Inappropriate content';
+  String get reportReasonInappropriate => 'Unangemessener Inhalt';
 
   @override
-  String get reportReasonIncorrect => 'Incorrect information';
+  String get reportReasonIncorrect => 'Falsche Informationen';
 
   @override
-  String get reportReasonHarmful => 'Harmful or dangerous';
+  String get reportReasonHarmful => 'Schädlich oder gefährlich';
 
   @override
-  String get reportReasonOther => 'Other';
+  String get reportReasonOther => 'Andere';
 
   @override
-  String get reportButtonLabel => 'Report';
+  String get reportButtonLabel => 'Melden';
 
   @override
-  String get reportSuccess => 'Report submitted successfully';
+  String get reportSuccess => 'Bericht erfolgreich gesendet';
 
   @override
-  String get reportError => 'Error submitting report';
+  String get reportError => 'Fehler beim Senden des Berichts';
 
   @override
-  String get contentCopied => 'Content copied to clipboard';
+  String get contentCopied => 'Inhalt in die Zwischenablage kopiert';
 
   @override
-  String get menuMyReports => 'My Reports';
+  String get menuMyReports => 'Meine Berichte';
 
   @override
-  String get reportStatusPending => 'Pending';
+  String get reportStatusPending => 'Ausstehend';
 
   @override
-  String get reportStatusSolved => 'Solved';
+  String get reportStatusSolved => 'Gelöst';
 
   @override
-  String get reportStatusRefused => 'Refused';
+  String get reportStatusRefused => 'Abgelehnt';
 
   @override
-  String get reportSuccessTitle => 'Report Received';
+  String get reportSuccessTitle => 'Bericht erhalten';
 
   @override
-  String get reportSuccessContent => 'Thank you for your report. We will review it shortly. You can track its status in \'My Reports\'.';
+  String get reportSuccessContent => 'Vielen Dank für Ihren Bericht. Wir werden ihn in Kürze überprüfen. Sie können den Status unter \'Meine Berichte\' verfolgen.';
 
   @override
-  String get reportViewReports => 'View My Reports';
+  String get reportViewReports => 'Meine Berichte anzeigen';
 
   @override
-  String get reportsTitle => 'My Reports';
+  String get reportsTitle => 'Meine Berichte';
 
   @override
-  String get noReportsFound => 'No reports found';
+  String get noReportsFound => 'Keine Berichte gefunden';
 
   @override
-  String get errorLoadingReports => 'Error loading reports';
+  String get errorLoadingReports => 'Fehler beim Laden der Berichte';
+
+  @override
+  String get updateError => 'Update fehlgeschlagen';
+
+  @override
+  String get upgradeApp => 'App aktualisieren';
 }

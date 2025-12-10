@@ -105,5 +105,7 @@
   "reportViewReports": "Meine Berichte anzeigen",
   "reportsTitle": "Meine Berichte",
   "noReportsFound": "Keine Berichte gefunden",
-  "errorLoadingReports": "Fehler beim Laden der Berichte"
+  "errorLoadingReports": "Fehler beim Laden der Berichte",
+  "updateError": "Update fehlgeschlagen",
+  "upgradeApp": "App aktualisieren"
 }
