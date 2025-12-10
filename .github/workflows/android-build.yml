@@ -317,7 +317,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: docai-msix-${{ github.run_number }}
-          path: build/windows/runner/Release/*.msix
+          path: build/windows/x64/runner/Release/*.msix
           retention-days: ${{ github.event_name == 'pull_request' && 7 || 30 }}
           compression-level: 1
 
