@@ -258,6 +258,54 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
           cache: true
+
+      # Cache para Windows
+      - name: Cache Flutter & Dart Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\Pub\Cache
+            ${{ github.workspace }}/.dart_tool
+            ${{ github.workspace }}/.packages
+            ${{ github.workspace }}/.flutter-plugins
+            ${{ github.workspace }}/.flutter-plugin-dependencies
+          key: flutter-dart-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            flutter-dart-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-
+            flutter-dart-${{ runner.os }}-
+
+      # Crear firebase_options.dart desde secret (usando bash)
+      - name: Create firebase_options.dart from secret
+        shell: bash
+        env:
+          FIREBASE_OPTIONS_DART: ${{ secrets.FIREBASE_OPTIONS_DART }}
+        run: |
+          mkdir -p lib
+          if [ -n "$FIREBASE_OPTIONS_DART" ]; then
+            cat > lib/firebase_options.dart << 'EOF'
+          ${{ secrets.FIREBASE_OPTIONS_DART }}
+          EOF
+            echo "✓ Firebase options file created successfully"
+          else
+            echo "❌ FIREBASE_OPTIONS_DART secret not found"
+            exit 1
+          fi
+
+      # Crear .env desde secret (usando bash)
+      - name: Create .env file from secret
+        shell: bash
+        env:
+          DOT_ENV: ${{ secrets.DOT_ENV }}
+        run: |
+          if [ -n "$DOT_ENV" ]; then
+            cat > .env << 'EOF'
+          ${{ secrets.DOT_ENV }}
+          EOF
+            echo "✓ .env file created successfully"
+          else
+            echo "❌ DOT_ENV secret not found"
+            exit 1
+          fi
       
       - name: Get dependencies
         run: flutter pub get
@@ -272,3 +320,12 @@ jobs:
           path: build/windows/runner/Release/*.msix
           retention-days: ${{ github.event_name == 'pull_request' && 7 || 30 }}
           compression-level: 1
+
+      # Limpiar archivos sensibles
+      - name: Cleanup sensitive files
+        if: always()
+        shell: bash
+        run: |
+          rm -f lib/firebase_options.dart
+          rm -f .env
+          echo "✓ Sensitive files cleaned up"
