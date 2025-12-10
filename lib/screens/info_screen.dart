@@ -52,14 +52,15 @@ class InfoScreen extends StatelessWidget {
         startColor: const Color(0xFF00E5FF),
         endColor: const Color(0xFF00BFA5),
       ),
-      _InfoItem(
-        icon: Icons.shop_outlined,
-        title: localizations.menuPlayStore,
-        subtitle: localizations.infoPlayStoreSubtitle,
-        url: _playStoreUri,
-        startColor: const Color(0xFF1DE9B6),
-        endColor: const Color(0xFF00C853),
-      ),
+      if (Theme.of(context).platform != TargetPlatform.windows)
+        _InfoItem(
+          icon: Icons.shop_outlined,
+          title: localizations.menuPlayStore,
+          subtitle: localizations.infoPlayStoreSubtitle,
+          url: _playStoreUri,
+          startColor: const Color(0xFF1DE9B6),
+          endColor: const Color(0xFF00C853),
+        ),
       _InfoItem(
         icon: Icons.feedback_outlined,
         title: localizations.menuSuggestions,
