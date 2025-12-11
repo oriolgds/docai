@@ -310,8 +310,11 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Build Windows App
+        run: flutter build windows --release
+
       - name: Create MSIX
-        run: dart run msix:create
+        run: dart run msix:create --no-build-windows
 
       - name: Upload MSIX artifact
         uses: actions/upload-artifact@v4
