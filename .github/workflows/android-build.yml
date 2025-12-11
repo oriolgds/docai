@@ -340,13 +340,6 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      # Show disk space before build
-      - name: Check disk space before build
-        shell: powershell
-        run: |
-          Write-Host "📊 Disk space before Windows build:"
-          Get-PSDrive C | Select-Object Used,Free
-
       # Build Windows app with verbose output for debugging
       - name: Build Windows App
         run: flutter build windows --release -v
