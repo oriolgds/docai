@@ -65,6 +65,6 @@ msix_config:
   publisher_display_name: "Oriol Giner"
   identity_name: "OriolGiner.Docai"
   publisher: "CN=2A1BF35C-B236-4EA2-9703-E3FBAD46CF55"
-  msix_version: 2.0.0.1
+  msix_version: 3.0.0.0
   store: true
   architecture: x64
