@@ -252,6 +252,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Free up disk space before building (Firebase C++ SDK is very large)
+      - name: Free up disk space
+        shell: powershell
+        run: |
+          Write-Host "📊 Initial disk space:"
+          Get-PSDrive C | Select-Object Used,Free
+          
+          # Remove unnecessary tools to free space
+          if (Test-Path "C:\Android") {
+            Write-Host "Removing Android SDK..."
+            Remove-Item -Recurse -Force "C:\Android" -ErrorAction SilentlyContinue
+          }
+          
+          Write-Host "📊 Disk space after cleanup:"
+          Get-PSDrive C | Select-Object Used,Free
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -259,7 +275,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      # Cache para Windows
+      # Cache para Windows (including Firebase C++ SDK)
       - name: Cache Flutter & Dart Dependencies
         uses: actions/cache@v4
         with:
@@ -273,6 +289,16 @@ jobs:
           restore-keys: |
             flutter-dart-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-
             flutter-dart-${{ runner.os }}-
+
+      # Cache Firebase C++ SDK (very large, ~627MB compressed)
+      - name: Cache Firebase C++ SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/windows/x64/extracted/firebase_cpp_sdk_windows
+          key: firebase-cpp-sdk-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            firebase-cpp-sdk-${{ runner.os }}-
 
       # Crear firebase_options.dart desde secret (usando bash)
       - name: Create firebase_options.dart from secret
@@ -307,14 +333,27 @@ jobs:
             exit 1
           fi
       
+      # Flutter clean to avoid cached CMake configuration issues
+      - name: Flutter Clean
+        run: flutter clean
+
       - name: Get dependencies
         run: flutter pub get
 
+      # Show disk space before build
+      - name: Check disk space before build
+        shell: powershell
+        run: |
+          Write-Host "📊 Disk space before Windows build:"
+          Get-PSDrive C | Select-Object Used,Free
+
+      # Build Windows app with verbose output for debugging
       - name: Build Windows App
-        run: flutter build windows --release
+        run: flutter build windows --release -v
+        timeout-minutes: 30
 
       - name: Create MSIX
-        run: dart run msix:create --no-build-windows
+        run: dart run msix:create --build-windows false
 
       - name: Upload MSIX artifact
         uses: actions/upload-artifact@v4
