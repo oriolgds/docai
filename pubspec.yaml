@@ -68,3 +68,4 @@ msix_config:
   msix_version: 2.0.1.0
   store: true
   architecture: x64
+  logo_path: assets/logo/xmas.png
