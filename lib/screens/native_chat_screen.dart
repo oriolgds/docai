@@ -660,6 +660,11 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
+    final showSnowfall =
+        _currentPageIndex == 0 &&
+        _messages.isEmpty &&
+        _inputController.text.trim().isEmpty;
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Stack(
@@ -690,7 +695,14 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                     ),
             ),
           ),
-          const Positioned.fill(child: SnowfallAnimation()),
+          Positioned.fill(
+            child: AnimatedOpacity(
+              opacity: showSnowfall ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+              child: const SnowfallAnimation(),
+            ),
+          ),
         ],
       ),
     );
