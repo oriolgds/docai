@@ -420,6 +420,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get preferencesSaved => 'Medizinisches Profil erfolgreich gespeichert';
 
   @override
+  String get reportRateLimitError => 'Sie senden Berichte zu schnell. Bitte warten Sie einen Moment.';
+
+  @override
   String get menuWindowsStore => 'Microsoft Store';
 
   @override

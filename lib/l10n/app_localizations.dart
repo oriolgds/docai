@@ -923,6 +923,12 @@ abstract class AppLocalizations {
   /// **'Medical profile saved successfully'**
   String get preferencesSaved;
 
+  /// No description provided for @reportRateLimitError.
+  ///
+  /// In en, this message translates to:
+  /// **'You are submitting reports too frequently. Please wait a moment.'**
+  String get reportRateLimitError;
+
   /// No description provided for @menuWindowsStore.
   ///
   /// In en, this message translates to:
