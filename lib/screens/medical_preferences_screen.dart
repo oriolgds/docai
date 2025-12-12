@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docai/l10n/app_localizations.dart';
+import 'dart:async';
 
 class MedicalPreferencesScreen extends StatefulWidget {
   const MedicalPreferencesScreen({super.key});
@@ -12,6 +13,7 @@ class MedicalPreferencesScreen extends StatefulWidget {
 class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
+  Timer? _debounceTimer;
 
   // Controllers
   final TextEditingController _ageController = TextEditingController();
@@ -29,10 +31,20 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
   void initState() {
     super.initState();
     _loadPreferences();
+
+    // Add listeners for auto-save
+    _ageController.addListener(_onFieldChanged);
+    _weightController.addListener(_onFieldChanged);
+    _heightController.addListener(_onFieldChanged);
+    _allergiesController.addListener(_onFieldChanged);
+    _conditionsController.addListener(_onFieldChanged);
+    _medicationsController.addListener(_onFieldChanged);
+    _dietaryController.addListener(_onFieldChanged);
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _ageController.dispose();
     _weightController.dispose();
     _heightController.dispose();
@@ -41,6 +53,13 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
     _medicationsController.dispose();
     _dietaryController.dispose();
     super.dispose();
+  }
+
+  void _onFieldChanged() {
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _savePreferences();
+    });
   }
 
   Future<void> _loadPreferences() async {
@@ -65,7 +84,10 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
   }
 
   Future<void> _savePreferences() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isLoading) return; // Don't save if still loading
+
+    // We don't validate on auto-save to allow partial input, but we could if strict validation is needed.
+    // However, basic type checks are done by keyboard type.
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -87,24 +109,9 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
       }
       await prefs.setString('pref_dietary', _dietaryController.text.trim());
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.preferencesSaved),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.of(context).pop();
-      }
+      // Auto-save is silent, no snackbar
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error saving preferences: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      debugPrint('Error saving preferences: $e');
     }
   }
 
@@ -122,13 +129,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(localizations.medicalPreferencesTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _savePreferences,
-            tooltip: localizations.saveLabel,
-          ),
-        ],
+        // No save button in AppBar
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -176,7 +177,10 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
                         DropdownMenuItem(value: 'female', child: Text(localizations.genderFemale)),
                         DropdownMenuItem(value: 'other', child: Text(localizations.genderOther)),
                       ],
-                      onChanged: (value) => setState(() => _selectedGender = value),
+                      onChanged: (value) {
+                        setState(() => _selectedGender = value);
+                        _savePreferences(); // Dropdowns trigger save immediately
+                      },
                     ),
                   ),
                 ],
@@ -272,7 +276,10 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
                   DropdownMenuItem(value: 'active', child: Text(localizations.activityActive)),
                   DropdownMenuItem(value: 'very_active', child: Text(localizations.activityVeryActive)),
                 ],
-                onChanged: (value) => setState(() => _selectedActivityLevel = value),
+                onChanged: (value) {
+                  setState(() => _selectedActivityLevel = value);
+                  _savePreferences(); // Dropdowns trigger save immediately
+                },
               ),
               const SizedBox(height: 16),
 
@@ -288,15 +295,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
               ),
               const SizedBox(height: 32),
 
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: FilledButton.icon(
-                  onPressed: _savePreferences,
-                  icon: const Icon(Icons.save),
-                  label: Text(localizations.saveLabel),
-                ),
-              ),
+              // Bottom Save button removed
             ],
           ),
         ),
