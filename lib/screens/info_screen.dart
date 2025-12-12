@@ -172,9 +172,8 @@ class InfoScreen extends StatelessWidget {
                               return const SizedBox.shrink();
                             }
                             final version = snapshot.data!;
-                            final versionString = '${version.version}+${version.buildNumber}';
                             return Text(
-                              localizations.versionDisplay(versionString),
+                              localizations.versionDisplay(version.version),
                               style: TextStyle(
                                 color: Theme.of(context).disabledColor,
                                 fontSize: 12,
