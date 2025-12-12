@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/state/locale_scope.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class InfoScreen extends StatelessWidget {
   const InfoScreen({super.key});
@@ -164,12 +165,22 @@ class InfoScreen extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 24),
                       child: Center(
-                        child: Text(
-                          localizations.versionDisplay('6.1.29+74'),
-                          style: TextStyle(
-                            color: Theme.of(context).disabledColor,
-                            fontSize: 12,
-                          ),
+                        child: FutureBuilder<PackageInfo>(
+                          future: PackageInfo.fromPlatform(),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const SizedBox.shrink();
+                            }
+                            final version = snapshot.data!;
+                            final versionString = '${version.version}+${version.buildNumber}';
+                            return Text(
+                              localizations.versionDisplay(versionString),
+                              style: TextStyle(
+                                color: Theme.of(context).disabledColor,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
