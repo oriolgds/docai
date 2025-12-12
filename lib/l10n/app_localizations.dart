@@ -748,6 +748,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Update app'**
   String get upgradeApp;
+
+  /// No description provided for @medicalPreferencesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Profile'**
+  String get medicalPreferencesTitle;
+
+  /// No description provided for @medicalPreferencesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize your experience by providing your medical details. This data is stored locally.'**
+  String get medicalPreferencesSubtitle;
+
+  /// No description provided for @sectionBasicInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic Information'**
+  String get sectionBasicInfo;
+
+  /// No description provided for @sectionMedicalHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical History'**
+  String get sectionMedicalHistory;
+
+  /// No description provided for @sectionLifestyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifestyle'**
+  String get sectionLifestyle;
+
+  /// No description provided for @labelAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get labelAge;
+
+  /// No description provided for @labelGender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get labelGender;
+
+  /// No description provided for @labelWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get labelWeight;
+
+  /// No description provided for @labelHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get labelHeight;
+
+  /// No description provided for @labelAllergies.
+  ///
+  /// In en, this message translates to:
+  /// **'Allergies'**
+  String get labelAllergies;
+
+  /// No description provided for @labelConditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Chronic Conditions'**
+  String get labelConditions;
+
+  /// No description provided for @labelMedications.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Medications'**
+  String get labelMedications;
+
+  /// No description provided for @labelActivityLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Level'**
+  String get labelActivityLevel;
+
+  /// No description provided for @labelDietary.
+  ///
+  /// In en, this message translates to:
+  /// **'Dietary Restrictions'**
+  String get labelDietary;
+
+  /// No description provided for @genderMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get genderMale;
+
+  /// No description provided for @genderFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get genderFemale;
+
+  /// No description provided for @genderOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get genderOther;
+
+  /// No description provided for @hintAllergies.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Peanuts, Penicillin, Pollen...'**
+  String get hintAllergies;
+
+  /// No description provided for @hintConditions.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Diabetes, Hypertension, Asthma...'**
+  String get hintConditions;
+
+  /// No description provided for @hintMedications.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Metformin, Lisinopril...'**
+  String get hintMedications;
+
+  /// No description provided for @hintDietary.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Vegan, Gluten-free, Low sodium...'**
+  String get hintDietary;
+
+  /// No description provided for @activitySedentary.
+  ///
+  /// In en, this message translates to:
+  /// **'Sedentary (Little to no exercise)'**
+  String get activitySedentary;
+
+  /// No description provided for @activityLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Lightly Active (Light exercise 1-3 days/week)'**
+  String get activityLight;
+
+  /// No description provided for @activityModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderately Active (Moderate exercise 3-5 days/week)'**
+  String get activityModerate;
+
+  /// No description provided for @activityActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active (Hard exercise 6-7 days/week)'**
+  String get activityActive;
+
+  /// No description provided for @activityVeryActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Very Active (Very hard exercise & physical job)'**
+  String get activityVeryActive;
+
+  /// No description provided for @saveLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Profile'**
+  String get saveLabel;
+
+  /// No description provided for @preferencesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical profile saved successfully'**
+  String get preferencesSaved;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

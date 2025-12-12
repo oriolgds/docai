@@ -331,4 +331,88 @@ class AppLocalizationsCa extends AppLocalizations {
 
   @override
   String get upgradeApp => 'Actualitzar app';
+
+  @override
+  String get medicalPreferencesTitle => 'Perfil Mèdic';
+
+  @override
+  String get medicalPreferencesSubtitle => 'Personalitza la teva experiència proporcionant les teves dades mèdiques. Aquestes dades s\'emmagatzemen localment.';
+
+  @override
+  String get sectionBasicInfo => 'Informació Bàsica';
+
+  @override
+  String get sectionMedicalHistory => 'Historial Mèdic';
+
+  @override
+  String get sectionLifestyle => 'Estil de Vida';
+
+  @override
+  String get labelAge => 'Edat';
+
+  @override
+  String get labelGender => 'Gènere';
+
+  @override
+  String get labelWeight => 'Pes';
+
+  @override
+  String get labelHeight => 'Alçada';
+
+  @override
+  String get labelAllergies => 'Al·lèrgies';
+
+  @override
+  String get labelConditions => 'Condicions Cròniques';
+
+  @override
+  String get labelMedications => 'Medicació Actual';
+
+  @override
+  String get labelActivityLevel => 'Nivell d\'Activitat';
+
+  @override
+  String get labelDietary => 'Restriccions Dietètiques';
+
+  @override
+  String get genderMale => 'Masculí';
+
+  @override
+  String get genderFemale => 'Femení';
+
+  @override
+  String get genderOther => 'Altre';
+
+  @override
+  String get hintAllergies => 'ex. Cacauets, Penicil·lina, Pol·len...';
+
+  @override
+  String get hintConditions => 'ex. Diabetis, Hipertensió, Asma...';
+
+  @override
+  String get hintMedications => 'ex. Metformina, Lisinopril...';
+
+  @override
+  String get hintDietary => 'ex. Vegà, Sense gluten, Baix en sodi...';
+
+  @override
+  String get activitySedentary => 'Sedentari (Poc o gens d\'exercici)';
+
+  @override
+  String get activityLight => 'Lleugerament Actiu (Exercici lleuger 1-3 dies/set)';
+
+  @override
+  String get activityModerate => 'Moderadament Actiu (Exercici moderat 3-5 dies/set)';
+
+  @override
+  String get activityActive => 'Actiu (Exercici fort 6-7 dies/set)';
+
+  @override
+  String get activityVeryActive => 'Molt Actiu (Exercici molt fort i feina física)';
+
+  @override
+  String get saveLabel => 'Desar Perfil';
+
+  @override
+  String get preferencesSaved => 'Perfil mèdic desat correctament';
 }

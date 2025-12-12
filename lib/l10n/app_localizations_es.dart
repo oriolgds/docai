@@ -331,4 +331,88 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get upgradeApp => 'Actualizar app';
+
+  @override
+  String get medicalPreferencesTitle => 'Perfil Médico';
+
+  @override
+  String get medicalPreferencesSubtitle => 'Personaliza tu experiencia proporcionando tus datos médicos. Estos datos se almacenan localmente.';
+
+  @override
+  String get sectionBasicInfo => 'Información Básica';
+
+  @override
+  String get sectionMedicalHistory => 'Historial Médico';
+
+  @override
+  String get sectionLifestyle => 'Estilo de Vida';
+
+  @override
+  String get labelAge => 'Edad';
+
+  @override
+  String get labelGender => 'Género';
+
+  @override
+  String get labelWeight => 'Peso';
+
+  @override
+  String get labelHeight => 'Altura';
+
+  @override
+  String get labelAllergies => 'Alergias';
+
+  @override
+  String get labelConditions => 'Condiciones Crónicas';
+
+  @override
+  String get labelMedications => 'Medicación Actual';
+
+  @override
+  String get labelActivityLevel => 'Nivel de Actividad';
+
+  @override
+  String get labelDietary => 'Restricciones Dietéticas';
+
+  @override
+  String get genderMale => 'Masculino';
+
+  @override
+  String get genderFemale => 'Femenino';
+
+  @override
+  String get genderOther => 'Otro';
+
+  @override
+  String get hintAllergies => 'ej. Cacahuetes, Penicilina, Polen...';
+
+  @override
+  String get hintConditions => 'ej. Diabetes, Hipertensión, Asma...';
+
+  @override
+  String get hintMedications => 'ej. Metformina, Lisinopril...';
+
+  @override
+  String get hintDietary => 'ej. Vegano, Sin gluten, Bajo en sodio...';
+
+  @override
+  String get activitySedentary => 'Sedentario (Poco o nada de ejercicio)';
+
+  @override
+  String get activityLight => 'Ligeramente Activo (Ejercicio ligero 1-3 días/sem)';
+
+  @override
+  String get activityModerate => 'Moderadamente Activo (Ejercicio moderado 3-5 días/sem)';
+
+  @override
+  String get activityActive => 'Activo (Ejercicio fuerte 6-7 días/sem)';
+
+  @override
+  String get activityVeryActive => 'Muy Activo (Ejercicio muy fuerte y trabajo físico)';
+
+  @override
+  String get saveLabel => 'Guardar Perfil';
+
+  @override
+  String get preferencesSaved => 'Perfil médico guardado correctamente';
 }

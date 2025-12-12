@@ -7,7 +7,8 @@ class MedicalPreferencesScreen extends StatefulWidget {
   const MedicalPreferencesScreen({super.key});
 
   @override
-  State<MedicalPreferencesScreen> createState() => _MedicalPreferencesScreenState();
+  State<MedicalPreferencesScreen> createState() =>
+      _MedicalPreferencesScreenState();
 }
 
 class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
@@ -100,8 +101,14 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
       await prefs.setString('pref_weight', _weightController.text.trim());
       await prefs.setString('pref_height', _heightController.text.trim());
       await prefs.setString('pref_allergies', _allergiesController.text.trim());
-      await prefs.setString('pref_conditions', _conditionsController.text.trim());
-      await prefs.setString('pref_medications', _medicationsController.text.trim());
+      await prefs.setString(
+        'pref_conditions',
+        _conditionsController.text.trim(),
+      );
+      await prefs.setString(
+        'pref_medications',
+        _medicationsController.text.trim(),
+      );
       if (_selectedActivityLevel != null) {
         await prefs.setString('pref_activity_level', _selectedActivityLevel!);
       } else {
@@ -140,9 +147,9 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
             children: [
               Text(
                 localizations.medicalPreferencesSubtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               ),
               const SizedBox(height: 24),
 
@@ -166,6 +173,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      isExpanded: true,
                       value: _selectedGender,
                       decoration: InputDecoration(
                         labelText: localizations.labelGender,
@@ -173,9 +181,18 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
                         prefixIcon: const Icon(Icons.person),
                       ),
                       items: [
-                        DropdownMenuItem(value: 'male', child: Text(localizations.genderMale)),
-                        DropdownMenuItem(value: 'female', child: Text(localizations.genderFemale)),
-                        DropdownMenuItem(value: 'other', child: Text(localizations.genderOther)),
+                        DropdownMenuItem(
+                          value: 'male',
+                          child: Text(localizations.genderMale),
+                        ),
+                        DropdownMenuItem(
+                          value: 'female',
+                          child: Text(localizations.genderFemale),
+                        ),
+                        DropdownMenuItem(
+                          value: 'other',
+                          child: Text(localizations.genderOther),
+                        ),
                       ],
                       onChanged: (value) {
                         setState(() => _selectedGender = value);
@@ -263,6 +280,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 value: _selectedActivityLevel,
                 decoration: InputDecoration(
                   labelText: localizations.labelActivityLevel,
@@ -270,11 +288,26 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
                   prefixIcon: const Icon(Icons.directions_run),
                 ),
                 items: [
-                  DropdownMenuItem(value: 'sedentary', child: Text(localizations.activitySedentary)),
-                  DropdownMenuItem(value: 'light', child: Text(localizations.activityLight)),
-                  DropdownMenuItem(value: 'moderate', child: Text(localizations.activityModerate)),
-                  DropdownMenuItem(value: 'active', child: Text(localizations.activityActive)),
-                  DropdownMenuItem(value: 'very_active', child: Text(localizations.activityVeryActive)),
+                  DropdownMenuItem(
+                    value: 'sedentary',
+                    child: Text(localizations.activitySedentary),
+                  ),
+                  DropdownMenuItem(
+                    value: 'light',
+                    child: Text(localizations.activityLight),
+                  ),
+                  DropdownMenuItem(
+                    value: 'moderate',
+                    child: Text(localizations.activityModerate),
+                  ),
+                  DropdownMenuItem(
+                    value: 'active',
+                    child: Text(localizations.activityActive),
+                  ),
+                  DropdownMenuItem(
+                    value: 'very_active',
+                    child: Text(localizations.activityVeryActive),
+                  ),
                 ],
                 onChanged: (value) {
                   setState(() => _selectedActivityLevel = value);
