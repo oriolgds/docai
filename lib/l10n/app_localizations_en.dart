@@ -334,4 +334,88 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get upgradeApp => 'Update app';
+
+  @override
+  String get medicalPreferencesTitle => 'Medical Profile';
+
+  @override
+  String get medicalPreferencesSubtitle => 'Customize your experience by providing your medical details. This data is stored locally.';
+
+  @override
+  String get sectionBasicInfo => 'Basic Information';
+
+  @override
+  String get sectionMedicalHistory => 'Medical History';
+
+  @override
+  String get sectionLifestyle => 'Lifestyle';
+
+  @override
+  String get labelAge => 'Age';
+
+  @override
+  String get labelGender => 'Gender';
+
+  @override
+  String get labelWeight => 'Weight';
+
+  @override
+  String get labelHeight => 'Height';
+
+  @override
+  String get labelAllergies => 'Allergies';
+
+  @override
+  String get labelConditions => 'Chronic Conditions';
+
+  @override
+  String get labelMedications => 'Current Medications';
+
+  @override
+  String get labelActivityLevel => 'Activity Level';
+
+  @override
+  String get labelDietary => 'Dietary Restrictions';
+
+  @override
+  String get genderMale => 'Male';
+
+  @override
+  String get genderFemale => 'Female';
+
+  @override
+  String get genderOther => 'Other';
+
+  @override
+  String get hintAllergies => 'e.g. Peanuts, Penicillin, Pollen...';
+
+  @override
+  String get hintConditions => 'e.g. Diabetes, Hypertension, Asthma...';
+
+  @override
+  String get hintMedications => 'e.g. Metformin, Lisinopril...';
+
+  @override
+  String get hintDietary => 'e.g. Vegan, Gluten-free, Low sodium...';
+
+  @override
+  String get activitySedentary => 'Sedentary (Little to no exercise)';
+
+  @override
+  String get activityLight => 'Lightly Active (Light exercise 1-3 days/week)';
+
+  @override
+  String get activityModerate => 'Moderately Active (Moderate exercise 3-5 days/week)';
+
+  @override
+  String get activityActive => 'Active (Hard exercise 6-7 days/week)';
+
+  @override
+  String get activityVeryActive => 'Very Active (Very hard exercise & physical job)';
+
+  @override
+  String get saveLabel => 'Save Profile';
+
+  @override
+  String get preferencesSaved => 'Medical profile saved successfully';
 }

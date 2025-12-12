@@ -12,6 +12,7 @@ import 'package:docai/services/pollinations_service.dart';
 import 'package:docai/screens/info_screen.dart';
 import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/screens/reports_screen.dart';
+import 'package:docai/screens/medical_preferences_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:uuid/uuid.dart';
@@ -480,8 +481,46 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       _scrollToBottom();
     }
 
+    // Retrieve medical preferences
+    final prefs = await SharedPreferences.getInstance();
+    final age = prefs.getString('pref_age');
+    final gender = prefs.getString('pref_gender');
+    final weight = prefs.getString('pref_weight');
+    final height = prefs.getString('pref_height');
+    final allergies = prefs.getString('pref_allergies');
+    final conditions = prefs.getString('pref_conditions');
+    final medications = prefs.getString('pref_medications');
+    final activityLevel = prefs.getString('pref_activity_level');
+    final dietary = prefs.getString('pref_dietary');
+
+    String medicalProfile = '';
+    if ([
+      age,
+      gender,
+      weight,
+      height,
+      allergies,
+      conditions,
+      medications,
+      activityLevel,
+      dietary,
+    ].any((e) => e != null && e.isNotEmpty)) {
+      medicalProfile = '\n\nUser Medical Profile:\n';
+      if (age?.isNotEmpty == true) medicalProfile += '- Age: $age\n';
+      if (gender?.isNotEmpty == true) medicalProfile += '- Gender: $gender\n';
+      if (weight?.isNotEmpty == true) medicalProfile += '- Weight: $weight kg\n';
+      if (height?.isNotEmpty == true) medicalProfile += '- Height: $height cm\n';
+      if (allergies?.isNotEmpty == true) medicalProfile += '- Allergies: $allergies\n';
+      if (conditions?.isNotEmpty == true) medicalProfile += '- Chronic Conditions: $conditions\n';
+      if (medications?.isNotEmpty == true) medicalProfile += '- Current Medications: $medications\n';
+      if (activityLevel?.isNotEmpty == true) medicalProfile += '- Activity Level: $activityLevel\n';
+      if (dietary?.isNotEmpty == true) medicalProfile += '- Dietary Restrictions: $dietary\n';
+
+      medicalProfile += '\nTake this profile into account when answering if relevant.';
+    }
+
     final apiMessages = [
-      {'role': 'system', 'content': _selectedPreset.systemPrompt},
+      {'role': 'system', 'content': _selectedPreset.systemPrompt + medicalProfile},
       ..._messages.map((m) => m.toApiFormat()),
     ];
 
@@ -1001,10 +1040,37 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                         ),
                                       );
                                       break;
+                                    case 'medical_profile':
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) =>
+                                                  const MedicalPreferencesScreen(),
+                                        ),
+                                      );
+                                      break;
                                   }
                                 },
                                 itemBuilder: (context) {
                                   return [
+                                    // Medical Profile
+                                    PopupMenuItem<String>(
+                                      value: 'medical_profile',
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.assignment_ind_outlined,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            localizations.medicalPreferencesTitle,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const PopupMenuDivider(),
+
                                     // Theme submenu header
                                     PopupMenuItem<String>(
                                       enabled: false,
@@ -1367,6 +1433,13 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                               ),
                             );
                             break;
+                          case 'medical_profile':
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const MedicalPreferencesScreen(),
+                              ),
+                            );
+                            break;
                           case 'delete_all':
                             await _deleteAllChats();
                             break;
@@ -1374,6 +1447,22 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                       },
                       itemBuilder: (context) {
                         return [
+                          // Medical Profile
+                          PopupMenuItem<String>(
+                            value: 'medical_profile',
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.assignment_ind_outlined,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(localizations.medicalPreferencesTitle),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuDivider(),
+
                           // Delete All (only on history page with items)
                           if (_currentPageIndex == 1 &&
                               _chatHistory.isNotEmpty) ...[
