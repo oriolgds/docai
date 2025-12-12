@@ -273,6 +273,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get reportDialogTitle => 'Reportar contenido';
 
   @override
+  String get reportReasonLabel => 'Razón: ';
+
+  @override
   String get reportReasonInappropriate => 'Contenido inapropiado';
 
   @override

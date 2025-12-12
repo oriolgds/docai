@@ -273,6 +273,9 @@ class AppLocalizationsCa extends AppLocalizations {
   String get reportDialogTitle => 'Informar de contingut';
 
   @override
+  String get reportReasonLabel => 'Raó: ';
+
+  @override
   String get reportReasonInappropriate => 'Contingut inadequat';
 
   @override

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:docai/services/firestore_service.dart';
+import 'package:docai/l10n/app_localizations.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class ReportsScreen extends StatelessWidget {
@@ -9,15 +10,19 @@ class ReportsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final firestoreService = FirestoreService();
+    final localizations = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Reports')),
+      appBar: AppBar(title: Text(localizations.reportsTitle)),
       body: StreamBuilder<QuerySnapshot>(
         stream: firestoreService.getReports(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(
-              child: Text('Error loading reports: ${snapshot.error}'),
+              child: Text(
+                '${localizations.errorLoadingReports}: ${snapshot.error}',
+              ),
             );
           }
 
@@ -27,7 +32,7 @@ class ReportsScreen extends StatelessWidget {
 
           final data = snapshot.data;
           if (data == null || data.docs.isEmpty) {
-            return const Center(child: Text('No reports found'));
+            return Center(child: Text(localizations.noReportsFound));
           }
 
           return ListView.builder(
@@ -37,6 +42,7 @@ class ReportsScreen extends StatelessWidget {
               final report = doc.data() as Map<String, dynamic>;
               final status = report['status'] as String? ?? 'pending';
               final timestamp = (report['reportedAt'] as Timestamp?)?.toDate();
+              final reasonKey = report['reason'] as String?;
 
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -51,10 +57,10 @@ class ReportsScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildStatusChip(status),
+                          _buildStatusChip(context, status),
                           if (timestamp != null)
                             Text(
-                              timeago.format(timestamp),
+                              timeago.format(timestamp, locale: locale),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],
@@ -63,17 +69,32 @@ class ReportsScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Text(
-                        'Reason: ${report['reason']}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: localizations.reportReasonLabel,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text: _getLocalizedReason(
+                                localizations,
+                                reasonKey,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.black26
-                              : Colors.grey[100],
+                          color:
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.black26
+                                  : Colors.grey[100],
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -97,7 +118,37 @@ class ReportsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusChip(String status) {
+  String _getLocalizedReason(AppLocalizations localizations, String? reason) {
+    if (reason == null) return '';
+
+    switch (reason.toLowerCase()) {
+      case 'inappropriate':
+        return localizations.reportReasonInappropriate;
+      case 'incorrect':
+        return localizations.reportReasonIncorrect;
+      case 'harmful':
+        return localizations.reportReasonHarmful;
+      case 'other':
+        return localizations.reportReasonOther;
+      default:
+        // Try to map English strings if stored as text
+        if (reason == 'Inappropriate content') {
+          return localizations.reportReasonInappropriate;
+        }
+        if (reason == 'Incorrect information') {
+          return localizations.reportReasonIncorrect;
+        }
+        if (reason == 'Harmful or dangerous') {
+          return localizations.reportReasonHarmful;
+        }
+        if (reason == 'Other') return localizations.reportReasonOther;
+
+        return reason;
+    }
+  }
+
+  Widget _buildStatusChip(BuildContext context, String status) {
+    final localizations = AppLocalizations.of(context)!;
     Color color;
     IconData icon;
     String label;
@@ -106,18 +157,18 @@ class ReportsScreen extends StatelessWidget {
       case 'solved':
         color = Colors.green;
         icon = Icons.check_circle_outline;
-        label = 'Solved';
+        label = localizations.reportStatusSolved;
         break;
       case 'refused':
         color = Colors.red;
         icon = Icons.cancel_outlined;
-        label = 'Refused';
+        label = localizations.reportStatusRefused;
         break;
       case 'pending':
       default:
         color = Colors.orange;
         icon = Icons.access_time;
-        label = 'Pending';
+        label = localizations.reportStatusPending;
         break;
     }
 
