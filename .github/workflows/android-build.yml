@@ -2,7 +2,9 @@ name: Build Android and Windows
 
 on:
   push:
-    branches: [ main ]  # Solo main para reducir ejecuciones
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
     inputs:
       build_type:
