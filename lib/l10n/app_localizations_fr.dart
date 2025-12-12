@@ -418,4 +418,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get preferencesSaved => 'Profil médical enregistré avec succès';
+
+  @override
+  String get reportRateLimitError => 'Vous envoyez des rapports trop rapidement. Veuillez patienter un instant.';
 }

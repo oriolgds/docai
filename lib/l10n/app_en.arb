@@ -136,5 +136,6 @@
   "activityActive": "Active (Hard exercise 6-7 days/week)",
   "activityVeryActive": "Very Active (Very hard exercise & physical job)",
   "saveLabel": "Save Profile",
-  "preferencesSaved": "Medical profile saved successfully"
+  "preferencesSaved": "Medical profile saved successfully",
+  "reportRateLimitError": "You are submitting reports too frequently. Please wait a moment."
 }

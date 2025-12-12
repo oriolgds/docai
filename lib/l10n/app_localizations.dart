@@ -922,6 +922,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Medical profile saved successfully'**
   String get preferencesSaved;
+
+  /// No description provided for @reportRateLimitError.
+  ///
+  /// In en, this message translates to:
+  /// **'You are submitting reports too frequently. Please wait a moment.'**
+  String get reportRateLimitError;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
