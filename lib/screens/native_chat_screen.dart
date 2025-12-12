@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
@@ -58,6 +59,12 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   late AnimationController _micController;
   late Animation<double> _micPulseAnimation;
 
+  late AnimationController _menuButtonController;
+  late Animation<double> _menuRotationAnimation;
+
+  late AnimationController _newChatHoverController;
+  late Animation<double> _newChatScaleAnimation;
+
   @override
   void initState() {
     super.initState();
@@ -82,6 +89,30 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     _fabAnimation = CurvedAnimation(
       parent: _fabController,
       curve: Curves.easeInOut,
+    );
+
+    _menuButtonController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _menuRotationAnimation = Tween<double>(begin: 0.0, end: 0.5).animate(
+      CurvedAnimation(
+        parent: _menuButtonController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    _newChatHoverController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+
+    _newChatScaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(
+        parent: _newChatHoverController,
+        curve: Curves.easeOutCubic,
+      ),
     );
 
     _scrollController.addListener(_onScroll);
@@ -196,6 +227,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     _scrollController.dispose();
     _fabController.dispose();
     _micController.dispose();
+    _menuButtonController.dispose();
+    _newChatHoverController.dispose();
     super.dispose();
   }
 
@@ -736,240 +769,724 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Widget _buildSideNav(AppLocalizations localizations) {
-    return Container(
-      width: 64,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          right: BorderSide(color: Theme.of(context).dividerColor, width: 1),
-        ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Doky',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    IconButton(
-                      icon: const Icon(Icons.add_comment_outlined),
-                      tooltip: localizations.chatNewConversation,
-                      onPressed: () {
-                        _safeLogEvent(name: 'new_chat');
-                        _clearChat();
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    IconButton(
-                      icon: Text(
-                        _selectedPreset.emoji,
-                        style: const TextStyle(fontSize: 22),
-                      ),
-                      tooltip: _getPresetName(context, _selectedPreset),
-                      onPressed: () {
-                        if (_currentPageIndex != 0) {
-                          _switchToPage(0);
-                        } else {
-                          _showPresetSelector();
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    IconButton(
-                      icon: Icon(
-                        Icons.history_outlined,
-                        color: _currentPageIndex == 1
-                            ? Colors.green[700]
-                            : Colors.grey[700],
-                      ),
-                      tooltip: localizations.menuHistory,
-                      onPressed: () => _switchToPage(1),
-                    ),
-                    if (_currentPageIndex == 1 && _chatHistory.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.red,
-                        ),
-                        tooltip: localizations.deleteDialogConfirm,
-                        onPressed: _deleteAllChats,
-                      ),
+    final currentTheme = ThemeScope.of(context).themeMode;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          width: 64,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDark
+                  ? [
+                      Colors.grey[900]!.withOpacity(0.85),
+                      Colors.grey[850]!.withOpacity(0.85),
+                    ]
+                  : [
+                      Colors.white.withOpacity(0.85),
+                      Colors.grey[50]!.withOpacity(0.85),
                     ],
-                    const Spacer(),
-                    IconButton(
-                      icon: Icon(
-                        _isIncognito ? Icons.visibility_off : Icons.visibility,
-                        color: _isIncognito
-                            ? Colors.amber[700]
-                            : (_messages.isNotEmpty ? Colors.grey : null),
-                      ),
-                      tooltip: _messages.isNotEmpty
-                          ? 'Cannot change incognito mode during conversation'
-                          : (_isIncognito
-                                ? 'Incognito Mode ON'
-                                : 'Incognito Mode OFF'),
-                      onPressed: _messages.isEmpty
-                          ? () {
-                              setState(() => _isIncognito = !_isIncognito);
-                            }
-                          : null,
-                    ),
-                    const SizedBox(height: 8),
-                    // Theme toggle
-                    IconButton(
-                      icon: Icon(
-                        ThemeScope.of(context).themeMode == ThemeMode.system
-                            ? Icons.brightness_auto
-                            : ThemeScope.of(context).themeMode ==
-                                  ThemeMode.light
-                            ? Icons.light_mode_outlined
-                            : Icons.dark_mode_outlined,
-                      ),
-                      tooltip:
-                          ThemeScope.of(context).themeMode == ThemeMode.system
-                          ? 'System Theme'
-                          : ThemeScope.of(context).themeMode == ThemeMode.light
-                          ? 'Light Theme'
-                          : 'Dark Theme',
-                      onPressed: () {
-                        ThemeScope.of(context).toggleTheme();
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    IconButton(
-                      icon: const Icon(Icons.info_outline),
-                      tooltip: 'Info',
-                      onPressed: () {
-                        _safeLogScreenView(screenName: 'info_screen');
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const InfoScreen()),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    IconButton(
-                      icon: const Icon(Icons.flag_outlined),
-                      tooltip: localizations.menuMyReports,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const ReportsScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            border: Border(
+              right: BorderSide(
+                color: isDark
+                    ? Colors.white.withOpacity(0.1)
+                    : Colors.black.withOpacity(0.05),
               ),
             ),
-          );
-        },
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withOpacity(0.3)
+                    : Colors.black.withOpacity(0.08),
+                blurRadius: 12,
+                offset: const Offset(2, 0),
+              ),
+            ],
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 12),
+                        // Gradient logo
+                        ShaderMask(
+                          shaderCallback: (bounds) => LinearGradient(
+                            colors: [Colors.green[400]!, Colors.teal[400]!],
+                          ).createShader(bounds),
+                          child: const Text(
+                            'Doky',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // New Chat button
+                        IconButton(
+                          icon: const Icon(Icons.add_comment_outlined),
+                          tooltip: localizations.chatNewConversation,
+                          onPressed: () {
+                            _safeLogEvent(name: 'new_chat');
+                            _clearChat();
+                          },
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Preset selector
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primaryContainer
+                                .withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: IconButton(
+                            icon: Text(
+                              _selectedPreset.emoji,
+                              style: const TextStyle(fontSize: 22),
+                            ),
+                            tooltip: _getPresetName(context, _selectedPreset),
+                            onPressed: () {
+                              if (_currentPageIndex != 0) {
+                                _switchToPage(0);
+                              } else {
+                                _showPresetSelector();
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
+                        // History button
+                        IconButton(
+                          icon: Icon(
+                            Icons.history_outlined,
+                            color: _currentPageIndex == 1
+                                ? Colors.green[700]
+                                : Colors.grey[700],
+                          ),
+                          tooltip: localizations.menuHistory,
+                          onPressed: () => _switchToPage(1),
+                        ),
+
+                        // Delete All (only on history page)
+                        if (_currentPageIndex == 1 &&
+                            _chatHistory.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                            ),
+                            tooltip: localizations.deleteDialogConfirm,
+                            onPressed: _deleteAllChats,
+                          ),
+                        ],
+
+                        const Spacer(),
+
+                        // Incognito button (outside menu)
+                        if (_currentPageIndex == 0)
+                          IconButton(
+                            icon: Icon(
+                              _isIncognito
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: _isIncognito
+                                  ? Colors.amber[700]
+                                  : (_messages.isNotEmpty ? Colors.grey : null),
+                            ),
+                            tooltip: _messages.isNotEmpty
+                                ? 'Cannot change incognito mode during conversation'
+                                : (_isIncognito
+                                      ? 'Incognito Mode ON'
+                                      : 'Incognito Mode OFF'),
+                            onPressed: _messages.isEmpty
+                                ? () {
+                                    setState(
+                                      () => _isIncognito = !_isIncognito,
+                                    );
+                                  }
+                                : null,
+                          ),
+                        if (_currentPageIndex == 0) const SizedBox(height: 8),
+
+                        // Animated Menu button
+                        AnimatedBuilder(
+                          animation: _menuRotationAnimation,
+                          builder: (context, child) {
+                            return Transform.rotate(
+                              angle: _menuRotationAnimation.value * 3.14159,
+                              child: PopupMenuButton<String>(
+                                icon: const Icon(Icons.more_vert),
+                                tooltip: 'Menu',
+                                offset: const Offset(64, 0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                elevation: 8,
+                                onOpened: () => _menuButtonController.forward(),
+                                onCanceled: () =>
+                                    _menuButtonController.reverse(),
+                                onSelected: (value) async {
+                                  _menuButtonController.reverse();
+                                  switch (value) {
+                                    case 'theme_light':
+                                      ThemeScope.of(
+                                        context,
+                                      ).updateThemeMode(ThemeMode.light);
+                                      break;
+                                    case 'theme_dark':
+                                      ThemeScope.of(
+                                        context,
+                                      ).updateThemeMode(ThemeMode.dark);
+                                      break;
+                                    case 'theme_system':
+                                      ThemeScope.of(
+                                        context,
+                                      ).updateThemeMode(ThemeMode.system);
+                                      break;
+                                    case 'info':
+                                      _safeLogScreenView(
+                                        screenName: 'info_screen',
+                                      );
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => const InfoScreen(),
+                                        ),
+                                      );
+                                      break;
+                                    case 'reports':
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => const ReportsScreen(),
+                                        ),
+                                      );
+                                      break;
+                                  }
+                                },
+                                itemBuilder: (context) {
+                                  return [
+                                    // Theme submenu header
+                                    PopupMenuItem<String>(
+                                      enabled: false,
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.palette_outlined,
+                                            size: 20,
+                                            color: Theme.of(context).hintColor,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            'Theme',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color: Theme.of(
+                                                context,
+                                              ).hintColor,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem<String>(
+                                      value: 'theme_light',
+                                      child: Row(
+                                        children: [
+                                          const SizedBox(width: 8),
+                                          const Icon(
+                                            Icons.light_mode_outlined,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Expanded(child: Text('Light')),
+                                          if (currentTheme == ThemeMode.light)
+                                            Icon(
+                                              Icons.check,
+                                              color: Colors.green[600],
+                                              size: 18,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem<String>(
+                                      value: 'theme_dark',
+                                      child: Row(
+                                        children: [
+                                          const SizedBox(width: 8),
+                                          const Icon(
+                                            Icons.dark_mode_outlined,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Expanded(child: Text('Dark')),
+                                          if (currentTheme == ThemeMode.dark)
+                                            Icon(
+                                              Icons.check,
+                                              color: Colors.green[600],
+                                              size: 18,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem<String>(
+                                      value: 'theme_system',
+                                      child: Row(
+                                        children: [
+                                          const SizedBox(width: 8),
+                                          const Icon(
+                                            Icons.brightness_auto,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Expanded(child: Text('System')),
+                                          if (currentTheme == ThemeMode.system)
+                                            Icon(
+                                              Icons.check,
+                                              color: Colors.green[600],
+                                              size: 18,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const PopupMenuDivider(),
+
+                                    // Info
+                                    PopupMenuItem<String>(
+                                      value: 'info',
+                                      child: Row(
+                                        children: const [
+                                          Icon(Icons.info_outline, size: 20),
+                                          SizedBox(width: 12),
+                                          Text('Info'),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // Reports
+                                    PopupMenuItem<String>(
+                                      value: 'reports',
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.flag_outlined,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Text(localizations.menuMyReports),
+                                        ],
+                                      ),
+                                    ),
+                                  ];
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Text(
-            'Doky',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const Spacer(),
-          if (_currentPageIndex == 1 && _chatHistory.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              tooltip: AppLocalizations.of(context)!.deleteDialogConfirm,
-              onPressed: _deleteAllChats,
+    final localizations = AppLocalizations.of(context)!;
+    final currentTheme = ThemeScope.of(context).themeMode;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDark
+                  ? [
+                      Colors.grey[900]!.withOpacity(0.85),
+                      Colors.grey[850]!.withOpacity(0.85),
+                    ]
+                  : [
+                      Colors.white.withOpacity(0.85),
+                      Colors.grey[50]!.withOpacity(0.85),
+                    ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          // Incognito mode toggle
-          if (_currentPageIndex == 0)
-            IconButton(
-              icon: Icon(
-                _isIncognito ? Icons.visibility_off : Icons.visibility,
-                color: _isIncognito
-                    ? Colors.amber[700]
-                    : (_messages.isNotEmpty ? Colors.grey : null),
+            border: Border(
+              bottom: BorderSide(
+                width: 1,
+                color: isDark
+                    ? Colors.white.withOpacity(0.1)
+                    : Colors.black.withOpacity(0.05),
               ),
-              tooltip: _messages.isNotEmpty
-                  ? 'Cannot change incognito mode during conversation'
-                  : (_isIncognito ? 'Incognito Mode ON' : 'Incognito Mode OFF'),
-              onPressed: _messages.isEmpty
-                  ? () {
-                      setState(() => _isIncognito = !_isIncognito);
-                    }
-                  : null,
             ),
-          IconButton(
-            icon: Icon(
-              ThemeScope.of(context).themeMode == ThemeMode.system
-                  ? Icons.brightness_auto
-                  : ThemeScope.of(context).themeMode == ThemeMode.light
-                  ? Icons.light_mode_outlined
-                  : Icons.dark_mode_outlined,
-            ),
-            tooltip: ThemeScope.of(context).themeMode == ThemeMode.system
-                ? 'System Theme'
-                : ThemeScope.of(context).themeMode == ThemeMode.light
-                ? 'Light Theme'
-                : 'Dark Theme',
-            onPressed: () {
-              ThemeScope.of(context).toggleTheme();
-            },
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withOpacity(0.3)
+                    : Colors.black.withOpacity(0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          if (_currentPageIndex == 0)
-            IconButton(
-              icon: const Icon(Icons.add_comment_outlined),
-              tooltip: AppLocalizations.of(context)!.chatNewConversation,
-              onPressed: () {
-                _safeLogEvent(name: 'new_chat');
-                _clearChat();
-              },
-            ),
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            tooltip: 'Info',
-            onPressed: () {
-              _safeLogScreenView(screenName: 'info_screen');
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const InfoScreen()));
-            },
+          child: Row(
+            children: [
+              // Animated logo with gradient
+              ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: [Colors.green[400]!, Colors.teal[400]!],
+                ).createShader(bounds),
+                child: const Text(
+                  'Doky',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const Spacer(),
+
+              // Primary action: Enhanced New Chat button (only on chat screen)
+              if (_currentPageIndex == 0)
+                MouseRegion(
+                  onEnter: (_) => _newChatHoverController.forward(),
+                  onExit: (_) => _newChatHoverController.reverse(),
+                  child: AnimatedBuilder(
+                    animation: _newChatScaleAnimation,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _newChatScaleAnimation.value,
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          duration: const Duration(seconds: 2),
+                          curve: Curves.easeInOut,
+                          builder: (context, value, child) {
+                            return Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.green[400]!,
+                                    Colors.teal[400]!,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.green.withOpacity(
+                                      0.3 +
+                                          (_newChatScaleAnimation.value - 1) *
+                                              2,
+                                    ),
+                                    blurRadius:
+                                        8 +
+                                        (_newChatScaleAnimation.value - 1) * 20,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(20),
+                                  onTap: () {
+                                    _safeLogEvent(name: 'new_chat');
+                                    _clearChat();
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        TweenAnimationBuilder<double>(
+                                          tween: Tween(begin: 0.0, end: 1.0),
+                                          duration: const Duration(
+                                            milliseconds: 300,
+                                          ),
+                                          builder: (context, rotation, child) {
+                                            return Transform.rotate(
+                                              angle: rotation * 3.14159 * 2,
+                                              child: const Icon(
+                                                Icons.add_comment_outlined,
+                                                color: Colors.white,
+                                                size: 18,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          localizations.chatNewConversation,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+              // Incognito button (outside menu, only on chat page)
+              if (_currentPageIndex == 0)
+                IconButton(
+                  icon: Icon(
+                    _isIncognito ? Icons.visibility_off : Icons.visibility,
+                    color: _isIncognito
+                        ? Colors.amber[700]
+                        : (_messages.isNotEmpty ? Colors.grey : null),
+                  ),
+                  tooltip: _messages.isNotEmpty
+                      ? 'Cannot change incognito mode during conversation'
+                      : (_isIncognito
+                            ? 'Incognito Mode ON'
+                            : 'Incognito Mode OFF'),
+                  onPressed: _messages.isEmpty
+                      ? () {
+                          setState(() => _isIncognito = !_isIncognito);
+                        }
+                      : null,
+                ),
+
+              // Animated Menu button
+              AnimatedBuilder(
+                animation: _menuRotationAnimation,
+                builder: (context, child) {
+                  return Transform.rotate(
+                    angle: _menuRotationAnimation.value * 3.14159,
+                    child: PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert),
+                      tooltip: 'Menu',
+                      offset: const Offset(0, 45),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 8,
+                      onOpened: () => _menuButtonController.forward(),
+                      onCanceled: () => _menuButtonController.reverse(),
+                      onSelected: (value) async {
+                        _menuButtonController.reverse();
+                        switch (value) {
+                          case 'incognito_toggle':
+                            if (_messages.isEmpty) {
+                              setState(() => _isIncognito = !_isIncognito);
+                            }
+                            break;
+                          case 'theme_light':
+                            ThemeScope.of(
+                              context,
+                            ).updateThemeMode(ThemeMode.light);
+                            break;
+                          case 'theme_dark':
+                            ThemeScope.of(
+                              context,
+                            ).updateThemeMode(ThemeMode.dark);
+                            break;
+                          case 'theme_system':
+                            ThemeScope.of(
+                              context,
+                            ).updateThemeMode(ThemeMode.system);
+                            break;
+                          case 'info':
+                            _safeLogScreenView(screenName: 'info_screen');
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const InfoScreen(),
+                              ),
+                            );
+                            break;
+                          case 'reports':
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const ReportsScreen(),
+                              ),
+                            );
+                            break;
+                          case 'delete_all':
+                            await _deleteAllChats();
+                            break;
+                        }
+                      },
+                      itemBuilder: (context) {
+                        return [
+                          // Delete All (only on history page with items)
+                          if (_currentPageIndex == 1 &&
+                              _chatHistory.isNotEmpty) ...[
+                            PopupMenuItem<String>(
+                              value: 'delete_all',
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.red,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    localizations.deleteDialogConfirm,
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                          ],
+
+                          // Theme submenu header
+                          PopupMenuItem<String>(
+                            enabled: false,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.palette_outlined,
+                                  size: 20,
+                                  color: Theme.of(context).hintColor,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Theme',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).hintColor,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'theme_light',
+                            child: Row(
+                              children: [
+                                const SizedBox(width: 8),
+                                const Icon(Icons.light_mode_outlined, size: 20),
+                                const SizedBox(width: 12),
+                                const Expanded(child: Text('Light')),
+                                if (currentTheme == ThemeMode.light)
+                                  Icon(
+                                    Icons.check,
+                                    color: Colors.green[600],
+                                    size: 18,
+                                  ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'theme_dark',
+                            child: Row(
+                              children: [
+                                const SizedBox(width: 8),
+                                const Icon(Icons.dark_mode_outlined, size: 20),
+                                const SizedBox(width: 12),
+                                const Expanded(child: Text('Dark')),
+                                if (currentTheme == ThemeMode.dark)
+                                  Icon(
+                                    Icons.check,
+                                    color: Colors.green[600],
+                                    size: 18,
+                                  ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'theme_system',
+                            child: Row(
+                              children: [
+                                const SizedBox(width: 8),
+                                const Icon(Icons.brightness_auto, size: 20),
+                                const SizedBox(width: 12),
+                                const Expanded(child: Text('System')),
+                                if (currentTheme == ThemeMode.system)
+                                  Icon(
+                                    Icons.check,
+                                    color: Colors.green[600],
+                                    size: 18,
+                                  ),
+                              ],
+                            ),
+                          ),
+
+                          const PopupMenuDivider(),
+
+                          // Info
+                          PopupMenuItem<String>(
+                            value: 'info',
+                            child: Row(
+                              children: const [
+                                Icon(Icons.info_outline, size: 20),
+                                SizedBox(width: 12),
+                                Text('Info'),
+                              ],
+                            ),
+                          ),
+
+                          // Reports
+                          PopupMenuItem<String>(
+                            value: 'reports',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.flag_outlined, size: 20),
+                                const SizedBox(width: 12),
+                                Text(localizations.menuMyReports),
+                              ],
+                            ),
+                          ),
+                        ];
+                      },
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.flag_outlined),
-            tooltip: AppLocalizations.of(context)!.menuMyReports,
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const ReportsScreen()));
-            },
-          ),
-        ],
+        ),
       ),
     );
   }
