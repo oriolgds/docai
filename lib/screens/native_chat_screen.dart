@@ -21,6 +21,7 @@ import 'package:in_app_update/in_app_update.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter/services.dart';
 import 'package:docai/services/firestore_service.dart';
+import 'package:docai/widgets/snowfall_animation.dart';
 
 class NativeChatScreen extends StatefulWidget {
   const NativeChatScreen({super.key});
@@ -659,33 +660,50 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
+    final showSnowfall =
+        _currentPageIndex == 0 &&
+        _messages.isEmpty &&
+        _inputController.text.trim().isEmpty;
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        behavior: HitTestBehavior.opaque,
-        child: SafeArea(
-          child: isLandscape
-              ? Row(
-                  children: [
-                    _buildSideNav(localizations),
-                    Expanded(child: _buildMainContent(localizations)),
-                  ],
-                )
-              : Column(
-                  children: [
-                    _buildHeader(),
-                    Expanded(child: _buildMainContent(localizations)),
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
-                      child: MediaQuery.of(context).viewInsets.bottom == 0
-                          ? _buildQuickActionsBar(localizations)
-                          : const SizedBox.shrink(),
+      body: Stack(
+        children: [
+          GestureDetector(
+            onTap: () => FocusScope.of(context).unfocus(),
+            behavior: HitTestBehavior.opaque,
+            child: SafeArea(
+              child: isLandscape
+                  ? Row(
+                      children: [
+                        _buildSideNav(localizations),
+                        Expanded(child: _buildMainContent(localizations)),
+                      ],
+                    )
+                  : Column(
+                      children: [
+                        _buildHeader(),
+                        Expanded(child: _buildMainContent(localizations)),
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeInOut,
+                          child: MediaQuery.of(context).viewInsets.bottom == 0
+                              ? _buildQuickActionsBar(localizations)
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-        ),
+            ),
+          ),
+          Positioned.fill(
+            child: AnimatedOpacity(
+              opacity: showSnowfall ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+              child: const SnowfallAnimation(),
+            ),
+          ),
+        ],
       ),
     );
   }
