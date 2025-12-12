@@ -421,4 +421,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get reportRateLimitError => 'Sie senden Berichte zu schnell. Bitte warten Sie einen Moment.';
+  String get menuWindowsStore => 'Microsoft Store';
+
+  @override
+  String get infoWindowsStoreSubtitle => 'Für PC im Microsoft Store herunterladen.';
+
+  @override
+  String versionDisplay(String version) {
+    return 'Version $version';
+  }
 }

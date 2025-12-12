@@ -138,4 +138,14 @@
   "saveLabel": "Save Profile",
   "preferencesSaved": "Medical profile saved successfully",
   "reportRateLimitError": "You are submitting reports too frequently. Please wait a moment."
+  "menuWindowsStore": "Microsoft Store",
+  "infoWindowsStoreSubtitle": "Download for PC on the Microsoft Store.",
+  "versionDisplay": "Version {version}",
+  "@versionDisplay": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  }
 }

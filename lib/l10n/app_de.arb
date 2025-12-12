@@ -138,4 +138,7 @@
   "saveLabel": "Profil speichern",
   "preferencesSaved": "Medizinisches Profil erfolgreich gespeichert",
   "reportRateLimitError": "Sie senden Berichte zu schnell. Bitte warten Sie einen Moment."
+  "menuWindowsStore": "Microsoft Store",
+  "infoWindowsStoreSubtitle": "Für PC im Microsoft Store herunterladen.",
+  "versionDisplay": "Version {version}"
 }
