@@ -629,6 +629,12 @@ abstract class AppLocalizations {
   /// **'Report content'**
   String get reportDialogTitle;
 
+  /// No description provided for @reportReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason: '**
+  String get reportReasonLabel;
+
   /// No description provided for @reportReasonInappropriate.
   ///
   /// In en, this message translates to:

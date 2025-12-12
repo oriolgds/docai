@@ -88,6 +88,7 @@
   "reportContent": "Report content",
   "copyContent": "Copy content",
   "reportDialogTitle": "Report content",
+  "reportReasonLabel": "Reason: ",
   "reportReasonInappropriate": "Inappropriate content",
   "reportReasonIncorrect": "Incorrect information",
   "reportReasonHarmful": "Harmful or dangerous",

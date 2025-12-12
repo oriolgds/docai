@@ -88,6 +88,7 @@
   "reportContent": "Signaler un contenu",
   "copyContent": "Copier le contenu",
   "reportDialogTitle": "Signaler un contenu",
+  "reportReasonLabel": "Raison : ",
   "reportReasonInappropriate": "Contenu inapproprié",
   "reportReasonIncorrect": "Informations incorrectes",
   "reportReasonHarmful": "Nuisible ou dangereux",

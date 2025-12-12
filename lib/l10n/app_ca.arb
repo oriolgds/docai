@@ -88,6 +88,7 @@
   "reportContent": "Informar de contingut",
   "copyContent": "Copiar contingut",
   "reportDialogTitle": "Informar de contingut",
+  "reportReasonLabel": "Raó: ",
   "reportReasonInappropriate": "Contingut inadequat",
   "reportReasonIncorrect": "Informació incorrecta",
   "reportReasonHarmful": "Perjudical o perillós",
