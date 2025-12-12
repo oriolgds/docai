@@ -418,4 +418,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get preferencesSaved => 'Profil médical enregistré avec succès';
+
+  @override
+  String get menuWindowsStore => 'Microsoft Store';
+
+  @override
+  String get infoWindowsStoreSubtitle => 'Télécharger pour PC sur le Microsoft Store.';
+
+  @override
+  String versionDisplay(String version) {
+    return 'Version $version';
+  }
 }

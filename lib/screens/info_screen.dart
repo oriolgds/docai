@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/state/locale_scope.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class InfoScreen extends StatelessWidget {
   const InfoScreen({super.key});
@@ -69,6 +70,16 @@ class InfoScreen extends StatelessWidget {
         startColor: const Color(0xFF00E676),
         endColor: const Color(0xFF00C853),
       ),
+      if (Theme.of(context).platform == TargetPlatform.android ||
+          Theme.of(context).platform == TargetPlatform.iOS)
+        _InfoItem(
+          icon: Icons.desktop_windows,
+          title: localizations.menuWindowsStore,
+          subtitle: localizations.infoWindowsStoreSubtitle,
+          url: Uri.parse('https://apps.microsoft.com/detail/9NBDMWZFNB6K'),
+          startColor: const Color(0xFF0078D7),
+          endColor: const Color(0xFF00A4EF),
+        ),
     ];
 
     return Scaffold(
@@ -149,6 +160,29 @@ class InfoScreen extends StatelessWidget {
                               );
                             }, childCount: items.length),
                           ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 24),
+                      child: Center(
+                        child: FutureBuilder<PackageInfo>(
+                          future: PackageInfo.fromPlatform(),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const SizedBox.shrink();
+                            }
+                            final version = snapshot.data!;
+                            return Text(
+                              localizations.versionDisplay(version.version),
+                              style: TextStyle(
+                                color: Theme.of(context).disabledColor,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               );
