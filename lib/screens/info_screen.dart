@@ -76,7 +76,7 @@ class InfoScreen extends StatelessWidget {
           icon: Icons.desktop_windows,
           title: localizations.menuWindowsStore,
           subtitle: localizations.infoWindowsStoreSubtitle,
-          url: Uri.parse('https://www.microsoft.com/store/apps'),
+          url: Uri.parse('https://apps.microsoft.com/detail/9NBDMWZFNB6K'),
           startColor: const Color(0xFF0078D7),
           endColor: const Color(0xFF00A4EF),
         ),
