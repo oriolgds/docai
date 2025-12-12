@@ -458,6 +458,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Future<void> _sendMessage() async {
+    HapticFeedback.lightImpact();
     final text = _inputController.text.trim();
     if (text.isEmpty || _isGenerating) return;
 
@@ -680,6 +681,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   void _switchToPage(int index) {
+    HapticFeedback.selectionClick();
     setState(() {
       _currentPageIndex = index;
     });
@@ -748,80 +750,97 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Widget _buildMainContent(AppLocalizations localizations) {
-    return IndexedStack(
-      index: _currentPageIndex,
-      children: [
-        // Chat page
-        Column(
-          children: [
-            Expanded(
-              child: Stack(
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.0, 0.05),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOut,
+            )),
+            child: child,
+          ),
+        );
+      },
+      child: _currentPageIndex == 0
+          ? KeyedSubtree(
+              key: const ValueKey('chat'),
+              child: Column(
                 children: [
-                  _messages.isEmpty
-                      ? _WelcomeScreen(
-                          preset: _selectedPreset,
-                          onSuggestionTap: (suggestion) {
-                            _inputController.text = suggestion;
-                          },
-                        )
-                      : _buildMessagesList(),
-                  // Scroll to bottom button positioned above input
-                  if (_messages.isNotEmpty)
-                    Positioned(
-                      bottom: 16,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: ScaleTransition(
-                          scale: _fabAnimation,
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.green[400]!,
-                                  Colors.green[600]!,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.green.withValues(alpha: 0.4),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              shape: const CircleBorder(),
-                              child: InkWell(
-                                customBorder: const CircleBorder(),
-                                onTap: _scrollToBottom,
-                                child: const Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  color: Colors.white,
-                                  size: 24,
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        _messages.isEmpty
+                            ? _WelcomeScreen(
+                                preset: _selectedPreset,
+                                onSuggestionTap: (suggestion) {
+                                  _inputController.text = suggestion;
+                                },
+                              )
+                            : _buildMessagesList(),
+                        // Scroll to bottom button positioned above input
+                        if (_messages.isNotEmpty)
+                          Positioned(
+                            bottom: 16,
+                            left: 0,
+                            right: 0,
+                            child: Center(
+                              child: ScaleTransition(
+                                scale: _fabAnimation,
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.green[400]!,
+                                        Colors.green[600]!,
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.green.withValues(alpha: 0.4),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    shape: const CircleBorder(),
+                                    child: InkWell(
+                                      customBorder: const CircleBorder(),
+                                      onTap: _scrollToBottom,
+                                      child: const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
+                      ],
                     ),
+                  ),
+                  _buildInputArea(localizations),
                 ],
               ),
+            )
+          : KeyedSubtree(
+              key: const ValueKey('history'),
+              child: _buildHistoryPage(),
             ),
-            _buildInputArea(localizations),
-          ],
-        ),
-
-        // History page
-        _buildHistoryPage(),
-      ],
     );
   }
 
@@ -1698,7 +1717,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
 
   Widget _buildSendButton() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: _isGenerating
@@ -1722,10 +1742,17 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         ],
       ),
       child: IconButton(
-        icon: Icon(
-          _isGenerating ? Icons.hourglass_empty : Icons.send_rounded,
-          color: Colors.white,
-          size: 20,
+        icon: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (child, animation) {
+            return ScaleTransition(scale: animation, child: child);
+          },
+          child: Icon(
+            _isGenerating ? Icons.hourglass_empty : Icons.send_rounded,
+            key: ValueKey(_isGenerating),
+            color: Colors.white,
+            size: 20,
+          ),
         ),
         onPressed: _isGenerating ? null : _sendMessage,
       ),
@@ -1772,6 +1799,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                     : (isDark ? Colors.grey[400] : Colors.grey[700]),
               ),
               onPressed: () async {
+                HapticFeedback.selectionClick();
                 if (!_speechEnabled) {
                   bool available = await _speechToText.initialize(
                     onError: (val) => debugPrint('onError: $val'),
@@ -2342,54 +2370,54 @@ class _MessageCard extends StatelessWidget {
     final assistantBubbleColor = isDark ? Colors.grey[800] : Colors.white;
     final codeBackgroundColor = isDark ? Colors.black26 : Colors.grey[100];
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isUser ? userBubbleColor : assistantBubbleColor,
-        borderRadius: BorderRadius.only(
-          topLeft: const Radius.circular(20),
-          topRight: const Radius.circular(20),
-          bottomLeft: Radius.circular(isUser ? 20 : 4),
-          bottomRight: Radius.circular(isUser ? 4 : 20),
+    return GestureDetector(
+      onLongPress: () {
+        HapticFeedback.mediumImpact();
+      },
+      child: CustomPaint(
+        painter: _ChatBubblePainter(
+          color: isUser ? userBubbleColor! : assistantBubbleColor!,
+          isUser: isUser,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: isUser ? 16 : 24,
+            right: isUser ? 24 : 16,
+            top: 12,
+            bottom: 12,
           ),
-        ],
+          child: message.content.isEmpty && isGenerating
+              ? _buildTypingIndicator()
+              : isUser
+                  ? Text(
+                      message.content,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                    )
+                  : MarkdownBody(
+                      data: message.content,
+                      styleSheet: MarkdownStyleSheet(
+                        p: TextStyle(
+                          color: isDark ? Colors.grey[200] : Colors.black87,
+                          fontSize: 15,
+                          height: 1.4,
+                        ),
+                        code: TextStyle(
+                          backgroundColor: codeBackgroundColor,
+                          color: isDark ? Colors.green[300] : Colors.green[700],
+                          fontFamily: 'monospace',
+                        ),
+                        codeblockDecoration: BoxDecoration(
+                          color: codeBackgroundColor,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+        ),
       ),
-      child: message.content.isEmpty && isGenerating
-          ? _buildTypingIndicator()
-          : isUser
-          ? Text(
-              message.content,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-                height: 1.4,
-              ),
-            )
-          : MarkdownBody(
-              data: message.content,
-              styleSheet: MarkdownStyleSheet(
-                p: TextStyle(
-                  color: isDark ? Colors.grey[200] : Colors.black87,
-                  fontSize: 15,
-                  height: 1.4,
-                ),
-                code: TextStyle(
-                  backgroundColor: codeBackgroundColor,
-                  color: isDark ? Colors.green[300] : Colors.green[700],
-                  fontFamily: 'monospace',
-                ),
-                codeblockDecoration: BoxDecoration(
-                  color: codeBackgroundColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
     );
   }
 
@@ -2452,6 +2480,53 @@ class _MessageCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ChatBubblePainter extends CustomPainter {
+  final Color color;
+  final bool isUser;
+
+  _ChatBubblePainter({required this.color, required this.isUser});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final rrect = RRect.fromRectAndCorners(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      topLeft: const Radius.circular(18),
+      topRight: const Radius.circular(18),
+      bottomLeft: isUser ? const Radius.circular(18) : Radius.zero,
+      bottomRight: isUser ? Radius.zero : const Radius.circular(18),
+    );
+
+    canvas.drawRRect(rrect, paint);
+
+    final tailPath = Path();
+    if (isUser) {
+      tailPath.moveTo(size.width, size.height - 14);
+      tailPath.quadraticBezierTo(
+        size.width + 8,
+        size.height,
+        size.width + 10,
+        size.height,
+      );
+      tailPath.lineTo(size.width, size.height);
+      tailPath.close();
+    } else {
+      tailPath.moveTo(0, size.height - 14);
+      tailPath.quadraticBezierTo(-8, size.height, -10, size.height);
+      tailPath.lineTo(0, size.height);
+      tailPath.close();
+    }
+
+    canvas.drawPath(tailPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _ActionButton extends StatelessWidget {
@@ -2767,7 +2842,10 @@ class _SuggestionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -2909,7 +2987,10 @@ class _QuickActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
