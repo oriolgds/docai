@@ -25,6 +25,7 @@ dependencies:
   timeago: ^3.7.0
   speech_to_text: ^7.3.0
   in_app_update: ^4.2.5
+  package_info_plus: ^8.2.0
   cloud_firestore: ^6.1.0
 
 dev_dependencies:

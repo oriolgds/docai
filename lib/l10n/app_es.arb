@@ -136,5 +136,9 @@
   "activityActive": "Activo (Ejercicio fuerte 6-7 días/sem)",
   "activityVeryActive": "Muy Activo (Ejercicio muy fuerte y trabajo físico)",
   "saveLabel": "Guardar Perfil",
-  "preferencesSaved": "Perfil médico guardado correctamente"
+  "preferencesSaved": "Perfil médico guardado correctamente",
+  "reportRateLimitError": "Estás enviando reportes demasiado rápido. Por favor espera un momento.",
+  "menuWindowsStore": "Microsoft Store",
+  "infoWindowsStoreSubtitle": "Descargar para PC en la Microsoft Store.",
+  "versionDisplay": "Versión {version}"
 }

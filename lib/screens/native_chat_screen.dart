@@ -2091,8 +2091,28 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     );
   }
 
-  void _reportMessage(ChatMessage message) {
+  Future<void> _reportMessage(ChatMessage message) async {
     final localizations = AppLocalizations.of(context)!;
+
+    // Rate limit check
+    final prefs = await SharedPreferences.getInstance();
+    final lastReportTime = prefs.getInt('last_report_timestamp') ?? 0;
+    final currentTime = DateTime.now().millisecondsSinceEpoch;
+    const reportCooldown = 120000; // 2 minutes in ms
+
+    if (currentTime - lastReportTime < reportCooldown) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(localizations.reportRateLimitError),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
 
     showDialog(
       context: context,
@@ -2157,6 +2177,13 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                               messageContent: message.content,
                               reason: selectedReason!,
                             );
+
+                            // Update last report timestamp
+                            await prefs.setInt(
+                              'last_report_timestamp',
+                              DateTime.now().millisecondsSinceEpoch,
+                            );
+
                             if (mounted) {
                               messenger.showSnackBar(
                                 SnackBar(

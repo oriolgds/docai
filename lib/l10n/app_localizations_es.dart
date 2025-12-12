@@ -418,4 +418,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get preferencesSaved => 'Perfil médico guardado correctamente';
+
+  @override
+  String get reportRateLimitError => 'Estás enviando reportes demasiado rápido. Por favor espera un momento.';
+
+  @override
+  String get menuWindowsStore => 'Microsoft Store';
+
+  @override
+  String get infoWindowsStoreSubtitle => 'Descargar para PC en la Microsoft Store.';
+
+  @override
+  String versionDisplay(String version) {
+    return 'Versión $version';
+  }
 }
