@@ -245,6 +245,55 @@ jobs:
           rm -f .env
           echo "✓ Sensitive files cleaned up"
 
+  release:
+    name: Create Release
+    needs: [build-android, build-windows]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get version from pubspec.yaml
+        id: get_version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Download APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: docai-apk-${{ github.run_number }}
+          path: release-artifacts/apk
+
+      - name: Download AAB artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: docai-aab-${{ github.run_number }}
+          path: release-artifacts/aab
+
+      - name: Download MSIX artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: docai-msix-${{ github.run_number }}
+          path: release-artifacts/msix
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          files: |
+            release-artifacts/apk/*.apk
+            release-artifacts/aab/*.aab
+            release-artifacts/msix/*.msix
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build-windows:
     name: Build Windows MSIX
     runs-on: windows-latest
