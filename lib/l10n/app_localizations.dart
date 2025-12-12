@@ -928,6 +928,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You are submitting reports too frequently. Please wait a moment.'**
   String get reportRateLimitError;
+
   /// No description provided for @menuWindowsStore.
   ///
   /// In en, this message translates to:

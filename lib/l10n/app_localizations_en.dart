@@ -421,6 +421,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportRateLimitError => 'You are submitting reports too frequently. Please wait a moment.';
+
+  @override
   String get menuWindowsStore => 'Microsoft Store';
 
   @override

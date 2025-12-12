@@ -137,7 +137,7 @@
   "activityVeryActive": "Molt Actiu (Exercici molt fort i feina física)",
   "saveLabel": "Desar Perfil",
   "preferencesSaved": "Perfil mèdic desat correctament",
-  "reportRateLimitError": "Esteu enviant informes massa ràpid. Espereu un moment."
+  "reportRateLimitError": "Esteu enviant informes massa ràpid. Espereu un moment.",
   "menuWindowsStore": "Microsoft Store",
   "infoWindowsStoreSubtitle": "Descarrega per a PC a la Microsoft Store.",
   "versionDisplay": "Versió {version}"
