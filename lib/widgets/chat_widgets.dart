@@ -146,26 +146,28 @@ class ModelSelectorSheet extends StatelessWidget {
     required this.onModelSelected,
   });
 
+  static const _modelDisplayNames = {
+    'openai': 'OpenAI (GPT-4o-mini)',
+    'mistral': 'Mistral Large',
+    'llama': 'Llama 3',
+    'claude': 'Claude',
+    'gemini': 'Gemini',
+  };
+
+  static const _modelEmojis = {
+    'openai': '🤖',
+    'mistral': '⚡',
+    'llama': '🦙',
+    'claude': '🎭',
+    'gemini': '♊',
+  };
+
   String _getModelDisplayName(String model) {
-    final names = {
-      'openai': 'OpenAI (GPT-4o-mini)',
-      'mistral': 'Mistral Large',
-      'llama': 'Llama 3',
-      'claude': 'Claude',
-      'gemini': 'Gemini',
-    };
-    return names[model.toLowerCase()] ?? model.toUpperCase();
+    return _modelDisplayNames[model.toLowerCase()] ?? model.toUpperCase();
   }
 
   String _getModelEmoji(String model) {
-    final emojis = {
-      'openai': '🤖',
-      'mistral': '⚡',
-      'llama': '🦙',
-      'claude': '🎭',
-      'gemini': '♊',
-    };
-    return emojis[model.toLowerCase()] ?? '🧠';
+    return _modelEmojis[model.toLowerCase()] ?? '🧠';
   }
 
   @override
