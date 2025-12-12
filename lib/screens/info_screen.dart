@@ -69,6 +69,16 @@ class InfoScreen extends StatelessWidget {
         startColor: const Color(0xFF00E676),
         endColor: const Color(0xFF00C853),
       ),
+      if (Theme.of(context).platform == TargetPlatform.android ||
+          Theme.of(context).platform == TargetPlatform.iOS)
+        _InfoItem(
+          icon: Icons.desktop_windows,
+          title: localizations.menuWindowsStore,
+          subtitle: localizations.infoWindowsStoreSubtitle,
+          url: Uri.parse('https://www.microsoft.com/store/apps'),
+          startColor: const Color(0xFF0078D7),
+          endColor: const Color(0xFF00A4EF),
+        ),
     ];
 
     return Scaffold(
@@ -149,6 +159,20 @@ class InfoScreen extends StatelessWidget {
                               );
                             }, childCount: items.length),
                           ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 24),
+                      child: Center(
+                        child: Text(
+                          localizations.versionDisplay('6.1.29+74'),
+                          style: TextStyle(
+                            color: Theme.of(context).disabledColor,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               );

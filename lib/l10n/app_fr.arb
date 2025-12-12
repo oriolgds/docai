@@ -136,5 +136,8 @@
   "activityActive": "Actif (Exercice intense 6-7 jours/semaine)",
   "activityVeryActive": "Très Actif (Exercice très intense & travail physique)",
   "saveLabel": "Enregistrer le Profil",
-  "preferencesSaved": "Profil médical enregistré avec succès"
+  "preferencesSaved": "Profil médical enregistré avec succès",
+  "menuWindowsStore": "Microsoft Store",
+  "infoWindowsStoreSubtitle": "Télécharger pour PC sur le Microsoft Store.",
+  "versionDisplay": "Version {version}"
 }

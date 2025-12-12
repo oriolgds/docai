@@ -922,6 +922,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Medical profile saved successfully'**
   String get preferencesSaved;
+
+  /// No description provided for @menuWindowsStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Microsoft Store'**
+  String get menuWindowsStore;
+
+  /// No description provided for @infoWindowsStoreSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Download for PC on the Microsoft Store.'**
+  String get infoWindowsStoreSubtitle;
+
+  /// No description provided for @versionDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String versionDisplay(String version);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
