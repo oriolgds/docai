@@ -15,7 +15,7 @@ on:
           - debug
 
 permissions:
-  contents: read
+  contents: write
   actions: write
 
 
@@ -219,6 +219,7 @@ jobs:
       - name: Upload APK artifacts
         if: matrix.build-type == 'apk'
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: docai-apk-${{ github.run_number }}
           path: build/app/outputs/flutter-apk/*.apk
@@ -229,11 +230,45 @@ jobs:
       - name: Upload AAB artifacts
         if: matrix.build-type == 'aab'
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: docai-aab-${{ github.run_number }}
           path: build/app/outputs/bundle/release/app-release.aab
           retention-days: ${{ github.event_name == 'pull_request' && 7 || 30 }}
           compression-level: 1
+
+      # Get version for Release
+      - name: Get version from pubspec.yaml
+        if: github.ref == 'refs/heads/main'
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      # Publish to Release (APK)
+      - name: Publish APK to Release
+        if: github.ref == 'refs/heads/main' && matrix.build-type == 'apk'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          files: build/app/outputs/flutter-apk/*.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Publish to Release (AAB)
+      - name: Publish AAB to Release
+        if: github.ref == 'refs/heads/main' && matrix.build-type == 'aab'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          files: build/app/outputs/bundle/release/app-release.aab
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Limpiar archivos sensibles
       - name: Cleanup sensitive files
@@ -244,56 +279,6 @@ jobs:
           rm -f lib/firebase_options.dart
           rm -f .env
           echo "✓ Sensitive files cleaned up"
-
-  release:
-    name: Create Release
-    needs: [build-android, build-windows]
-    if: github.ref == 'refs/heads/main' && needs.build-android.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Get version from pubspec.yaml
-        id: get_version
-        run: |
-          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Download APK artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: docai-apk-${{ github.run_number }}
-          path: release-artifacts/apk
-
-      - name: Download AAB artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: docai-aab-${{ github.run_number }}
-          path: release-artifacts/aab
-
-      - name: Download MSIX artifacts
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: docai-msix-${{ github.run_number }}
-          path: release-artifacts/msix
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ env.VERSION }}
-          name: ${{ env.VERSION }}
-          files: |
-            release-artifacts/apk/*.apk
-            release-artifacts/aab/*.aab
-            release-artifacts/msix/*.msix
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows:
     name: Build Windows MSIX
@@ -406,6 +391,25 @@ jobs:
           path: build/windows/x64/runner/Release/*.msix
           retention-days: ${{ github.event_name == 'pull_request' && 7 || 30 }}
           compression-level: 1
+
+      - name: Get version from pubspec.yaml
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Publish MSIX to Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          files: build/windows/x64/runner/Release/*.msix
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Limpiar archivos sensibles
       - name: Cleanup sensitive files
