@@ -28,9 +28,6 @@ env:
 jobs:
   build-android:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        build-type: [apk, aab]
     
     steps:
       - name: Cancel Previous Workflow Runs
@@ -74,9 +71,8 @@ jobs:
             android/.gradle
             android/build
             android/app/build
-          key: android-gradle-${{ runner.os }}-${{ matrix.build-type }}-${{ hashFiles('android/**/*.gradle*', 'android/**/gradle-wrapper.properties', '**/pubspec.lock') }}
+          key: android-gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/**/gradle-wrapper.properties', '**/pubspec.lock') }}
           restore-keys: |
-            android-gradle-${{ runner.os }}-${{ matrix.build-type }}-
             android-gradle-${{ runner.os }}-
 
       # Crear firebase_options.dart desde secret
@@ -148,10 +144,17 @@ jobs:
         run: |
           echo "📦 Installing Flutter dependencies..."
           flutter pub get
-          # Solo ejecutar análisis en PRs y solo una vez (en build apk)
-          if [ "${{ github.event_name }}" == "pull_request" ] && [ "${{ matrix.build-type }}" == "apk" ]; then
+          # Solo ejecutar análisis en PRs
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
             flutter analyze --no-fatal-infos || true
           fi
+
+      # Get version for Release
+      - name: Get version from pubspec.yaml
+        if: github.ref == 'refs/heads/main'
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       # Configurar Gradle con memoria optimizada
       - name: Configure Gradle properties
@@ -178,9 +181,44 @@ jobs:
           EOF
           echo "✓ Gradle configuration optimized"
 
+      # Build AAB optimizado
+      - name: Build AAB
+        run: |
+          echo "🔨 Building AAB..."
+          export GRADLE_OPTS="$GRADLE_OPTS -Dorg.gradle.build-cache=true"
+
+          flutter build appbundle --release \
+            --tree-shake-icons \
+            --shrink
+
+          echo "✓ AAB build completed"
+          ls -lh build/app/outputs/bundle/release/
+
+      # Subir artifacts AAB con retención reducida para PRs
+      - name: Upload AAB artifacts
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: docai-aab-${{ github.run_number }}
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: ${{ github.event_name == 'pull_request' && 7 || 30 }}
+          compression-level: 1
+
+      # Publish to Release (AAB)
+      - name: Publish AAB to Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          files: build/app/outputs/bundle/release/app-release.aab
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # Build APK optimizado
       - name: Build APK
-        if: matrix.build-type == 'apk'
         run: |
           echo "🔨 Building APK..."
           export GRADLE_OPTS="$GRADLE_OPTS -Dorg.gradle.build-cache=true"
@@ -201,23 +239,8 @@ jobs:
           
           ls -lh build/app/outputs/flutter-apk/
 
-      # Build AAB optimizado
-      - name: Build AAB
-        if: matrix.build-type == 'aab'
-        run: |
-          echo "🔨 Building AAB..."
-          export GRADLE_OPTS="$GRADLE_OPTS -Dorg.gradle.build-cache=true"
-          
-          flutter build appbundle --release \
-            --tree-shake-icons \
-            --shrink
-          
-          echo "✓ AAB build completed"
-          ls -lh build/app/outputs/bundle/release/
-
       # Subir artifacts APK con retención reducida para PRs
       - name: Upload APK artifacts
-        if: matrix.build-type == 'apk'
         uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
@@ -226,45 +249,14 @@ jobs:
           retention-days: ${{ github.event_name == 'pull_request' && 7 || 30 }}
           compression-level: 1
 
-      # Subir artifacts AAB con retención reducida para PRs
-      - name: Upload AAB artifacts
-        if: matrix.build-type == 'aab'
-        uses: actions/upload-artifact@v4
-        continue-on-error: true
-        with:
-          name: docai-aab-${{ github.run_number }}
-          path: build/app/outputs/bundle/release/app-release.aab
-          retention-days: ${{ github.event_name == 'pull_request' && 7 || 30 }}
-          compression-level: 1
-
-      # Get version for Release
-      - name: Get version from pubspec.yaml
-        if: github.ref == 'refs/heads/main'
-        run: |
-          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
       # Publish to Release (APK)
       - name: Publish APK to Release
-        if: github.ref == 'refs/heads/main' && matrix.build-type == 'apk'
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.VERSION }}
           name: ${{ env.VERSION }}
           files: build/app/outputs/flutter-apk/*.apk
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Publish to Release (AAB)
-      - name: Publish AAB to Release
-        if: github.ref == 'refs/heads/main' && matrix.build-type == 'aab'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ env.VERSION }}
-          name: ${{ env.VERSION }}
-          files: build/app/outputs/bundle/release/app-release.aab
           draft: false
           prerelease: false
         env:
