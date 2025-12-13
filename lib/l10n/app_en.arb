@@ -147,5 +147,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "sendButtonTooltip": "Send message",
+  "voiceButtonTooltip": "Voice input"
 }

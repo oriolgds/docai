@@ -432,4 +432,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String versionDisplay(String version) {
     return 'Version $version';
   }
+
+  @override
+  String get sendButtonTooltip => 'Send message';
+
+  @override
+  String get voiceButtonTooltip => 'Voice input';
 }
