@@ -1760,6 +1760,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             size: 20,
           ),
         ),
+        tooltip: AppLocalizations.of(context)!.sendButtonTooltip,
         onPressed: _isGenerating ? null : _sendMessage,
       ),
     );
@@ -1804,6 +1805,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                     ? Colors.white
                     : (isDark ? Colors.grey[400] : Colors.grey[700]),
               ),
+              tooltip: AppLocalizations.of(context)!.voiceButtonTooltip,
               onPressed: () async {
                 HapticFeedback.selectionClick();
                 if (!_speechEnabled) {

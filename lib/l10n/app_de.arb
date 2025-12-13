@@ -140,5 +140,7 @@
   "reportRateLimitError": "Sie senden Berichte zu schnell. Bitte warten Sie einen Moment.",
   "menuWindowsStore": "Microsoft Store",
   "infoWindowsStoreSubtitle": "Für PC im Microsoft Store herunterladen.",
-  "versionDisplay": "Version {version}"
+  "versionDisplay": "Version {version}",
+  "sendButtonTooltip": "Nachricht senden",
+  "voiceButtonTooltip": "Spracheingabe"
 }

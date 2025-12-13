@@ -946,6 +946,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Version {version}'**
   String versionDisplay(String version);
+
+  /// No description provided for @sendButtonTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Send message'**
+  String get sendButtonTooltip;
+
+  /// No description provided for @voiceButtonTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice input'**
+  String get voiceButtonTooltip;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

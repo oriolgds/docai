@@ -140,5 +140,7 @@
   "reportRateLimitError": "Esteu enviant informes massa ràpid. Espereu un moment.",
   "menuWindowsStore": "Microsoft Store",
   "infoWindowsStoreSubtitle": "Descarrega per a PC a la Microsoft Store.",
-  "versionDisplay": "Versió {version}"
+  "versionDisplay": "Versió {version}",
+  "sendButtonTooltip": "Enviar missatge",
+  "voiceButtonTooltip": "Entrada de veu"
 }
