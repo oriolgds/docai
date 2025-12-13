@@ -3,7 +3,7 @@ import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/state/locale_scope.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:docai/widgets/smooth_scroll.dart';
+import 'package:docai/utils/smooth_scroll_controller.dart';
 
 class InfoScreen extends StatefulWidget {
   const InfoScreen({super.key});
@@ -13,7 +13,7 @@ class InfoScreen extends StatefulWidget {
 }
 
 class _InfoScreenState extends State<InfoScreen> {
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = SmoothScrollController();
 
   @override
   void dispose() {
@@ -119,13 +119,11 @@ class _InfoScreenState extends State<InfoScreen> {
               final isWide = constraints.maxWidth > 800;
               final crossAxisCount = isWide ? 2 : 1;
 
-              return SmoothScroll(
+              return CustomScrollView(
                 controller: _scrollController,
-                child: CustomScrollView(
-                  controller: _scrollController,
-                  slivers: [
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
                     sliver: SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 24),

@@ -23,7 +23,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter/services.dart';
 import 'package:docai/services/firestore_service.dart';
 import 'package:docai/widgets/snowfall_animation.dart';
-import 'package:docai/widgets/smooth_scroll.dart';
+import 'package:docai/utils/smooth_scroll_controller.dart';
 
 class NativeChatScreen extends StatefulWidget {
   const NativeChatScreen({super.key});
@@ -37,7 +37,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   final PollinationsService _service = PollinationsService();
   final FirestoreService _firestoreService = FirestoreService();
   final TextEditingController _inputController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = SmoothScrollController();
   final List<ChatMessage> _messages = [];
 
   MedicalPreset _selectedPreset = MedicalPreset.presets.first;
@@ -1619,13 +1619,11 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Widget _buildMessagesList() {
-    return SmoothScroll(
+    return ListView.builder(
       controller: _scrollController,
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        itemCount: _messages.length + (_currentSuggestions.isNotEmpty ? 1 : 0),
-        itemBuilder: (context, index) {
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      itemCount: _messages.length + (_currentSuggestions.isNotEmpty ? 1 : 0),
+      itemBuilder: (context, index) {
         // Show follow-up suggestions after the last message
         if (index == _messages.length && _currentSuggestions.isNotEmpty) {
           return Padding(
@@ -1656,7 +1654,6 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           onReport: () => _reportMessage(message),
         );
       },
-    ),
     );
   }
 
