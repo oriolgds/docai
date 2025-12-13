@@ -6,6 +6,7 @@ import 'package:docai/state/locale_scope.dart';
 import 'package:docai/state/theme_scope.dart';
 import 'package:docai/screens/native_chat_screen.dart';
 import 'package:docai/screens/splash_screen.dart';
+import 'package:docai/utils/app_scroll_behavior.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import 'dart:ui';
@@ -168,6 +169,7 @@ class DocAIApp extends StatelessWidget {
     return MaterialApp(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       debugShowCheckedModeBanner: false,
+      scrollBehavior: AppScrollBehavior(),
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
