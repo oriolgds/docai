@@ -118,9 +118,6 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     );
 
     _scrollController.addListener(_onScroll);
-    _inputController.addListener(() {
-      setState(() {}); // Rebuild when text changes for send button
-    });
 
     _safeLogScreenView(screenName: 'home_screen');
   }
@@ -701,11 +698,6 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
-    final showSnowfall =
-        _currentPageIndex == 0 &&
-        _messages.isEmpty &&
-        _inputController.text.trim().isEmpty;
-
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Stack(
@@ -737,11 +729,19 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             ),
           ),
           Positioned.fill(
-            child: AnimatedOpacity(
-              opacity: showSnowfall ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeInOut,
-              child: const SnowfallAnimation(),
+            child: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _inputController,
+              builder: (context, value, child) {
+                final showSnowfall = _currentPageIndex == 0 &&
+                    _messages.isEmpty &&
+                    value.text.trim().isEmpty;
+                return AnimatedOpacity(
+                  opacity: showSnowfall ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
+                  child: const SnowfallAnimation(),
+                );
+              },
             ),
           ),
         ],
@@ -1657,8 +1657,6 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Widget _buildInputArea(AppLocalizations localizations) {
-    final hasText = _inputController.text.trim().isNotEmpty;
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1700,16 +1698,24 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             ),
           ),
           const SizedBox(width: 8),
-          if (hasText && !_isListening) ...[
-            // Response length toggle button
-            _buildResponseLengthToggle(),
-            const SizedBox(width: 8),
-            // Send button
-            _buildSendButton(),
-          ] else ...[
-            // Voice button
-            _buildVoiceButton(),
-          ],
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _inputController,
+            builder: (context, value, child) {
+              final hasText = value.text.trim().isNotEmpty;
+              if (hasText && !_isListening) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildResponseLengthToggle(),
+                    const SizedBox(width: 8),
+                    _buildSendButton(),
+                  ],
+                );
+              } else {
+                return _buildVoiceButton();
+              }
+            },
+          ),
         ],
       ),
     );
