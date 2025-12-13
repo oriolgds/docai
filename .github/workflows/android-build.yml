@@ -248,7 +248,7 @@ jobs:
   release:
     name: Create Release
     needs: [build-android, build-windows]
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && needs.build-android.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -276,6 +276,7 @@ jobs:
 
       - name: Download MSIX artifacts
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: docai-msix-${{ github.run_number }}
           path: release-artifacts/msix
@@ -399,6 +400,7 @@ jobs:
 
       - name: Upload MSIX artifact
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: docai-msix-${{ github.run_number }}
           path: build/windows/x64/runner/Release/*.msix
