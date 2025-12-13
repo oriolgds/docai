@@ -3,9 +3,23 @@ import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/state/locale_scope.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:docai/widgets/smooth_scroll.dart';
 
-class InfoScreen extends StatelessWidget {
+class InfoScreen extends StatefulWidget {
   const InfoScreen({super.key});
+
+  @override
+  State<InfoScreen> createState() => _InfoScreenState();
+}
+
+class _InfoScreenState extends State<InfoScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   static final Uri _twitterUri = Uri.parse('https://x.com/docaiapp');
   static final Uri _portfolioUri = Uri.parse('https://oriol.is-a.dev');
@@ -105,10 +119,13 @@ class InfoScreen extends StatelessWidget {
               final isWide = constraints.maxWidth > 800;
               final crossAxisCount = isWide ? 2 : 1;
 
-              return CustomScrollView(
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+              return SmoothScroll(
+                controller: _scrollController,
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
                     sliver: SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 24),
@@ -161,30 +178,31 @@ class InfoScreen extends StatelessWidget {
                             }, childCount: items.length),
                           ),
                   ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 24),
-                      child: Center(
-                        child: FutureBuilder<PackageInfo>(
-                          future: PackageInfo.fromPlatform(),
-                          builder: (context, snapshot) {
-                            if (!snapshot.hasData) {
-                              return const SizedBox.shrink();
-                            }
-                            final version = snapshot.data!;
-                            return Text(
-                              localizations.versionDisplay(version.version),
-                              style: TextStyle(
-                                color: Theme.of(context).disabledColor,
-                                fontSize: 12,
-                              ),
-                            );
-                          },
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 24),
+                        child: Center(
+                          child: FutureBuilder<PackageInfo>(
+                            future: PackageInfo.fromPlatform(),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData) {
+                                return const SizedBox.shrink();
+                              }
+                              final version = snapshot.data!;
+                              return Text(
+                                localizations.versionDisplay(version.version),
+                                style: TextStyle(
+                                  color: Theme.of(context).disabledColor,
+                                  fontSize: 12,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               );
             },
           ),

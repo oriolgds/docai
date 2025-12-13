@@ -23,6 +23,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter/services.dart';
 import 'package:docai/services/firestore_service.dart';
 import 'package:docai/widgets/snowfall_animation.dart';
+import 'package:docai/widgets/smooth_scroll.dart';
 
 class NativeChatScreen extends StatefulWidget {
   const NativeChatScreen({super.key});
@@ -1618,11 +1619,13 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Widget _buildMessagesList() {
-    return ListView.builder(
+    return SmoothScroll(
       controller: _scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      itemCount: _messages.length + (_currentSuggestions.isNotEmpty ? 1 : 0),
-      itemBuilder: (context, index) {
+      child: ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        itemCount: _messages.length + (_currentSuggestions.isNotEmpty ? 1 : 0),
+        itemBuilder: (context, index) {
         // Show follow-up suggestions after the last message
         if (index == _messages.length && _currentSuggestions.isNotEmpty) {
           return Padding(
@@ -1653,6 +1656,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           onReport: () => _reportMessage(message),
         );
       },
+    ),
     );
   }
 
@@ -3093,7 +3097,7 @@ class _PresetSelectorSheet extends StatelessWidget {
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
-                          childAspectRatio: 1.5,
+                          childAspectRatio: 1.3,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
