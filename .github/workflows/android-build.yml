@@ -27,7 +27,7 @@ env:
 
 jobs:
   build-android:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     
     steps:
       - name: Cancel Previous Workflow Runs
@@ -274,7 +274,7 @@ jobs:
 
   build-windows:
     name: Build Windows MSIX
-    runs-on: self-hosted
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
