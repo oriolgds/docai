@@ -30,63 +30,61 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Secrets Setup (Using bash for compatibility)
+      # Secrets Setup (Using PowerShell)
       - name: Create firebase_options.dart from secret
-        shell: bash
+        shell: powershell
         env:
           FIREBASE_OPTIONS_DART: ${{ secrets.FIREBASE_OPTIONS_DART }}
         run: |
-          mkdir -p lib
-          if [ -n "$FIREBASE_OPTIONS_DART" ]; then
-            cat > lib/firebase_options.dart << 'EOF'
-          ${{ secrets.FIREBASE_OPTIONS_DART }}
-          EOF
-            echo "✓ Firebase options file created successfully"
-          else
-            echo "❌ FIREBASE_OPTIONS_DART secret not found"
+          New-Item -ItemType Directory -Force -Path "lib" | Out-Null
+          if ($env:FIREBASE_OPTIONS_DART) {
+            $env:FIREBASE_OPTIONS_DART | Set-Content -Path "lib/firebase_options.dart" -Encoding UTF8
+            Write-Host "✓ Firebase options file created successfully"
+          } else {
+            Write-Error "❌ FIREBASE_OPTIONS_DART secret not found"
             exit 1
-          fi
+          }
 
       - name: Create .env file from secret
-        shell: bash
+        shell: powershell
         env:
           DOT_ENV: ${{ secrets.DOT_ENV }}
         run: |
-          if [ -n "$DOT_ENV" ]; then
-            cat > .env << 'EOF'
-          ${{ secrets.DOT_ENV }}
-          EOF
-            echo "✓ .env file created successfully"
-          else
-            echo "❌ DOT_ENV secret not found"
+          if ($env:DOT_ENV) {
+            $env:DOT_ENV | Set-Content -Path ".env" -Encoding UTF8
+            Write-Host "✓ .env file created successfully"
+          } else {
+            Write-Error "❌ DOT_ENV secret not found"
             exit 1
-          fi
+          }
 
       - name: Decode keystore from secret
-        shell: bash
+        shell: powershell
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          mkdir -p android/app
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
-            echo "✓ Keystore decoded successfully"
-          else
-            echo "❌ KEYSTORE_BASE64 secret not found"
-            exit 1
-          fi
+          New-Item -ItemType Directory -Force -Path "android/app" | Out-Null
+          if ($env:KEYSTORE_BASE64) {
+             $bytes = [System.Convert]::FromBase64String($env:KEYSTORE_BASE64)
+             [System.IO.File]::WriteAllBytes("android/app/upload-keystore.jks", $bytes)
+             Write-Host "✓ Keystore decoded successfully"
+          } else {
+             Write-Error "❌ KEYSTORE_BASE64 secret not found"
+             exit 1
+          }
 
       - name: Create key.properties
-        shell: bash
+        shell: powershell
         run: |
-          mkdir -p android
-          cat > android/key.properties << 'EOF'
+          New-Item -ItemType Directory -Force -Path "android" | Out-Null
+          $content = @"
           storePassword=${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword=${{ secrets.KEY_PASSWORD }}
           keyAlias=${{ secrets.KEY_ALIAS }}
           storeFile=upload-keystore.jks
-          EOF
-          echo "✓ key.properties created successfully"
+          "@
+          $content | Set-Content -Path "android/key.properties" -Encoding UTF8
+          Write-Host "✓ key.properties created successfully"
 
       # Flutter Setup
       - name: Get dependencies
@@ -94,10 +92,10 @@ jobs:
 
       - name: Get version from pubspec.yaml
         if: github.ref == 'refs/heads/main'
-        shell: bash
+        shell: powershell
         run: |
-          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          $version = (Select-String -Path "pubspec.yaml" -Pattern "^version: ").Line -replace "version: ", ""
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       # Android Build
       - name: Build AAB
@@ -146,10 +144,10 @@ jobs:
       # Cleanup
       - name: Cleanup sensitive files
         if: always()
-        shell: bash
+        shell: powershell
         run: |
-          rm -f android/app/upload-keystore.jks
-          rm -f android/key.properties
-          rm -f lib/firebase_options.dart
-          rm -f .env
-          echo "✓ Sensitive files cleaned up"
+          Remove-Item -Path "android/app/upload-keystore.jks" -ErrorAction SilentlyContinue
+          Remove-Item -Path "android/key.properties" -ErrorAction SilentlyContinue
+          Remove-Item -Path "lib/firebase_options.dart" -ErrorAction SilentlyContinue
+          Remove-Item -Path ".env" -ErrorAction SilentlyContinue
+          Write-Host "✓ Sensitive files cleaned up"
