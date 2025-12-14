@@ -816,13 +816,16 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                   child: Material(
                                     color: Colors.transparent,
                                     shape: const CircleBorder(),
-                                    child: InkWell(
-                                      customBorder: const CircleBorder(),
-                                      onTap: _scrollToBottom,
-                                      child: const Icon(
-                                        Icons.keyboard_arrow_down_rounded,
-                                        color: Colors.white,
-                                        size: 24,
+                                    child: Tooltip(
+                                      message: localizations.scrollToBottom,
+                                      child: InkWell(
+                                        customBorder: const CircleBorder(),
+                                        onTap: _scrollToBottom,
+                                        child: const Icon(
+                                          Icons.keyboard_arrow_down_rounded,
+                                          color: Colors.white,
+                                          size: 24,
+                                        ),
                                       ),
                                     ),
                                   ),

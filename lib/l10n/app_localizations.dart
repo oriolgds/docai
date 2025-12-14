@@ -958,6 +958,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Voice input'**
   String get voiceButtonTooltip;
+
+  /// No description provided for @scrollToBottom.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll to bottom'**
+  String get scrollToBottom;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

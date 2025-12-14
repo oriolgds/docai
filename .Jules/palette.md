@@ -5,3 +5,7 @@
 ## 2025-05-24 - [Primary Action Button Accessibility]
 **Learning:** Primary action buttons like "Send" and "Voice Input" lacked tooltips, which are critical for screen reader users and desktop users to understand the icon's function.
 **Action:** Always verify that icon-only buttons have a `tooltip` property defined, relying on `AppLocalizations` for internationalization.
+
+## 2025-05-25 - [Custom Widget Accessibility]
+**Learning:** Custom-styled buttons built with `Container` and `InkWell` often miss accessibility features like tooltips that standard buttons provide. The "Scroll to Bottom" button was invisible to screen readers.
+**Action:** When creating or reviewing custom interactive widgets, explicitly wrap them in `Tooltip` and ensure they have semantic labels.
