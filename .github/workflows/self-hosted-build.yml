@@ -107,7 +107,21 @@ jobs:
         with:
           name: docai-aab-${{ github.run_number }}
           path: build/app/outputs/bundle/release/app-release.aab
-          retention-days: 30
+          retention-days: ${{ github.event_name == 'pull_request' && 7 || 30 }}
+          compression-level: 1
+
+      # Publish to Release (AAB)
+      - name: Publish AAB to Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          files: build/app/outputs/bundle/release/app-release.aab
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build APK (Release)
         if: github.ref == 'refs/heads/main'
@@ -123,19 +137,17 @@ jobs:
         with:
           name: docai-apk-${{ github.run_number }}
           path: build/app/outputs/flutter-apk/*.apk
-          retention-days: 30
+          retention-days: ${{ github.event_name == 'pull_request' && 7 || 30 }}
+          compression-level: 1
 
-
-      # Release
-      - name: Publish to Release
+      # Publish to Release (APK)
+      - name: Publish APK to Release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.VERSION }}
           name: ${{ env.VERSION }}
-          files: |
-            build/app/outputs/bundle/release/app-release.aab
-            build/app/outputs/flutter-apk/*.apk
+          files: build/app/outputs/flutter-apk/*.apk
           draft: false
           prerelease: false
         env:
