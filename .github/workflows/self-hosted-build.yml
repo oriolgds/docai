@@ -39,9 +39,9 @@ jobs:
           New-Item -ItemType Directory -Force -Path "lib" | Out-Null
           if ($env:FIREBASE_OPTIONS_DART) {
             $env:FIREBASE_OPTIONS_DART | Set-Content -Path "lib/firebase_options.dart" -Encoding UTF8
-            Write-Host "✓ Firebase options file created successfully"
+            Write-Host "[OK] Firebase options file created successfully"
           } else {
-            Write-Error "❌ FIREBASE_OPTIONS_DART secret not found"
+            Write-Error "[ERROR] FIREBASE_OPTIONS_DART secret not found"
             exit 1
           }
 
@@ -52,9 +52,9 @@ jobs:
         run: |
           if ($env:DOT_ENV) {
             $env:DOT_ENV | Set-Content -Path ".env" -Encoding UTF8
-            Write-Host "✓ .env file created successfully"
+            Write-Host "[OK] .env file created successfully"
           } else {
-            Write-Error "❌ DOT_ENV secret not found"
+            Write-Error "[ERROR] DOT_ENV secret not found"
             exit 1
           }
 
@@ -67,9 +67,9 @@ jobs:
           if ($env:KEYSTORE_BASE64) {
              $bytes = [System.Convert]::FromBase64String($env:KEYSTORE_BASE64)
              [System.IO.File]::WriteAllBytes("android/app/upload-keystore.jks", $bytes)
-             Write-Host "✓ Keystore decoded successfully"
+             Write-Host "[OK] Keystore decoded successfully"
           } else {
-             Write-Error "❌ KEYSTORE_BASE64 secret not found"
+             Write-Error "[ERROR] KEYSTORE_BASE64 secret not found"
              exit 1
           }
 
@@ -84,7 +84,7 @@ jobs:
           storeFile=upload-keystore.jks
           "@
           $content | Set-Content -Path "android/key.properties" -Encoding UTF8
-          Write-Host "✓ key.properties created successfully"
+          Write-Host "[OK] key.properties created successfully"
 
       # Flutter Setup
       - name: Get dependencies
@@ -150,4 +150,4 @@ jobs:
           Remove-Item -Path "android/key.properties" -ErrorAction SilentlyContinue
           Remove-Item -Path "lib/firebase_options.dart" -ErrorAction SilentlyContinue
           Remove-Item -Path ".env" -ErrorAction SilentlyContinue
-          Write-Host "✓ Sensitive files cleaned up"
+          Write-Host "[OK] Sensitive files cleaned up"
