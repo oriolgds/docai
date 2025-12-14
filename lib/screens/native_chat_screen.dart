@@ -254,9 +254,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       final distanceFromBottom = maxScroll - offset;
 
       // Update near bottom status
-      setState(() {
-        _isNearBottom = distanceFromBottom < 100;
-      });
+      // Optimization: Avoid setState here as _isNearBottom is not used in build()
+      _isNearBottom = distanceFromBottom < 100;
 
       // Show/hide FAB based on scroll position
       if (distanceFromBottom > 200) {
