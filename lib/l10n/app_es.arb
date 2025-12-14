@@ -142,5 +142,6 @@
   "infoWindowsStoreSubtitle": "Descargar para PC en la Microsoft Store.",
   "versionDisplay": "Versión {version}",
   "sendButtonTooltip": "Enviar mensaje",
-  "voiceButtonTooltip": "Entrada de voz"
+  "voiceButtonTooltip": "Entrada de voz",
+  "scrollToBottom": "Ir al final"
 }

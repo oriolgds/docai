@@ -438,4 +438,6 @@ class AppLocalizationsCa extends AppLocalizations {
 
   @override
   String get voiceButtonTooltip => 'Entrada de veu';
+@override
+  String get scrollToBottom => 'Anar al final';
 }

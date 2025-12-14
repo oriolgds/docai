@@ -438,4 +438,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get voiceButtonTooltip => 'Spracheingabe';
+@override
+  String get scrollToBottom => 'Nach unten scrollen';
 }

@@ -149,5 +149,6 @@
     }
   },
   "sendButtonTooltip": "Send message",
-  "voiceButtonTooltip": "Voice input"
+  "voiceButtonTooltip": "Voice input",
+  "scrollToBottom": "Scroll to bottom"
 }
