@@ -38,7 +38,8 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path "lib" | Out-Null
           if ($env:FIREBASE_OPTIONS_DART) {
-            $env:FIREBASE_OPTIONS_DART | Set-Content -Path "lib/firebase_options.dart" -Encoding UTF8
+            $path = "lib/firebase_options.dart"
+            [System.IO.File]::WriteAllText($path, $env:FIREBASE_OPTIONS_DART)
             Write-Host "[OK] Firebase options file created successfully"
           } else {
             Write-Error "[ERROR] FIREBASE_OPTIONS_DART secret not found"
@@ -51,7 +52,7 @@ jobs:
           DOT_ENV: ${{ secrets.DOT_ENV }}
         run: |
           if ($env:DOT_ENV) {
-            $env:DOT_ENV | Set-Content -Path ".env" -Encoding UTF8
+            [System.IO.File]::WriteAllText(".env", $env:DOT_ENV)
             Write-Host "[OK] .env file created successfully"
           } else {
             Write-Error "[ERROR] DOT_ENV secret not found"
@@ -77,13 +78,13 @@ jobs:
         shell: powershell
         run: |
           New-Item -ItemType Directory -Force -Path "android" | Out-Null
-          $content = @"
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          storeFile=upload-keystore.jks
-          "@
-          $content | Set-Content -Path "android/key.properties" -Encoding UTF8
+          $content = @'
+storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+keyPassword=${{ secrets.KEY_PASSWORD }}
+keyAlias=${{ secrets.KEY_ALIAS }}
+storeFile=upload-keystore.jks
+'@
+          [System.IO.File]::WriteAllText("android/key.properties", $content)
           Write-Host "[OK] key.properties created successfully"
 
       # Flutter Setup
