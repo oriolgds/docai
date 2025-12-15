@@ -1675,12 +1675,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
-            child: Container(
+            child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 120),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(24),
-              ),
               child: TextField(
                 controller: _inputController,
                 enabled: !_isGenerating,
@@ -1690,7 +1686,24 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                 decoration: InputDecoration(
                   hintText: localizations.inputPlaceholder,
                   hintStyle: TextStyle(color: Theme.of(context).hintColor),
-                  border: InputBorder.none,
+                  filled: true,
+                  fillColor:
+                      Theme.of(context).colorScheme.surfaceContainerHighest,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2.0,
+                    ),
+                  ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 12,
