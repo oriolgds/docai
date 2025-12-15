@@ -738,7 +738,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                   opacity: showSnowfall ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 500),
                   curve: Curves.easeInOut,
-                  child: const SnowfallAnimation(),
+                  child: SnowfallAnimation(isEnabled: showSnowfall),
                 );
               },
             ),

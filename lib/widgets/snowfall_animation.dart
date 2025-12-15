@@ -27,8 +27,28 @@ class _SnowfallAnimationState extends State<SnowfallAnimation>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
-    )..repeat();
+    );
+    if (widget.isEnabled) {
+      _controller.repeat();
+    }
     _initializeSnowflakes();
+  }
+
+  @override
+  void didUpdateWidget(SnowfallAnimation oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isEnabled != oldWidget.isEnabled) {
+      if (widget.isEnabled) {
+        _controller.repeat();
+      } else {
+        // Delay stopping to allow fade-out animation in parent to complete
+        Future.delayed(const Duration(milliseconds: 600), () {
+          if (mounted && !widget.isEnabled) {
+            _controller.stop();
+          }
+        });
+      }
+    }
   }
 
   void _initializeSnowflakes() {
@@ -56,7 +76,8 @@ class _SnowfallAnimationState extends State<SnowfallAnimation>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.isEnabled) return const SizedBox.shrink();
+    // Optimization: Controller state is managed in didUpdateWidget/initState
+    // We don't return early here to allow parent to handle fade-out transitions
 
     return IgnorePointer(
       child: AnimatedBuilder(
