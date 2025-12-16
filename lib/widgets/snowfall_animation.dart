@@ -59,13 +59,23 @@ class _SnowfallAnimationState extends State<SnowfallAnimation>
   }
 
   Snowflake _generateSnowflake(bool randomY) {
-    return Snowflake(
-      x: _random.nextDouble(),
-      y: randomY ? _random.nextDouble() : -0.1,
-      size: _random.nextDouble() * 3 + 2,
-      speed: _random.nextDouble() * 0.005 + 0.002,
-      opacity: _random.nextDouble() * 0.5 + 0.3,
+    final snowflake = Snowflake(
+      x: 0,
+      y: 0,
+      size: 0,
+      speed: 0,
+      opacity: 0,
     );
+    _resetSnowflake(snowflake, randomY);
+    return snowflake;
+  }
+
+  void _resetSnowflake(Snowflake snowflake, bool randomY) {
+    snowflake.x = _random.nextDouble();
+    snowflake.y = randomY ? _random.nextDouble() : -0.1;
+    snowflake.size = _random.nextDouble() * 3 + 2;
+    snowflake.speed = _random.nextDouble() * 0.005 + 0.002;
+    snowflake.opacity = _random.nextDouble() * 0.5 + 0.3;
   }
 
   @override
@@ -97,7 +107,8 @@ class _SnowfallAnimationState extends State<SnowfallAnimation>
     for (int i = 0; i < _snowflakes.length; i++) {
       _snowflakes[i].y += _snowflakes[i].speed;
       if (_snowflakes[i].y > 1.1) {
-        _snowflakes[i] = _generateSnowflake(false);
+        // Optimization: Recycle object instead of creating new one to reduce GC
+        _resetSnowflake(_snowflakes[i], false);
       }
     }
   }
