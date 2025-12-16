@@ -143,5 +143,11 @@
   "versionDisplay": "Versió {version}",
   "sendButtonTooltip": "Enviar missatge",
   "voiceButtonTooltip": "Entrada de veu",
-  "scrollToBottom": "Anar al final"
+  "scrollToBottom": "Anar al final",
+  "menuTooltip": "Menú",
+  "incognitoLockedTooltip": "No es pot canviar el mode incògnit durant la conversa",
+  "incognitoOnTooltip": "Mode incògnit ACTIVAT",
+  "incognitoOffTooltip": "Mode incògnit DESACTIVAT",
+  "responseLongTooltip": "Resposta llarga",
+  "responseShortTooltip": "Resposta ràpida"
 }

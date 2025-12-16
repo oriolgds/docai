@@ -995,10 +995,10 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                   : (_messages.isNotEmpty ? Colors.grey : null),
                             ),
                             tooltip: _messages.isNotEmpty
-                                ? 'Cannot change incognito mode during conversation'
+                                ? localizations.incognitoLockedTooltip
                                 : (_isIncognito
-                                      ? 'Incognito Mode ON'
-                                      : 'Incognito Mode OFF'),
+                                    ? localizations.incognitoOnTooltip
+                                    : localizations.incognitoOffTooltip),
                             onPressed: _messages.isEmpty
                                 ? () {
                                     setState(
@@ -1017,7 +1017,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                               angle: _menuRotationAnimation.value * 3.14159,
                               child: PopupMenuButton<String>(
                                 icon: const Icon(Icons.more_vert),
-                                tooltip: 'Menu',
+                                tooltip: localizations.menuTooltip,
                                 offset: const Offset(64, 0),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
@@ -1389,10 +1389,10 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                         : (_messages.isNotEmpty ? Colors.grey : null),
                   ),
                   tooltip: _messages.isNotEmpty
-                      ? 'Cannot change incognito mode during conversation'
+                      ? localizations.incognitoLockedTooltip
                       : (_isIncognito
-                            ? 'Incognito Mode ON'
-                            : 'Incognito Mode OFF'),
+                          ? localizations.incognitoOnTooltip
+                          : localizations.incognitoOffTooltip),
                   onPressed: _messages.isEmpty
                       ? () {
                           setState(() => _isIncognito = !_isIncognito);
@@ -1408,7 +1408,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                     angle: _menuRotationAnimation.value * 3.14159,
                     child: PopupMenuButton<String>(
                       icon: const Icon(Icons.more_vert),
-                      tooltip: 'Menu',
+                      tooltip: localizations.menuTooltip,
                       offset: const Offset(0, 45),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -1861,6 +1861,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Widget _buildResponseLengthToggle() {
+    final localizations = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = _isLongResponse ? Colors.blue : Colors.green;
     final backgroundColor = isDark
@@ -1888,7 +1889,9 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           color: iconColor,
           size: 20,
         ),
-        tooltip: _isLongResponse ? 'Long Response' : 'Fast Response',
+        tooltip: _isLongResponse
+            ? localizations.responseLongTooltip
+            : localizations.responseShortTooltip,
         onPressed: () {
           setState(() => _isLongResponse = !_isLongResponse);
         },

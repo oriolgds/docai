@@ -440,4 +440,22 @@ class AppLocalizationsCa extends AppLocalizations {
   String get voiceButtonTooltip => 'Entrada de veu';
 @override
   String get scrollToBottom => 'Anar al final';
+
+  @override
+  String get menuTooltip => 'Menú';
+
+  @override
+  String get incognitoLockedTooltip => 'No es pot canviar el mode incògnit durant la conversa';
+
+  @override
+  String get incognitoOnTooltip => 'Mode incògnit ACTIVAT';
+
+  @override
+  String get incognitoOffTooltip => 'Mode incògnit DESACTIVAT';
+
+  @override
+  String get responseLongTooltip => 'Resposta llarga';
+
+  @override
+  String get responseShortTooltip => 'Resposta ràpida';
 }
