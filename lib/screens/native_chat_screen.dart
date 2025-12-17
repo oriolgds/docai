@@ -67,11 +67,33 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   late AnimationController _newChatHoverController;
   late Animation<double> _newChatScaleAnimation;
 
+  late AnimationController _newChatTextController;
+  late Animation<double> _newChatTextWidthAnimation;
+  bool _isNewChatHovering = false;
+
   @override
   void initState() {
     super.initState();
     _checkForUpdate();
     _loadChatHistory();
+
+    _newChatTextController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+      value: 1.0,
+    );
+
+    _newChatTextWidthAnimation = CurvedAnimation(
+      parent: _newChatTextController,
+      curve: Curves.easeInOut,
+    );
+
+    // Auto-hide text after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted && !_isNewChatHovering) {
+        _newChatTextController.reverse();
+      }
+    });
 
     _fabController = AnimationController(
       vsync: this,
@@ -228,6 +250,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     _micController.dispose();
     _menuButtonController.dispose();
     _newChatHoverController.dispose();
+    _newChatTextController.dispose();
     super.dispose();
   }
 
@@ -1287,8 +1310,16 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               // Primary action: Enhanced New Chat button (only on chat screen)
               if (_currentPageIndex == 0)
                 MouseRegion(
-                  onEnter: (_) => _newChatHoverController.forward(),
-                  onExit: (_) => _newChatHoverController.reverse(),
+                  onEnter: (_) {
+                    _isNewChatHovering = true;
+                    _newChatHoverController.forward();
+                    _newChatTextController.forward();
+                  },
+                  onExit: (_) {
+                    _isNewChatHovering = false;
+                    _newChatHoverController.reverse();
+                    _newChatTextController.reverse();
+                  },
                   child: AnimatedBuilder(
                     animation: _newChatScaleAnimation,
                     builder: (context, child) {
@@ -1357,13 +1388,31 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                             );
                                           },
                                         ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          localizations.chatNewConversation,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
+                                        ClipRect(
+                                          child: SizeTransition(
+                                            sizeFactor:
+                                                _newChatTextWidthAnimation,
+                                            axis: Axis.horizontal,
+                                            axisAlignment: -1.0,
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  localizations
+                                                      .chatNewConversation,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.visible,
+                                                  softWrap: false,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ],
