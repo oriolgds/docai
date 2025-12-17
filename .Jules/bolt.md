@@ -9,3 +9,7 @@
 ## 2025-12-15 - [Animation Controller Resource Usage]
 **Learning:** Discovered `SnowfallAnimation` was running its `AnimationController` loop continuously even when invisible/disabled, consuming CPU resources unnecessarily.
 **Action:** Always manage `AnimationController` state (start/stop) based on visibility or enabled state. Use `didUpdateWidget` to react to property changes and stop animations when not needed.
+
+## 2025-05-27 - [Markdown Parsing Bottleneck]
+**Learning:** `MarkdownBody` in `NativeChatScreen` was being re-parsed and rebuilt on every state update (e.g., typing) and scroll event, causing jank. `ListView.builder` rebuilds items frequently, and `MarkdownBody` parsing is CPU intensive.
+**Action:** Implemented `CachedMarkdownBody` to cache the widget instance and skip re-parsing when content hasn't changed. Also increased `ListView.cacheExtent` to keep more items alive off-screen.
