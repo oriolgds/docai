@@ -150,5 +150,11 @@
   },
   "sendButtonTooltip": "Send message",
   "voiceButtonTooltip": "Voice input",
-  "scrollToBottom": "Scroll to bottom"
+  "scrollToBottom": "Scroll to bottom",
+  "menuTooltip": "Menu",
+  "incognitoLockedTooltip": "Cannot change incognito mode during conversation",
+  "incognitoOnTooltip": "Incognito Mode ON",
+  "incognitoOffTooltip": "Incognito Mode OFF",
+  "responseLongTooltip": "Long Response",
+  "responseShortTooltip": "Fast Response"
 }

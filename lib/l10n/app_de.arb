@@ -143,5 +143,11 @@
   "versionDisplay": "Version {version}",
   "sendButtonTooltip": "Nachricht senden",
   "voiceButtonTooltip": "Spracheingabe",
-  "scrollToBottom": "Nach unten scrollen"
+  "scrollToBottom": "Nach unten scrollen",
+  "menuTooltip": "Menu",
+  "incognitoLockedTooltip": "Cannot change incognito mode during conversation",
+  "incognitoOnTooltip": "Incognito Mode ON",
+  "incognitoOffTooltip": "Incognito Mode OFF",
+  "responseLongTooltip": "Long Response",
+  "responseShortTooltip": "Fast Response"
 }

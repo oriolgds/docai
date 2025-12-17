@@ -964,6 +964,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scroll to bottom'**
   String get scrollToBottom;
+
+  /// No description provided for @menuTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu'**
+  String get menuTooltip;
+
+  /// No description provided for @incognitoLockedTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot change incognito mode during conversation'**
+  String get incognitoLockedTooltip;
+
+  /// No description provided for @incognitoOnTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Incognito Mode ON'**
+  String get incognitoOnTooltip;
+
+  /// No description provided for @incognitoOffTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Incognito Mode OFF'**
+  String get incognitoOffTooltip;
+
+  /// No description provided for @responseLongTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Long Response'**
+  String get responseLongTooltip;
+
+  /// No description provided for @responseShortTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast Response'**
+  String get responseShortTooltip;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

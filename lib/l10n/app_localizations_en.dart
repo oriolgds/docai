@@ -440,4 +440,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceButtonTooltip => 'Voice input';
 @override
   String get scrollToBottom => 'Scroll to bottom';
+
+  @override
+  String get menuTooltip => 'Menu';
+
+  @override
+  String get incognitoLockedTooltip => 'Cannot change incognito mode during conversation';
+
+  @override
+  String get incognitoOnTooltip => 'Incognito Mode ON';
+
+  @override
+  String get incognitoOffTooltip => 'Incognito Mode OFF';
+
+  @override
+  String get responseLongTooltip => 'Long Response';
+
+  @override
+  String get responseShortTooltip => 'Fast Response';
 }
