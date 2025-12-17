@@ -23,6 +23,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter/services.dart';
 import 'package:docai/services/firestore_service.dart';
 import 'package:docai/widgets/snowfall_animation.dart';
+import 'package:docai/widgets/cached_markdown_body.dart';
 
 class NativeChatScreen extends StatefulWidget {
   const NativeChatScreen({super.key});
@@ -1672,6 +1673,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      cacheExtent: 500, // Optimize scrolling by keeping more items alive
       itemCount: _messages.length + (_currentSuggestions.isNotEmpty ? 1 : 0),
       itemBuilder: (context, index) {
         // Show follow-up suggestions after the last message
@@ -1700,8 +1702,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               _isGenerating &&
               index == _messages.length - 1 &&
               message.role == MessageRole.assistant,
-          onCopy: () => _copyToClipboard(message.content),
-          onReport: () => _reportMessage(message),
+          onCopy: _copyToClipboard,
+          onReport: _reportMessage,
         );
       },
     );
@@ -2326,8 +2328,8 @@ class _MessageCard extends StatelessWidget {
   final bool isUser;
   final bool showAvatar;
   final bool isGenerating;
-  final VoidCallback? onCopy;
-  final VoidCallback? onReport;
+  final ValueChanged<String>? onCopy;
+  final ValueChanged<ChatMessage>? onReport;
 
   const _MessageCard({
     required this.message,
@@ -2472,24 +2474,9 @@ class _MessageCard extends StatelessWidget {
                         height: 1.4,
                       ),
                     )
-                  : MarkdownBody(
+                  : CachedMarkdownBody(
                       data: message.content,
-                      styleSheet: MarkdownStyleSheet(
-                        p: TextStyle(
-                          color: isDark ? Colors.grey[200] : Colors.black87,
-                          fontSize: 15,
-                          height: 1.4,
-                        ),
-                        code: TextStyle(
-                          backgroundColor: codeBackgroundColor,
-                          color: isDark ? Colors.green[300] : Colors.green[700],
-                          fontFamily: 'monospace',
-                        ),
-                        codeblockDecoration: BoxDecoration(
-                          color: codeBackgroundColor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
+                      isDark: isDark,
                     ),
         ),
       ),
@@ -2541,14 +2528,14 @@ class _MessageCard extends StatelessWidget {
           _ActionButton(
             icon: Icons.copy_rounded,
             tooltip: localizations.copyContent,
-            onTap: onCopy,
+            onTap: onCopy != null ? () => onCopy!(message.content) : null,
             size: 16,
           ),
           const SizedBox(width: 8),
           _ActionButton(
             icon: Icons.flag_outlined,
             tooltip: localizations.reportContent,
-            onTap: onReport,
+            onTap: onReport != null ? () => onReport!(message) : null,
             size: 16,
           ),
         ],
@@ -2601,7 +2588,9 @@ class _ChatBubblePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(_ChatBubblePainter oldDelegate) {
+    return oldDelegate.color != color || oldDelegate.isUser != isUser;
+  }
 }
 
 class _ActionButton extends StatelessWidget {
