@@ -3050,11 +3050,13 @@ class _QuickActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.selectionClick();
-          onTap();
-        },
+      child: Tooltip(
+        message: label,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onTap();
+          },
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -3100,6 +3102,7 @@ class _QuickActionButton extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -3207,12 +3210,14 @@ class _PresetSelectorSheet extends StatelessWidget {
           width: isSelected ? 2 : 1,
         ),
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          Navigator.pop(context);
-          onPresetSelected(preset);
-        },
+      child: Tooltip(
+        message: _getPresetName(context, preset),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.pop(context);
+            onPresetSelected(preset);
+          },
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: isGrid
@@ -3274,6 +3279,7 @@ class _PresetSelectorSheet extends StatelessWidget {
                   ],
                 ),
         ),
+      ),
       ),
     );
   }
