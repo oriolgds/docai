@@ -1359,67 +1359,70 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                               ),
                               child: Material(
                                 color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(20),
-                                  onTap: () {
-                                    _safeLogEvent(name: 'new_chat');
-                                    _clearChat();
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 8,
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        TweenAnimationBuilder<double>(
-                                          tween: Tween(begin: 0.0, end: 1.0),
-                                          duration: const Duration(
-                                            milliseconds: 300,
-                                          ),
-                                          builder: (context, rotation, child) {
-                                            return Transform.rotate(
-                                              angle: rotation * 3.14159 * 2,
-                                              child: const Icon(
-                                                Icons.add_comment_outlined,
-                                                color: Colors.white,
-                                                size: 18,
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        ClipRect(
-                                          child: SizeTransition(
-                                            sizeFactor:
-                                                _newChatTextWidthAnimation,
-                                            axis: Axis.horizontal,
-                                            axisAlignment: -1.0,
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const SizedBox(width: 6),
-                                                Text(
-                                                  localizations
-                                                      .chatNewConversation,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.visible,
-                                                  softWrap: false,
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.w600,
-                                                    fontSize: 14,
-                                                  ),
+                                child: Tooltip(
+                                  message: localizations.chatNewConversation,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(20),
+                                    onTap: () {
+                                      _safeLogEvent(name: 'new_chat');
+                                      _clearChat();
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          TweenAnimationBuilder<double>(
+                                            tween: Tween(begin: 0.0, end: 1.0),
+                                            duration: const Duration(
+                                              milliseconds: 300,
+                                            ),
+                                            builder: (context, rotation, child) {
+                                              return Transform.rotate(
+                                                angle: rotation * 3.14159 * 2,
+                                                child: const Icon(
+                                                  Icons.add_comment_outlined,
+                                                  color: Colors.white,
+                                                  size: 18,
                                                 ),
-                                              ],
+                                              );
+                                            },
+                                          ),
+                                          ClipRect(
+                                            child: SizeTransition(
+                                              sizeFactor:
+                                                  _newChatTextWidthAnimation,
+                                              axis: Axis.horizontal,
+                                              axisAlignment: -1.0,
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const SizedBox(width: 6),
+                                                  Text(
+                                                    localizations
+                                                        .chatNewConversation,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.visible,
+                                                    softWrap: false,
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight: FontWeight.w600,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
                                 ),
+                              ),
                               ),
                             );
                           },
