@@ -163,6 +163,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
                     child: TextFormField(
                       controller: _ageController,
                       keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.next,
                       decoration: InputDecoration(
                         labelText: localizations.labelAge,
                         border: const OutlineInputBorder(),
@@ -209,7 +210,9 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _weightController,
-                      keyboardType: TextInputType.number,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      textInputAction: TextInputAction.next,
                       decoration: InputDecoration(
                         labelText: localizations.labelWeight,
                         suffixText: 'kg',
@@ -222,7 +225,9 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _heightController,
-                      keyboardType: TextInputType.number,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      textInputAction: TextInputAction.next,
                       decoration: InputDecoration(
                         labelText: localizations.labelHeight,
                         suffixText: 'cm',
@@ -242,6 +247,8 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
               TextFormField(
                 controller: _allergiesController,
                 maxLines: 2,
+                textInputAction: TextInputAction.next,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   labelText: localizations.labelAllergies,
                   hintText: localizations.hintAllergies,
@@ -254,6 +261,8 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
               TextFormField(
                 controller: _conditionsController,
                 maxLines: 2,
+                textInputAction: TextInputAction.next,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   labelText: localizations.labelConditions,
                   hintText: localizations.hintConditions,
@@ -266,6 +275,8 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
               TextFormField(
                 controller: _medicationsController,
                 maxLines: 2,
+                textInputAction: TextInputAction.next,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   labelText: localizations.labelMedications,
                   hintText: localizations.hintMedications,
@@ -319,6 +330,8 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
               TextFormField(
                 controller: _dietaryController,
                 maxLines: 2,
+                textInputAction: TextInputAction.done,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   labelText: localizations.labelDietary,
                   hintText: localizations.hintDietary,
