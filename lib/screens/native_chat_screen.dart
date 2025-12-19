@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:docai/models/chat_message.dart';
@@ -24,6 +25,12 @@ import 'package:flutter/services.dart';
 import 'package:docai/services/firestore_service.dart';
 import 'package:docai/widgets/snowfall_animation.dart';
 import 'package:docai/widgets/cached_markdown_body.dart';
+
+// Top-level function for background isolation of JSON encoding
+// Receives a list of Maps (primitive objects) to be safe for isolate transfer
+List<String> _encodeChatHistory(List<Map<String, dynamic>> historyMaps) {
+  return historyMaps.map((map) => jsonEncode(map)).toList();
+}
 
 class NativeChatScreen extends StatefulWidget {
   const NativeChatScreen({super.key});
@@ -310,9 +317,10 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   Future<void> _persistChatHistory() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final historyJson = _chatHistory
-          .map((session) => jsonEncode(session.toJson()))
-          .toList();
+      // Offload potentially expensive JSON encoding to a background isolate
+      // We first convert to Map (fast) then encoding to String (slow) in isolate
+      final historyMaps = _chatHistory.map((s) => s.toJson()).toList();
+      final historyJson = await compute(_encodeChatHistory, historyMaps);
       await prefs.setStringList('chat_history', historyJson);
     } catch (e) {
       debugPrint('Error persisting chat history: $e');

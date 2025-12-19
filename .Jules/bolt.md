@@ -13,3 +13,7 @@
 ## 2025-05-27 - [Markdown Parsing Bottleneck]
 **Learning:** `MarkdownBody` in `NativeChatScreen` was being re-parsed and rebuilt on every state update (e.g., typing) and scroll event, causing jank. `ListView.builder` rebuilds items frequently, and `MarkdownBody` parsing is CPU intensive.
 **Action:** Implemented `CachedMarkdownBody` to cache the widget instance and skip re-parsing when content hasn't changed. Also increased `ListView.cacheExtent` to keep more items alive off-screen.
+
+## 2025-05-28 - [Sync JSON Serialization]
+**Learning:** Found `_persistChatHistory` performing synchronous `jsonEncode` on the entire chat history (up to 50 sessions) on the UI thread. This operation was triggered multiple times per message exchange, causing potential jank during typing and receiving messages.
+**Action:** Offloaded JSON serialization to a background isolate using `compute`. This prevents the UI thread from being blocked by expensive data processing operations, especially as data grows.
