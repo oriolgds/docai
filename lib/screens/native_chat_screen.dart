@@ -537,19 +537,30 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       medicalProfile = '\n\nUser Medical Profile:\n';
       if (age?.isNotEmpty == true) medicalProfile += '- Age: $age\n';
       if (gender?.isNotEmpty == true) medicalProfile += '- Gender: $gender\n';
-      if (weight?.isNotEmpty == true) medicalProfile += '- Weight: $weight kg\n';
-      if (height?.isNotEmpty == true) medicalProfile += '- Height: $height cm\n';
-      if (allergies?.isNotEmpty == true) medicalProfile += '- Allergies: $allergies\n';
-      if (conditions?.isNotEmpty == true) medicalProfile += '- Chronic Conditions: $conditions\n';
-      if (medications?.isNotEmpty == true) medicalProfile += '- Current Medications: $medications\n';
-      if (activityLevel?.isNotEmpty == true) medicalProfile += '- Activity Level: $activityLevel\n';
-      if (dietary?.isNotEmpty == true) medicalProfile += '- Dietary Restrictions: $dietary\n';
+      if (weight?.isNotEmpty == true)
+        medicalProfile += '- Weight: $weight kg\n';
+      if (height?.isNotEmpty == true)
+        medicalProfile += '- Height: $height cm\n';
+      if (allergies?.isNotEmpty == true)
+        medicalProfile += '- Allergies: $allergies\n';
+      if (conditions?.isNotEmpty == true)
+        medicalProfile += '- Chronic Conditions: $conditions\n';
+      if (medications?.isNotEmpty == true)
+        medicalProfile += '- Current Medications: $medications\n';
+      if (activityLevel?.isNotEmpty == true)
+        medicalProfile += '- Activity Level: $activityLevel\n';
+      if (dietary?.isNotEmpty == true)
+        medicalProfile += '- Dietary Restrictions: $dietary\n';
 
-      medicalProfile += '\nTake this profile into account when answering if relevant.';
+      medicalProfile +=
+          '\nTake this profile into account when answering if relevant.';
     }
 
     final apiMessages = [
-      {'role': 'system', 'content': _selectedPreset.systemPrompt + medicalProfile},
+      {
+        'role': 'system',
+        'content': _selectedPreset.systemPrompt + medicalProfile,
+      },
       ..._messages.map((m) => m.toApiFormat()),
     ];
 
@@ -763,7 +774,13 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             child: ValueListenableBuilder<TextEditingValue>(
               valueListenable: _inputController,
               builder: (context, value, child) {
-                final showSnowfall = _currentPageIndex == 0 &&
+                final now = DateTime.now();
+                final isChristmasTime =
+                    (now.month == 12 && now.day >= 8) ||
+                    (now.month == 1 && now.day <= 8);
+                final showSnowfall =
+                    isChristmasTime &&
+                    _currentPageIndex == 0 &&
                     _messages.isEmpty &&
                     value.text.trim().isEmpty;
                 return AnimatedOpacity(
@@ -787,13 +804,13 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         return FadeTransition(
           opacity: animation,
           child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0.0, 0.05),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOut,
-            )),
+            position:
+                Tween<Offset>(
+                  begin: const Offset(0.0, 0.05),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(parent: animation, curve: Curves.easeOut),
+                ),
             child: child,
           ),
         );
@@ -838,7 +855,9 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.green.withValues(alpha: 0.4),
+                                        color: Colors.green.withValues(
+                                          alpha: 0.4,
+                                        ),
                                         blurRadius: 12,
                                         offset: const Offset(0, 4),
                                       ),
@@ -956,10 +975,9 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                     Container(
                       margin: const EdgeInsets.symmetric(horizontal: 10),
                       decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primaryContainer
-                            .withValues(alpha: 0.3),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: Theme.of(
@@ -998,8 +1016,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                     ),
 
                     // Delete All (only on history page)
-                    if (_currentPageIndex == 1 &&
-                        _chatHistory.isNotEmpty) ...[
+                    if (_currentPageIndex == 1 && _chatHistory.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       IconButton(
                         icon: const Icon(
@@ -1027,13 +1044,11 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                         tooltip: _messages.isNotEmpty
                             ? localizations.incognitoLockedTooltip
                             : (_isIncognito
-                                ? localizations.incognitoOnTooltip
-                                : localizations.incognitoOffTooltip),
+                                  ? localizations.incognitoOnTooltip
+                                  : localizations.incognitoOffTooltip),
                         onPressed: _messages.isEmpty
                             ? () {
-                                setState(
-                                  () => _isIncognito = !_isIncognito,
-                                );
+                                setState(() => _isIncognito = !_isIncognito);
                               }
                             : null,
                       ),
@@ -1054,8 +1069,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                             ),
                             elevation: 8,
                             onOpened: () => _menuButtonController.forward(),
-                            onCanceled: () =>
-                                _menuButtonController.reverse(),
+                            onCanceled: () => _menuButtonController.reverse(),
                             onSelected: (value) async {
                               _menuButtonController.reverse();
                               switch (value) {
@@ -1075,9 +1089,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                   ).updateThemeMode(ThemeMode.system);
                                   break;
                                 case 'info':
-                                  _safeLogScreenView(
-                                    screenName: 'info_screen',
-                                  );
+                                  _safeLogScreenView(screenName: 'info_screen');
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (_) => const InfoScreen(),
@@ -1094,9 +1106,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                 case 'medical_profile':
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder:
-                                          (_) =>
-                                              const MedicalPreferencesScreen(),
+                                      builder: (_) =>
+                                          const MedicalPreferencesScreen(),
                                     ),
                                   );
                                   break;
@@ -1137,9 +1148,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                         'Theme',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w600,
-                                          color: Theme.of(
-                                            context,
-                                          ).hintColor,
+                                          color: Theme.of(context).hintColor,
                                           fontSize: 12,
                                         ),
                                       ),
@@ -1226,10 +1235,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                   value: 'reports',
                                   child: Row(
                                     children: [
-                                      const Icon(
-                                        Icons.flag_outlined,
-                                        size: 20,
-                                      ),
+                                      const Icon(Icons.flag_outlined, size: 20),
                                       const SizedBox(width: 12),
                                       Text(localizations.menuMyReports),
                                     ],
@@ -1337,10 +1343,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                           margin: const EdgeInsets.only(right: 8),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [
-                                Colors.green[400]!,
-                                Colors.teal[400]!,
-                              ],
+                              colors: [Colors.green[400]!, Colors.teal[400]!],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -1348,13 +1351,10 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.green.withOpacity(
-                                  0.3 +
-                                      (_newChatScaleAnimation.value - 1) *
-                                          2,
+                                  0.3 + (_newChatScaleAnimation.value - 1) * 2,
                                 ),
                                 blurRadius:
-                                    8 +
-                                    (_newChatScaleAnimation.value - 1) * 20,
+                                    8 + (_newChatScaleAnimation.value - 1) * 20,
                                 offset: const Offset(0, 2),
                               ),
                             ],
@@ -1393,8 +1393,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                     ),
                                     ClipRect(
                                       child: SizeTransition(
-                                        sizeFactor:
-                                            _newChatTextWidthAnimation,
+                                        sizeFactor: _newChatTextWidthAnimation,
                                         axis: Axis.horizontal,
                                         axisAlignment: -1.0,
                                         child: Row(
@@ -1402,11 +1401,9 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                           children: [
                                             const SizedBox(width: 6),
                                             Text(
-                                              localizations
-                                                  .chatNewConversation,
+                                              localizations.chatNewConversation,
                                               maxLines: 1,
-                                              overflow:
-                                                  TextOverflow.visible,
+                                              overflow: TextOverflow.visible,
                                               softWrap: false,
                                               style: const TextStyle(
                                                 color: Colors.white,
@@ -1443,13 +1440,21 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               tooltip: _messages.isNotEmpty
                   ? localizations.incognitoLockedTooltip
                   : (_isIncognito
-                      ? localizations.incognitoOnTooltip
-                      : localizations.incognitoOffTooltip),
+                        ? localizations.incognitoOnTooltip
+                        : localizations.incognitoOffTooltip),
               onPressed: _messages.isEmpty
                   ? () {
                       setState(() => _isIncognito = !_isIncognito);
                     }
                   : null,
+            ),
+
+          // Delete All button (only on history page with items)
+          if (_currentPageIndex == 1 && _chatHistory.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              tooltip: localizations.deleteDialogConfirm,
+              onPressed: _deleteAllChats,
             ),
 
           // Animated Menu button
@@ -1477,14 +1482,10 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                         }
                         break;
                       case 'theme_light':
-                        ThemeScope.of(
-                          context,
-                        ).updateThemeMode(ThemeMode.light);
+                        ThemeScope.of(context).updateThemeMode(ThemeMode.light);
                         break;
                       case 'theme_dark':
-                        ThemeScope.of(
-                          context,
-                        ).updateThemeMode(ThemeMode.dark);
+                        ThemeScope.of(context).updateThemeMode(ThemeMode.dark);
                         break;
                       case 'theme_system':
                         ThemeScope.of(
@@ -1494,9 +1495,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                       case 'info':
                         _safeLogScreenView(screenName: 'info_screen');
                         Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const InfoScreen(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const InfoScreen()),
                         );
                         break;
                       case 'reports':
@@ -1513,9 +1512,6 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                           ),
                         );
                         break;
-                      case 'delete_all':
-                        await _deleteAllChats();
-                        break;
                     }
                   },
                   itemBuilder: (context) {
@@ -1525,39 +1521,13 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                         value: 'medical_profile',
                         child: Row(
                           children: [
-                            const Icon(
-                              Icons.assignment_ind_outlined,
-                              size: 20,
-                            ),
+                            const Icon(Icons.assignment_ind_outlined, size: 20),
                             const SizedBox(width: 12),
                             Text(localizations.medicalPreferencesTitle),
                           ],
                         ),
                       ),
                       const PopupMenuDivider(),
-
-                      // Delete All (only on history page with items)
-                      if (_currentPageIndex == 1 &&
-                          _chatHistory.isNotEmpty) ...[
-                        PopupMenuItem<String>(
-                          value: 'delete_all',
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.delete_outline,
-                                color: Colors.red,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                localizations.deleteDialogConfirm,
-                                style: const TextStyle(color: Colors.red),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuDivider(),
-                      ],
 
                       // Theme submenu header
                       PopupMenuItem<String>(
@@ -1738,8 +1708,9 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                   hintText: localizations.inputPlaceholder,
                   hintStyle: TextStyle(color: Theme.of(context).hintColor),
                   filled: true,
-                  fillColor:
-                      Theme.of(context).colorScheme.surfaceContainerHighest,
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,
@@ -2466,18 +2437,15 @@ class _MessageCard extends StatelessWidget {
           child: message.content.isEmpty && isGenerating
               ? _buildTypingIndicator()
               : isUser
-                  ? Text(
-                      message.content,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        height: 1.4,
-                      ),
-                    )
-                  : CachedMarkdownBody(
-                      data: message.content,
-                      isDark: isDark,
-                    ),
+              ? Text(
+                  message.content,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    height: 1.4,
+                  ),
+                )
+              : CachedMarkdownBody(data: message.content, isDark: isDark),
         ),
       ),
     );
@@ -2631,6 +2599,12 @@ class _WelcomeScreen extends StatelessWidget {
   final ValueChanged<String> onSuggestionTap;
 
   const _WelcomeScreen({required this.preset, required this.onSuggestionTap});
+
+  bool _isChristmasTime(BuildContext context) {
+    final now = DateTime.now();
+    return (now.month == 12 && now.day >= 8) ||
+        (now.month == 1 && now.day <= 8);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2802,7 +2776,9 @@ class _WelcomeScreen extends StatelessWidget {
         ),
         child: ClipOval(
           child: Image.asset(
-            'assets/logo/xmas.webp',
+            _isChristmasTime(context)
+                ? 'assets/logo/xmas.webp'
+                : 'assets/logo/logo compress.webp',
             width: 100,
             height: 100,
             fit: BoxFit.cover,
@@ -3057,52 +3033,52 @@ class _QuickActionButton extends StatelessWidget {
             HapticFeedback.selectionClick();
             onTap();
           },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: isActive
-              ? BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.green[900]!.withValues(alpha: 0.3)
-                      : Colors.green[50],
-                  borderRadius: BorderRadius.circular(12),
-                )
-              : null,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (emoji != null) ...[
-                Text(emoji!, style: const TextStyle(fontSize: 24)),
-              ] else ...[
-                Icon(
-                  icon,
-                  size: 24,
-                  color: isActive
-                      ? (Theme.of(context).brightness == Brightness.dark
-                            ? Colors.green[300]
-                            : Colors.green[700])
-                      : null,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: isActive
+                ? BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.green[900]!.withValues(alpha: 0.3)
+                        : Colors.green[50],
+                    borderRadius: BorderRadius.circular(12),
+                  )
+                : null,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (emoji != null) ...[
+                  Text(emoji!, style: const TextStyle(fontSize: 24)),
+                ] else ...[
+                  Icon(
+                    icon,
+                    size: 24,
+                    color: isActive
+                        ? (Theme.of(context).brightness == Brightness.dark
+                              ? Colors.green[300]
+                              : Colors.green[700])
+                        : null,
+                  ),
+                ],
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isActive
+                        ? (Theme.of(context).brightness == Brightness.dark
+                              ? Colors.green[300]
+                              : Colors.green[700])
+                        : Theme.of(context).textTheme.bodyMedium?.color,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isActive
-                      ? (Theme.of(context).brightness == Brightness.dark
-                            ? Colors.green[300]
-                            : Colors.green[700])
-                      : Theme.of(context).textTheme.bodyMedium?.color,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -3218,68 +3194,68 @@ class _PresetSelectorSheet extends StatelessWidget {
             Navigator.pop(context);
             onPresetSelected(preset);
           },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: isGrid
-              ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(preset.emoji, style: const TextStyle(fontSize: 32)),
-                    const SizedBox(height: 8),
-                    Text(
-                      _getPresetName(context, preset),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: isGrid
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(preset.emoji, style: const TextStyle(fontSize: 32)),
+                      const SizedBox(height: 8),
+                      Text(
+                        _getPresetName(context, preset),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (isSelected) ...[
-                      const SizedBox(height: 4),
-                      Icon(
-                        Icons.check_circle,
-                        color: Colors.green[600],
-                        size: 16,
-                      ),
+                      if (isSelected) ...[
+                        const SizedBox(height: 4),
+                        Icon(
+                          Icons.check_circle,
+                          color: Colors.green[600],
+                          size: 16,
+                        ),
+                      ],
                     ],
-                  ],
-                )
-              : Row(
-                  children: [
-                    Text(preset.emoji, style: const TextStyle(fontSize: 32)),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _getPresetName(context, preset),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                  )
+                : Row(
+                    children: [
+                      Text(preset.emoji, style: const TextStyle(fontSize: 32)),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _getPresetName(context, preset),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getPresetDescription(context, preset),
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.color,
-                              fontSize: 13,
+                            const SizedBox(height: 4),
+                            Text(
+                              _getPresetDescription(context, preset),
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.color,
+                                fontSize: 13,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    if (isSelected)
-                      Icon(Icons.check_circle, color: Colors.green[600]),
-                  ],
-                ),
+                      if (isSelected)
+                        Icon(Icons.check_circle, color: Colors.green[600]),
+                    ],
+                  ),
+          ),
         ),
-      ),
       ),
     );
   }
