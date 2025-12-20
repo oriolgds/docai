@@ -12,3 +12,7 @@
 ## 2025-02-19 - Tooltips for Truncated Text
 **Learning:** Text labels in custom buttons (e.g. `_QuickActionButton`) are often set to truncate with `TextOverflow.ellipsis` to fit small screens. Without a tooltip, users cannot read the full label, creating a barrier.
 **Action:** Wrap any interactive element containing potentially truncated text (or icon-only actions) in a `Tooltip` widget with the full text string.
+
+## 2025-02-20 - Consistent Empty States
+**Learning:** Plain text empty states ("No items found") feel unpolished and can be easily missed. Using a consistent visual pattern (Icon + Text) across the app improves perceived quality and user orientation.
+**Action:** Replace plain text empty states with a centered `Column` containing a relevant large Icon (size 80, grey[300]) and styled text (size 18, w500, grey[600]), matching existing patterns in other screens.

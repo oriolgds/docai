@@ -32,7 +32,23 @@ class ReportsScreen extends StatelessWidget {
 
           final data = snapshot.data;
           if (data == null || data.docs.isEmpty) {
-            return Center(child: Text(localizations.noReportsFound));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.flag_outlined, size: 80, color: Colors.grey[300]),
+                  const SizedBox(height: 16),
+                  Text(
+                    localizations.noReportsFound,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
 
           return ListView.builder(
