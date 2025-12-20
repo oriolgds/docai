@@ -1,7 +1,7 @@
 name: docai
 description: "An app to heal the world"
 
-version: 6.1.41+86
+version: 6.1.42+87
 
 environment:
   sdk: ^3.9.0
@@ -67,7 +67,7 @@ msix_config:
   publisher_display_name: "Oriol Giner"
   identity_name: "OriolGiner.Docai"
   publisher: "CN=2A1BF35C-B236-4EA2-9703-E3FBAD46CF55"
-  msix_version: 6.1.41.0
+  msix_version: 6.1.42.0
   store: true
   architecture: x64
   logo_path: assets/logo/xmas.png
