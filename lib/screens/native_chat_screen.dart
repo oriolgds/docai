@@ -46,6 +46,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
+  final Set<String> _shownMessageIds = {};
 
   MedicalPreset _selectedPreset = MedicalPreset.presets.first;
   bool _isLongResponse =
@@ -290,9 +291,15 @@ class _NativeChatScreenState extends State<NativeChatScreen>
 
       // Show/hide FAB based on scroll position
       if (distanceFromBottom > 200) {
-        _fabController.forward();
+        if (_fabController.status != AnimationStatus.forward &&
+            _fabController.status != AnimationStatus.completed) {
+          _fabController.forward();
+        }
       } else {
-        _fabController.reverse();
+        if (_fabController.status != AnimationStatus.reverse &&
+            _fabController.status != AnimationStatus.dismissed) {
+          _fabController.reverse();
+        }
       }
     }
   }
@@ -474,6 +481,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     setState(() {
       _messages.clear();
       _messages.addAll(session.messages);
+      _shownMessageIds.clear();
+      _shownMessageIds.addAll(session.messages.map((m) => m.id));
       _isLongResponse = session.isLongResponse;
       _selectedPreset = MedicalPreset.getById(session.preset);
       _currentSessionId = session.id;
@@ -645,6 +654,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   void _clearChat() {
     setState(() {
       _messages.clear();
+      _shownMessageIds.clear();
       _currentSessionId = null;
       _isNearBottom = true;
       _currentSuggestions = [];
@@ -1664,16 +1674,23 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         final showAvatar =
             index == 0 || _messages[index - 1].role != message.role;
 
+        // Optimization: only animate if message hasn't been shown before
+        final shouldAnimate = !_shownMessageIds.contains(message.id);
+
         return _MessageCard(
           message: message,
           isUser: isUser,
           showAvatar: showAvatar,
+          shouldAnimate: shouldAnimate,
           isGenerating:
               _isGenerating &&
               index == _messages.length - 1 &&
               message.role == MessageRole.assistant,
           onCopy: _copyToClipboard,
           onReport: _reportMessage,
+          onShown: () {
+            _shownMessageIds.add(message.id);
+          },
         );
       },
     );
@@ -2298,17 +2315,21 @@ class _MessageCard extends StatelessWidget {
   final ChatMessage message;
   final bool isUser;
   final bool showAvatar;
+  final bool shouldAnimate;
   final bool isGenerating;
   final ValueChanged<String>? onCopy;
   final ValueChanged<ChatMessage>? onReport;
+  final VoidCallback? onShown;
 
   const _MessageCard({
     required this.message,
     required this.isUser,
     required this.showAvatar,
+    this.shouldAnimate = true,
     this.isGenerating = false,
     this.onCopy,
     this.onReport,
+    this.onShown,
   });
 
   @override
@@ -2318,8 +2339,13 @@ class _MessageCard extends StatelessWidget {
     final useMobileLayout = !isUser && isMobile;
 
     return TweenAnimationBuilder(
-      tween: Tween<double>(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 300),
+      tween: Tween<double>(begin: shouldAnimate ? 0 : 1, end: 1),
+      duration: shouldAnimate ? const Duration(milliseconds: 300) : Duration.zero,
+      onEnd: () {
+        if (shouldAnimate) {
+          onShown?.call();
+        }
+      },
       builder: (context, double value, child) {
         return Opacity(
           opacity: value,
