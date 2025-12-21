@@ -113,13 +113,16 @@ class ReportsScreen extends StatelessWidget {
                                   : Colors.grey[100],
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(
-                          report['messageContent'] ?? '',
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontStyle: FontStyle.italic,
+                        child: Tooltip(
+                          message: report['messageContent'] ?? '',
+                          child: Text(
+                            report['messageContent'] ?? '',
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                         ),
                       ),
