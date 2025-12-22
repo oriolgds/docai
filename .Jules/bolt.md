@@ -20,3 +20,7 @@
 ## 2025-05-28 - [BackdropFilter Performance]
 **Learning:** `BackdropFilter` was used on `_buildSideNav` and `_buildHeader` over a solid `Scaffold` background. This forces an expensive `saveLayer` and blur pass for no visual benefit (blurring a solid color is still a solid color).
 **Action:** Remove `BackdropFilter` (and wrapping `ClipRect`) when the background is known to be solid/static. Use semi-transparent `Container` colors instead.
+
+## 2025-05-29 - [Side Effects in Build Methods]
+**Learning:** `SnowfallAnimation` was updating its physics state inside the `build` method (via `AnimatedBuilder`). This caused the animation to speed up unpredictably when the widget was rebuilt by external factors (e.g., keyboard input triggers), as the physics update ran more frequently than the frame rate.
+**Action:** Move state/physics updates to `AnimationController` listeners or Tickers. Ensure `build` methods are pure and only describe the UI based on current state.

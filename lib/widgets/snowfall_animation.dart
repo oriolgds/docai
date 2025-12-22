@@ -31,6 +31,9 @@ class _SnowfallAnimationState extends State<SnowfallAnimation>
     if (widget.isEnabled) {
       _controller.repeat();
     }
+    // Optimization: Update physics in listener, not in build method
+    // to ensure consistent speed regardless of rebuild frequency.
+    _controller.addListener(_updateSnowflakes);
     _initializeSnowflakes();
   }
 
@@ -93,7 +96,6 @@ class _SnowfallAnimationState extends State<SnowfallAnimation>
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          _updateSnowflakes();
           return CustomPaint(
             painter: SnowPainter(_snowflakes),
             size: Size.infinite,
