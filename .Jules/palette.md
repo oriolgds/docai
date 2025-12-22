@@ -16,3 +16,7 @@
 ## 2025-02-20 - Consistent Empty States
 **Learning:** Plain text empty states ("No items found") feel unpolished and can be easily missed. Using a consistent visual pattern (Icon + Text) across the app improves perceived quality and user orientation.
 **Action:** Replace plain text empty states with a centered `Column` containing a relevant large Icon (size 80, grey[300]) and styled text (size 18, w500, grey[600]), matching existing patterns in other screens.
+
+## 2025-02-21 - Consistent Haptic Feedback
+**Learning:** Inconsistent haptic feedback breaks the tactile experience. When some buttons click and others don't, the app feels unfinished. Applying `HapticFeedback.selectionClick()` to all primary actions creates a cohesive, physical feel.
+**Action:** Ensure all interactive toggles, significant actions (like clearing chat), and list selections trigger `HapticFeedback.selectionClick()` or appropriate feedback type.

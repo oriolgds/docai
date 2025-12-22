@@ -880,7 +880,10 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                       message: localizations.scrollToBottom,
                                       child: InkWell(
                                         customBorder: const CircleBorder(),
-                                        onTap: _scrollToBottom,
+                                        onTap: () {
+                                          HapticFeedback.selectionClick();
+                                          _scrollToBottom();
+                                        },
                                         child: const Icon(
                                           Icons.keyboard_arrow_down_rounded,
                                           color: Colors.white,
@@ -975,6 +978,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                       icon: const Icon(Icons.add_comment_outlined),
                       tooltip: localizations.chatNewConversation,
                       onPressed: () {
+                        HapticFeedback.selectionClick();
                         _safeLogEvent(name: 'new_chat');
                         _clearChat();
                       },
@@ -1058,6 +1062,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                   : localizations.incognitoOffTooltip),
                         onPressed: _messages.isEmpty
                             ? () {
+                                HapticFeedback.selectionClick();
                                 setState(() => _isIncognito = !_isIncognito);
                               }
                             : null,
@@ -1374,6 +1379,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                             child: InkWell(
                               borderRadius: BorderRadius.circular(20),
                               onTap: () {
+                                HapticFeedback.selectionClick();
                                 _safeLogEvent(name: 'new_chat');
                                 _clearChat();
                               },
@@ -1454,6 +1460,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                         : localizations.incognitoOffTooltip),
               onPressed: _messages.isEmpty
                   ? () {
+                      HapticFeedback.selectionClick();
                       setState(() => _isIncognito = !_isIncognito);
                     }
                   : null,
@@ -1932,6 +1939,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             ? localizations.responseLongTooltip
             : localizations.responseShortTooltip,
         onPressed: () {
+          HapticFeedback.selectionClick();
           setState(() => _isLongResponse = !_isLongResponse);
         },
       ),
@@ -3217,6 +3225,7 @@ class _PresetSelectorSheet extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
+            HapticFeedback.selectionClick();
             Navigator.pop(context);
             onPresetSelected(preset);
           },
