@@ -14,6 +14,7 @@ import 'package:docai/screens/info_screen.dart';
 import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/screens/reports_screen.dart';
 import 'package:docai/screens/medical_preferences_screen.dart';
+import 'package:docai/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:uuid/uuid.dart';
@@ -25,6 +26,7 @@ import 'package:flutter/services.dart';
 import 'package:docai/services/firestore_service.dart';
 import 'package:docai/widgets/snowfall_animation.dart';
 import 'package:docai/widgets/cached_markdown_body.dart';
+import 'package:docai/services/app_haptics.dart';
 
 // Top-level function for background isolation of JSON encoding
 // Receives a list of Maps (primitive objects) to be safe for isolate transfer
@@ -495,7 +497,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Future<void> _sendMessage() async {
-    HapticFeedback.lightImpact();
+    AppHaptics.lightImpact(context);
     final text = _inputController.text.trim();
     if (text.isEmpty || _isGenerating) return;
 
@@ -678,7 +680,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           ),
           TextButton(
             onPressed: () {
-              HapticFeedback.lightImpact();
+              AppHaptics.lightImpact(context);
               Navigator.of(context).pop(true);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -713,7 +715,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               builder: (context) => _ConfirmPresetChangeDialog(
                 isSamePreset: preset.id == _selectedPreset.id,
                 onConfirm: () {
-                  HapticFeedback.selectionClick();
+                  AppHaptics.selectionClick(context);
                   setState(() {
                     _selectedPreset = preset;
                     _clearChat();
@@ -734,7 +736,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   void _switchToPage(int index) {
-    HapticFeedback.selectionClick();
+    AppHaptics.selectionClick(context);
     setState(() {
       _currentPageIndex = index;
     });
@@ -885,7 +887,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                       child: InkWell(
                                         customBorder: const CircleBorder(),
                                         onTap: () {
-                                          HapticFeedback.selectionClick();
+                                          AppHaptics.selectionClick(context);
                                           _scrollToBottom();
                                         },
                                         child: const Icon(
@@ -982,7 +984,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                       icon: const Icon(Icons.add_comment_outlined),
                       tooltip: localizations.chatNewConversation,
                       onPressed: () {
-                        HapticFeedback.selectionClick();
+                        AppHaptics.selectionClick(context);
                         _safeLogEvent(name: 'new_chat');
                         _clearChat();
                       },
@@ -1066,7 +1068,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                   : localizations.incognitoOffTooltip),
                         onPressed: _messages.isEmpty
                             ? () {
-                                HapticFeedback.selectionClick();
+                                AppHaptics.selectionClick(context);
                                 setState(() => _isIncognito = !_isIncognito);
                               }
                             : null,
@@ -1112,6 +1114,13 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (_) => const InfoScreen(),
+                                    ),
+                                  );
+                                  break;
+                                case 'settings':
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const SettingsScreen(),
                                     ),
                                   );
                                   break;
@@ -1236,6 +1245,18 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                 ),
 
                                 const PopupMenuDivider(),
+
+                                // Settings
+                                PopupMenuItem<String>(
+                                  value: 'settings',
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.settings_outlined, size: 20),
+                                      const SizedBox(width: 12),
+                                      Text(localizations.menuSettings),
+                                    ],
+                                  ),
+                                ),
 
                                 // Info
                                 PopupMenuItem<String>(
@@ -1383,7 +1404,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                             child: InkWell(
                               borderRadius: BorderRadius.circular(20),
                               onTap: () {
-                                HapticFeedback.selectionClick();
+                                AppHaptics.selectionClick(context);
                                 _safeLogEvent(name: 'new_chat');
                                 _clearChat();
                               },
@@ -1464,7 +1485,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                         : localizations.incognitoOffTooltip),
               onPressed: _messages.isEmpty
                   ? () {
-                      HapticFeedback.selectionClick();
+                      AppHaptics.selectionClick(context);
                       setState(() => _isIncognito = !_isIncognito);
                     }
                   : null,
@@ -1872,7 +1893,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               ),
               tooltip: AppLocalizations.of(context)!.voiceButtonTooltip,
               onPressed: () async {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick(context);
                 if (!_speechEnabled) {
                   bool available = await _speechToText.initialize(
                     onError: (val) => debugPrint('onError: $val'),
@@ -1943,7 +1964,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             ? localizations.responseLongTooltip
             : localizations.responseShortTooltip,
         onPressed: () {
-          HapticFeedback.selectionClick();
+          AppHaptics.selectionClick(context);
           setState(() => _isLongResponse = !_isLongResponse);
         },
       ),
@@ -2458,7 +2479,7 @@ class _MessageCard extends StatelessWidget {
 
     return GestureDetector(
       onLongPress: () {
-        HapticFeedback.mediumImpact();
+        AppHaptics.mediumImpact(context);
       },
       child: CustomPaint(
         painter: _ChatBubblePainter(
@@ -2921,7 +2942,7 @@ class _SuggestionChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selectionClick(context);
         onTap();
       },
       borderRadius: BorderRadius.circular(16),
@@ -2993,7 +3014,7 @@ class _FollowUpSuggestions extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 8),
             child: InkWell(
               onTap: () {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick(context);
                 onSuggestionTap(suggestion);
               },
               borderRadius: BorderRadius.circular(12),
@@ -3071,7 +3092,7 @@ class _QuickActionButton extends StatelessWidget {
         message: label,
         child: InkWell(
           onTap: () {
-            HapticFeedback.selectionClick();
+            AppHaptics.selectionClick(context);
             onTap();
           },
           borderRadius: BorderRadius.circular(12),
@@ -3232,7 +3253,7 @@ class _PresetSelectorSheet extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
-            HapticFeedback.selectionClick();
+            AppHaptics.selectionClick(context);
             Navigator.pop(context);
             onPresetSelected(preset);
           },
