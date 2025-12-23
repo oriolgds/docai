@@ -677,7 +677,10 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             child: Text(AppLocalizations.of(context)!.deleteDialogCancel),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              Navigator.of(context).pop(true);
+            },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: Text(AppLocalizations.of(context)!.deleteDialogConfirm),
           ),
@@ -710,6 +713,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               builder: (context) => _ConfirmPresetChangeDialog(
                 isSamePreset: preset.id == _selectedPreset.id,
                 onConfirm: () {
+                  HapticFeedback.selectionClick();
                   setState(() {
                     _selectedPreset = preset;
                     _clearChat();
@@ -2988,7 +2992,10 @@ class _FollowUpSuggestions extends StatelessWidget {
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: InkWell(
-              onTap: () => onSuggestionTap(suggestion),
+              onTap: () {
+                HapticFeedback.selectionClick();
+                onSuggestionTap(suggestion);
+              },
               borderRadius: BorderRadius.circular(12),
               child: Container(
                 padding: const EdgeInsets.symmetric(

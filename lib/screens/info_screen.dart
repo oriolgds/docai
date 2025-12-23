@@ -3,6 +3,7 @@ import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/state/locale_scope.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:flutter/services.dart';
 
 class InfoScreen extends StatelessWidget {
   const InfoScreen({super.key});
@@ -413,7 +414,10 @@ class _InfoCard extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
-        onTap: onTap,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Row(
