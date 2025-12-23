@@ -12,6 +12,8 @@ import 'dart:ui';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:docai/firebase_options.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:docai/services/firestore_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,6 +74,15 @@ class _DocAIAppWrapperState extends State<DocAIAppWrapper> {
             FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
             return true;
           };
+        }
+
+        // Set user ID for analytics to ensure consistent user tracking
+        try {
+          final firestoreService = FirestoreService();
+          final userId = await firestoreService.getUserId();
+          await FirebaseAnalytics.instance.setUserId(id: userId);
+        } catch (e) {
+          debugPrint("Failed to set analytics user ID: $e");
         }
       } else {
         // Attempt to initialize Firebase Core on Windows if configured,
