@@ -1035,6 +1035,22 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                       onPressed: () => _switchToPage(1),
                     ),
 
+                    // Settings button
+                    IconButton(
+                      icon: const Icon(
+                        Icons.settings_outlined,
+                        color: Colors.grey,
+                      ),
+                      tooltip: localizations.menuSettings,
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const SettingsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+
                     // Delete All (only on history page)
                     if (_currentPageIndex == 1 && _chatHistory.isNotEmpty) ...[
                       const SizedBox(height: 8),
@@ -2152,6 +2168,16 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               isActive: false,
               onTap: _handleUpdate,
             ),
+          _QuickActionButton(
+            icon: Icons.settings_outlined,
+            label: localizations.menuSettings,
+            isActive: false,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
+          ),
         ],
       ),
     );
