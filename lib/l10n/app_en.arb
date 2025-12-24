@@ -160,5 +160,9 @@
   "menuSettings": "Settings",
   "settingsLanguage": "Language",
   "settingsHaptics": "Haptic Feedback",
-  "settingsHapticsLabel": "Enable tactile feedback"
+  "settingsHapticsLabel": "Enable tactile feedback",
+  "settingsTheme": "Theme",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSystem": "System"
 }

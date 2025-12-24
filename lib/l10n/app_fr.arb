@@ -153,5 +153,9 @@
   "menuSettings": "Paramètres",
   "settingsLanguage": "Langue",
   "settingsHaptics": "Retour haptique",
-  "settingsHapticsLabel": "Activer le retour tactile"
+  "settingsHapticsLabel": "Activer le retour tactile",
+  "settingsTheme": "Thème",
+  "themeLight": "Clair",
+  "themeDark": "Sombre",
+  "themeSystem": "Système"
 }

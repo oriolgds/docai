@@ -153,5 +153,9 @@
   "menuSettings": "Configuració",
   "settingsLanguage": "Idioma",
   "settingsHaptics": "Resposta tàctil",
-  "settingsHapticsLabel": "Activar resposta tàctil"
+  "settingsHapticsLabel": "Activar resposta tàctil",
+  "settingsTheme": "Tema",
+  "themeLight": "Clar",
+  "themeDark": "Fosc",
+  "themeSystem": "Sistema"
 }

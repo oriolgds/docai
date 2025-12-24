@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:docai/l10n/app_localizations.dart';
-import 'package:docai/state/locale_scope.dart';
 import 'package:docai/services/app_haptics.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -21,13 +20,6 @@ class InfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
-    final localeController = LocaleScope.of(context);
-    final supportedLocales = AppLocalizations.supportedLocales;
-    final resolvedLocale = _findLocaleMatch(
-      localeController.locale ?? Localizations.localeOf(context),
-      supportedLocales,
-    );
-    final selectedLocale = _findLocaleMatch(resolvedLocale, supportedLocales);
 
     final items = [
       _InfoItem(
@@ -175,13 +167,6 @@ class InfoScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Locale _findLocaleMatch(Locale target, List<Locale> options) {
-    return options.firstWhere(
-      (locale) => locale.languageCode == target.languageCode,
-      orElse: () => options.first,
     );
   }
 
