@@ -159,6 +159,10 @@
   "responseShortTooltip": "Fast Response",
   "menuSettings": "Settings",
   "settingsLanguage": "Language",
+  "settingsTheme": "Appearance",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSystem": "System",
   "settingsHaptics": "Haptic Feedback",
   "settingsHapticsLabel": "Enable tactile feedback"
 }

@@ -152,6 +152,10 @@
   "responseShortTooltip": "Respuesta rápida",
   "menuSettings": "Ajustes",
   "settingsLanguage": "Idioma",
+  "settingsTheme": "Apariencia",
+  "themeLight": "Claro",
+  "themeDark": "Oscuro",
+  "themeSystem": "Sistema",
   "settingsHaptics": "Respuesta táctil",
   "settingsHapticsLabel": "Activar respuesta táctil"
 }

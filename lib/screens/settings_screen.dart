@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/state/locale_scope.dart';
 import 'package:docai/state/settings_scope.dart';
+import 'package:docai/state/theme_scope.dart';
 import 'package:docai/widgets/language_selector.dart';
 import 'package:docai/services/app_haptics.dart';
 
@@ -13,6 +14,7 @@ class SettingsScreen extends StatelessWidget {
     final localizations = AppLocalizations.of(context)!;
     final localeController = LocaleScope.of(context);
     final settingsController = SettingsScope.of(context);
+    final themeController = ThemeScope.of(context);
 
     final supportedLocales = AppLocalizations.supportedLocales;
     final resolvedLocale = _findLocaleMatch(
@@ -53,6 +55,72 @@ class SettingsScreen extends StatelessWidget {
                   localeController.updateLocale(locale);
                 }
               },
+            ),
+
+            const SizedBox(height: 32),
+
+            // Theme Section
+            Text(
+              localizations.settingsTheme,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              elevation: 0,
+              color: cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(
+                  color: borderColor.withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Column(
+                  children: [
+                    RadioListTile<ThemeMode>(
+                      title: Text(localizations.themeSystem, style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
+                      activeColor: borderColor,
+                      value: ThemeMode.system,
+                      groupValue: themeController.themeMode,
+                      onChanged: (value) {
+                        AppHaptics.selectionClick(context);
+                        if (value != null) themeController.updateThemeMode(value);
+                      },
+                      secondary: Icon(Icons.brightness_auto, color: textColor.withValues(alpha: 0.7)),
+                    ),
+                    Divider(height: 1, color: borderColor.withValues(alpha: 0.1), indent: 16, endIndent: 16),
+                    RadioListTile<ThemeMode>(
+                      title: Text(localizations.themeLight, style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
+                      activeColor: borderColor,
+                      value: ThemeMode.light,
+                      groupValue: themeController.themeMode,
+                      onChanged: (value) {
+                        AppHaptics.selectionClick(context);
+                        if (value != null) themeController.updateThemeMode(value);
+                      },
+                      secondary: Icon(Icons.light_mode_outlined, color: textColor.withValues(alpha: 0.7)),
+                    ),
+                    Divider(height: 1, color: borderColor.withValues(alpha: 0.1), indent: 16, endIndent: 16),
+                    RadioListTile<ThemeMode>(
+                      title: Text(localizations.themeDark, style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
+                      activeColor: borderColor,
+                      value: ThemeMode.dark,
+                      groupValue: themeController.themeMode,
+                      onChanged: (value) {
+                        AppHaptics.selectionClick(context);
+                        if (value != null) themeController.updateThemeMode(value);
+                      },
+                      secondary: Icon(Icons.dark_mode_outlined, color: textColor.withValues(alpha: 0.7)),
+                    ),
+                  ],
+                ),
+              ),
             ),
 
             const SizedBox(height: 32),

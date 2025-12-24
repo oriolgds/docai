@@ -152,6 +152,10 @@
   "responseShortTooltip": "Fast Response",
   "menuSettings": "Einstellungen",
   "settingsLanguage": "Sprache",
+  "settingsTheme": "Aussehen",
+  "themeLight": "Hell",
+  "themeDark": "Dunkel",
+  "themeSystem": "System",
   "settingsHaptics": "Haptisches Feedback",
   "settingsHapticsLabel": "Haptisches Feedback aktivieren"
 }
