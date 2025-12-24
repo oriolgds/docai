@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:docai/l10n/app_localizations.dart';
+import 'package:docai/services/app_haptics.dart';
 import 'dart:async';
 
 class MedicalPreferencesScreen extends StatefulWidget {
@@ -196,6 +197,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
                         ),
                       ],
                       onChanged: (value) {
+                        AppHaptics.selectionClick(context);
                         setState(() => _selectedGender = value);
                         _savePreferences(); // Dropdowns trigger save immediately
                       },
@@ -321,6 +323,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
                   ),
                 ],
                 onChanged: (value) {
+                  AppHaptics.selectionClick(context);
                   setState(() => _selectedActivityLevel = value);
                   _savePreferences(); // Dropdowns trigger save immediately
                 },

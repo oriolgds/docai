@@ -149,5 +149,9 @@
   "incognitoOnTooltip": "Modo incógnito ACTIVADO",
   "incognitoOffTooltip": "Modo incógnito DESACTIVADO",
   "responseLongTooltip": "Respuesta larga",
-  "responseShortTooltip": "Respuesta rápida"
+  "responseShortTooltip": "Respuesta rápida",
+  "menuSettings": "Ajustes",
+  "settingsLanguage": "Idioma",
+  "settingsHaptics": "Respuesta táctil",
+  "settingsHapticsLabel": "Activar respuesta táctil"
 }

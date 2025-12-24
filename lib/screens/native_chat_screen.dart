@@ -14,6 +14,7 @@ import 'package:docai/screens/info_screen.dart';
 import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/screens/reports_screen.dart';
 import 'package:docai/screens/medical_preferences_screen.dart';
+import 'package:docai/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:uuid/uuid.dart';
@@ -25,6 +26,7 @@ import 'package:flutter/services.dart';
 import 'package:docai/services/firestore_service.dart';
 import 'package:docai/widgets/snowfall_animation.dart';
 import 'package:docai/widgets/cached_markdown_body.dart';
+import 'package:docai/services/app_haptics.dart';
 
 // Top-level function for background isolation of JSON encoding
 // Receives a list of Maps (primitive objects) to be safe for isolate transfer
@@ -495,7 +497,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   Future<void> _sendMessage() async {
-    HapticFeedback.lightImpact();
+    AppHaptics.lightImpact(context);
     final text = _inputController.text.trim();
     if (text.isEmpty || _isGenerating) return;
 
@@ -677,7 +679,10 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             child: Text(AppLocalizations.of(context)!.deleteDialogCancel),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () {
+              AppHaptics.lightImpact(context);
+              Navigator.of(context).pop(true);
+            },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: Text(AppLocalizations.of(context)!.deleteDialogConfirm),
           ),
@@ -710,6 +715,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               builder: (context) => _ConfirmPresetChangeDialog(
                 isSamePreset: preset.id == _selectedPreset.id,
                 onConfirm: () {
+                  AppHaptics.selectionClick(context);
                   setState(() {
                     _selectedPreset = preset;
                     _clearChat();
@@ -730,7 +736,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   void _switchToPage(int index) {
-    HapticFeedback.selectionClick();
+    AppHaptics.selectionClick(context);
     setState(() {
       _currentPageIndex = index;
     });
@@ -881,7 +887,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                       child: InkWell(
                                         customBorder: const CircleBorder(),
                                         onTap: () {
-                                          HapticFeedback.selectionClick();
+                                          AppHaptics.selectionClick(context);
                                           _scrollToBottom();
                                         },
                                         child: const Icon(
@@ -978,7 +984,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                       icon: const Icon(Icons.add_comment_outlined),
                       tooltip: localizations.chatNewConversation,
                       onPressed: () {
-                        HapticFeedback.selectionClick();
+                        AppHaptics.selectionClick(context);
                         _safeLogEvent(name: 'new_chat');
                         _clearChat();
                       },
@@ -1062,7 +1068,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                   : localizations.incognitoOffTooltip),
                         onPressed: _messages.isEmpty
                             ? () {
-                                HapticFeedback.selectionClick();
+                                AppHaptics.selectionClick(context);
                                 setState(() => _isIncognito = !_isIncognito);
                               }
                             : null,
@@ -1108,6 +1114,13 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (_) => const InfoScreen(),
+                                    ),
+                                  );
+                                  break;
+                                case 'settings':
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const SettingsScreen(),
                                     ),
                                   );
                                   break;
@@ -1232,6 +1245,18 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                 ),
 
                                 const PopupMenuDivider(),
+
+                                // Settings
+                                PopupMenuItem<String>(
+                                  value: 'settings',
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.settings_outlined, size: 20),
+                                      const SizedBox(width: 12),
+                                      Text(localizations.menuSettings),
+                                    ],
+                                  ),
+                                ),
 
                                 // Info
                                 PopupMenuItem<String>(
@@ -1379,7 +1404,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                             child: InkWell(
                               borderRadius: BorderRadius.circular(20),
                               onTap: () {
-                                HapticFeedback.selectionClick();
+                                AppHaptics.selectionClick(context);
                                 _safeLogEvent(name: 'new_chat');
                                 _clearChat();
                               },
@@ -1460,7 +1485,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                         : localizations.incognitoOffTooltip),
               onPressed: _messages.isEmpty
                   ? () {
-                      HapticFeedback.selectionClick();
+                      AppHaptics.selectionClick(context);
                       setState(() => _isIncognito = !_isIncognito);
                     }
                   : null,
@@ -1868,7 +1893,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               ),
               tooltip: AppLocalizations.of(context)!.voiceButtonTooltip,
               onPressed: () async {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick(context);
                 if (!_speechEnabled) {
                   bool available = await _speechToText.initialize(
                     onError: (val) => debugPrint('onError: $val'),
@@ -1939,7 +1964,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             ? localizations.responseLongTooltip
             : localizations.responseShortTooltip,
         onPressed: () {
-          HapticFeedback.selectionClick();
+          AppHaptics.selectionClick(context);
           setState(() => _isLongResponse = !_isLongResponse);
         },
       ),
@@ -2346,14 +2371,96 @@ class _MessageCard extends StatelessWidget {
     final isMobile = MediaQuery.of(context).size.width < 600;
     final useMobileLayout = !isUser && isMobile;
 
+    final child = Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: useMobileLayout
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (showAvatar) ...[
+                  Row(
+                    children: [
+                      _buildAvatar(),
+                      const SizedBox(width: 8),
+                      Text(
+                        localizations.chatDoky,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                ],
+                _buildMessageBubble(context),
+                if (!isUser && !isGenerating && message.content.isNotEmpty)
+                  _buildActionButtons(context),
+                _buildTimestamp(),
+              ],
+            )
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: isUser
+                  ? MainAxisAlignment.end
+                  : MainAxisAlignment.start,
+              children: [
+                if (!isUser && showAvatar) ...[
+                  _buildAvatar(),
+                  const SizedBox(width: 12),
+                ],
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: isUser
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
+                    children: [
+                      if (showAvatar) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: 6,
+                            left: 4,
+                            right: 4,
+                          ),
+                          child: Text(
+                            isUser
+                                ? localizations.chatYou
+                                : localizations.chatDoky,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                        ),
+                      ],
+                      _buildMessageBubble(context),
+                      if (!isUser &&
+                          !isGenerating &&
+                          message.content.isNotEmpty)
+                        _buildActionButtons(context),
+                      _buildTimestamp(),
+                    ],
+                  ),
+                ),
+                if (isUser && showAvatar) ...[
+                  const SizedBox(width: 12),
+                  _buildAvatar(),
+                ],
+              ],
+            ),
+    );
+
+    // Optimization: Skip the animation builder overhead for messages that have already been shown.
+    if (!shouldAnimate) {
+      return child;
+    }
+
     return TweenAnimationBuilder(
-      tween: Tween<double>(begin: shouldAnimate ? 0 : 1, end: 1),
-      duration: shouldAnimate ? const Duration(milliseconds: 300) : Duration.zero,
-      onEnd: () {
-        if (shouldAnimate) {
-          onShown?.call();
-        }
-      },
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 300),
+      onEnd: onShown,
       builder: (context, double value, child) {
         return Opacity(
           opacity: value,
@@ -2363,86 +2470,7 @@ class _MessageCard extends StatelessWidget {
           ),
         );
       },
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 20),
-        child: useMobileLayout
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (showAvatar) ...[
-                    Row(
-                      children: [
-                        _buildAvatar(),
-                        const SizedBox(width: 8),
-                        Text(
-                          localizations.chatDoky,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[800],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                  ],
-                  _buildMessageBubble(context),
-                  if (!isUser && !isGenerating && message.content.isNotEmpty)
-                    _buildActionButtons(context),
-                  _buildTimestamp(),
-                ],
-              )
-            : Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: isUser
-                    ? MainAxisAlignment.end
-                    : MainAxisAlignment.start,
-                children: [
-                  if (!isUser && showAvatar) ...[
-                    _buildAvatar(),
-                    const SizedBox(width: 12),
-                  ],
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: isUser
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                      children: [
-                        if (showAvatar) ...[
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: 6,
-                              left: 4,
-                              right: 4,
-                            ),
-                            child: Text(
-                              isUser
-                                  ? localizations.chatYou
-                                  : localizations.chatDoky,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                          ),
-                        ],
-                        _buildMessageBubble(context),
-                        if (!isUser &&
-                            !isGenerating &&
-                            message.content.isNotEmpty)
-                          _buildActionButtons(context),
-                        _buildTimestamp(),
-                      ],
-                    ),
-                  ),
-                  if (isUser && showAvatar) ...[
-                    const SizedBox(width: 12),
-                    _buildAvatar(),
-                  ],
-                ],
-              ),
-      ),
+      child: child,
     );
   }
 
@@ -2454,7 +2482,7 @@ class _MessageCard extends StatelessWidget {
 
     return GestureDetector(
       onLongPress: () {
-        HapticFeedback.mediumImpact();
+        AppHaptics.mediumImpact(context);
       },
       child: CustomPaint(
         painter: _ChatBubblePainter(
@@ -2917,7 +2945,7 @@ class _SuggestionChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selectionClick(context);
         onTap();
       },
       borderRadius: BorderRadius.circular(16),
@@ -2988,7 +3016,10 @@ class _FollowUpSuggestions extends StatelessWidget {
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: InkWell(
-              onTap: () => onSuggestionTap(suggestion),
+              onTap: () {
+                AppHaptics.selectionClick(context);
+                onSuggestionTap(suggestion);
+              },
               borderRadius: BorderRadius.circular(12),
               child: Container(
                 padding: const EdgeInsets.symmetric(
@@ -3064,7 +3095,7 @@ class _QuickActionButton extends StatelessWidget {
         message: label,
         child: InkWell(
           onTap: () {
-            HapticFeedback.selectionClick();
+            AppHaptics.selectionClick(context);
             onTap();
           },
           borderRadius: BorderRadius.circular(12),
@@ -3225,7 +3256,7 @@ class _PresetSelectorSheet extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
-            HapticFeedback.selectionClick();
+            AppHaptics.selectionClick(context);
             Navigator.pop(context);
             onPresetSelected(preset);
           },
