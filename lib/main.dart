@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/state/locale_scope.dart';
 import 'package:docai/state/theme_scope.dart';
+import 'package:docai/state/settings_scope.dart';
 import 'package:docai/screens/native_chat_screen.dart';
 import 'package:docai/screens/splash_screen.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -39,6 +40,7 @@ class _DocAIAppWrapperState extends State<DocAIAppWrapper> {
   bool _isInitialized = false;
   LocaleController? _localeController;
   ThemeController? _themeController;
+  SettingsController? _settingsController;
 
   @override
   void initState() {
@@ -108,11 +110,15 @@ class _DocAIAppWrapperState extends State<DocAIAppWrapper> {
       final themeController = ThemeController();
       await themeController.loadSavedThemeMode();
 
+      final settingsController = SettingsController();
+      await settingsController.loadSettings();
+
       // Update state to transition from splash screen
       if (mounted) {
         setState(() {
           _localeController = localeController;
           _themeController = themeController;
+          _settingsController = settingsController;
           _isInitialized = true;
         });
       }
@@ -126,6 +132,7 @@ class _DocAIAppWrapperState extends State<DocAIAppWrapper> {
           // Fallback controllers if loading failed
           _localeController = LocaleController();
           _themeController = ThemeController();
+          _settingsController = SettingsController();
         });
       }
     }
@@ -136,7 +143,8 @@ class _DocAIAppWrapperState extends State<DocAIAppWrapper> {
     // Show a basic MaterialApp with splash screen while initializing
     if (!_isInitialized ||
         _localeController == null ||
-        _themeController == null) {
+        _themeController == null ||
+        _settingsController == null) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -161,9 +169,12 @@ class _DocAIAppWrapperState extends State<DocAIAppWrapper> {
     }
 
     // Once initialized, show the full app
-    return LocaleScope(
-      controller: _localeController!,
-      child: ThemeScope(controller: _themeController!, child: const DocAIApp()),
+    return SettingsScope(
+      controller: _settingsController!,
+      child: LocaleScope(
+        controller: _localeController!,
+        child: ThemeScope(controller: _themeController!, child: const DocAIApp()),
+      ),
     );
   }
 }

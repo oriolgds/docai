@@ -149,5 +149,9 @@
   "incognitoOnTooltip": "Incognito Mode ON",
   "incognitoOffTooltip": "Incognito Mode OFF",
   "responseLongTooltip": "Long Response",
-  "responseShortTooltip": "Fast Response"
+  "responseShortTooltip": "Fast Response",
+  "menuSettings": "Paramètres",
+  "settingsLanguage": "Langue",
+  "settingsHaptics": "Retour haptique",
+  "settingsHapticsLabel": "Activer le retour tactile"
 }
