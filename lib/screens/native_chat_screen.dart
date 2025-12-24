@@ -2371,14 +2371,96 @@ class _MessageCard extends StatelessWidget {
     final isMobile = MediaQuery.of(context).size.width < 600;
     final useMobileLayout = !isUser && isMobile;
 
+    final child = Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: useMobileLayout
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (showAvatar) ...[
+                  Row(
+                    children: [
+                      _buildAvatar(),
+                      const SizedBox(width: 8),
+                      Text(
+                        localizations.chatDoky,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                ],
+                _buildMessageBubble(context),
+                if (!isUser && !isGenerating && message.content.isNotEmpty)
+                  _buildActionButtons(context),
+                _buildTimestamp(),
+              ],
+            )
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: isUser
+                  ? MainAxisAlignment.end
+                  : MainAxisAlignment.start,
+              children: [
+                if (!isUser && showAvatar) ...[
+                  _buildAvatar(),
+                  const SizedBox(width: 12),
+                ],
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: isUser
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
+                    children: [
+                      if (showAvatar) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: 6,
+                            left: 4,
+                            right: 4,
+                          ),
+                          child: Text(
+                            isUser
+                                ? localizations.chatYou
+                                : localizations.chatDoky,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                        ),
+                      ],
+                      _buildMessageBubble(context),
+                      if (!isUser &&
+                          !isGenerating &&
+                          message.content.isNotEmpty)
+                        _buildActionButtons(context),
+                      _buildTimestamp(),
+                    ],
+                  ),
+                ),
+                if (isUser && showAvatar) ...[
+                  const SizedBox(width: 12),
+                  _buildAvatar(),
+                ],
+              ],
+            ),
+    );
+
+    // Optimization: Skip the animation builder overhead for messages that have already been shown.
+    if (!shouldAnimate) {
+      return child;
+    }
+
     return TweenAnimationBuilder(
-      tween: Tween<double>(begin: shouldAnimate ? 0 : 1, end: 1),
-      duration: shouldAnimate ? const Duration(milliseconds: 300) : Duration.zero,
-      onEnd: () {
-        if (shouldAnimate) {
-          onShown?.call();
-        }
-      },
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 300),
+      onEnd: onShown,
       builder: (context, double value, child) {
         return Opacity(
           opacity: value,
@@ -2388,86 +2470,7 @@ class _MessageCard extends StatelessWidget {
           ),
         );
       },
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 20),
-        child: useMobileLayout
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (showAvatar) ...[
-                    Row(
-                      children: [
-                        _buildAvatar(),
-                        const SizedBox(width: 8),
-                        Text(
-                          localizations.chatDoky,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[800],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                  ],
-                  _buildMessageBubble(context),
-                  if (!isUser && !isGenerating && message.content.isNotEmpty)
-                    _buildActionButtons(context),
-                  _buildTimestamp(),
-                ],
-              )
-            : Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: isUser
-                    ? MainAxisAlignment.end
-                    : MainAxisAlignment.start,
-                children: [
-                  if (!isUser && showAvatar) ...[
-                    _buildAvatar(),
-                    const SizedBox(width: 12),
-                  ],
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: isUser
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                      children: [
-                        if (showAvatar) ...[
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: 6,
-                              left: 4,
-                              right: 4,
-                            ),
-                            child: Text(
-                              isUser
-                                  ? localizations.chatYou
-                                  : localizations.chatDoky,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                          ),
-                        ],
-                        _buildMessageBubble(context),
-                        if (!isUser &&
-                            !isGenerating &&
-                            message.content.isNotEmpty)
-                          _buildActionButtons(context),
-                        _buildTimestamp(),
-                      ],
-                    ),
-                  ),
-                  if (isUser && showAvatar) ...[
-                    const SizedBox(width: 12),
-                    _buildAvatar(),
-                  ],
-                ],
-              ),
-      ),
+      child: child,
     );
   }
 
