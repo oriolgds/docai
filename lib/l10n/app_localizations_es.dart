@@ -438,7 +438,8 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get voiceButtonTooltip => 'Entrada de voz';
-@override
+
+  @override
   String get scrollToBottom => 'Ir al final';
 
   @override
@@ -458,4 +459,28 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get responseShortTooltip => 'Respuesta rápida';
+
+  @override
+  String get menuSettings => 'Ajustes';
+
+  @override
+  String get settingsLanguage => 'Idioma';
+
+  @override
+  String get settingsHaptics => 'Respuesta táctil';
+
+  @override
+  String get settingsHapticsLabel => 'Activar respuesta táctil';
+
+  @override
+  String get settingsTheme => 'Tema';
+
+  @override
+  String get themeLight => 'Claro';
+
+  @override
+  String get themeDark => 'Oscuro';
+
+  @override
+  String get themeSystem => 'Sistema';
 }

@@ -153,5 +153,9 @@
   "menuSettings": "Einstellungen",
   "settingsLanguage": "Sprache",
   "settingsHaptics": "Haptisches Feedback",
-  "settingsHapticsLabel": "Haptisches Feedback aktivieren"
+  "settingsHapticsLabel": "Haptisches Feedback aktivieren",
+  "settingsTheme": "Thema",
+  "themeLight": "Hell",
+  "themeDark": "Dunkel",
+  "themeSystem": "System"
 }
