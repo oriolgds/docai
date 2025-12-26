@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:docai/models/chat_session.dart';
 import 'package:docai/models/medical_preset.dart';
+import 'package:docai/l10n/app_localizations.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class ChatHistoryScreen extends StatelessWidget {
@@ -21,19 +22,22 @@ class ChatHistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
-        title: const Text(
-          'Chat History',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          localizations.menuHistory,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: chatHistory.isEmpty
-          ? _buildEmptyState()
+          ? _buildEmptyState(context)
           : ListView.builder(
               padding: const EdgeInsets.all(
                 16,
@@ -89,7 +93,7 @@ class ChatHistoryScreen extends StatelessWidget {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    session.title ?? 'Sin título',
+                                    session.title ?? localizations.chatUntitled,
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
@@ -126,7 +130,7 @@ class ChatHistoryScreen extends StatelessWidget {
                                 Text(
                                   timeago.format(
                                     session.updatedAt,
-                                    locale: 'es',
+                                    locale: locale,
                                   ),
                                   style: TextStyle(
                                     color: Colors.grey[600],
@@ -148,6 +152,7 @@ class ChatHistoryScreen extends StatelessWidget {
   }
 
   Widget _buildBottomBar(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -166,7 +171,7 @@ class ChatHistoryScreen extends StatelessWidget {
             ),
             _QuickActionButton(
               icon: Icons.history_outlined,
-              label: 'History',
+              label: localizations.menuHistory,
               isActive: true, // Indicate we're on history page
               onTap: () {}, // Already on history, do nothing
             ),
@@ -176,7 +181,8 @@ class ChatHistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -184,7 +190,7 @@ class ChatHistoryScreen extends StatelessWidget {
           Icon(Icons.history, size: 80, color: Colors.grey[300]),
           const SizedBox(height: 24),
           Text(
-            'No saved chats',
+            localizations.chatNoHistory,
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 18,
@@ -193,7 +199,7 @@ class ChatHistoryScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Your conversations will appear here',
+            localizations.chatHistoryPlaceholder,
             style: TextStyle(color: Colors.grey[500], fontSize: 14),
           ),
         ],
