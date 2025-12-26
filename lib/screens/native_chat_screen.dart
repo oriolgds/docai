@@ -3465,45 +3465,64 @@ class _TypingIndicatorState extends State<_TypingIndicator>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dotColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final dotColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: List.generate(3, (index) {
-          return AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              // Create a wave effect
-              // Offset the phase for each dot
-              final double t = (_controller.value - index * 0.2);
-              // Use sine wave for smooth bouncing
-              final double curveValue = math.sin(2 * math.pi * t);
-              // Map sine wave (-1 to 1) to vertical offset
-              final double yOffset = curveValue * 4;
-              // Also animate opacity slightly for better effect
-              final double opacity = (curveValue + 1.5) / 2.5;
-
-              return Transform.translate(
-                offset: Offset(0, yOffset),
-                child: Opacity(
-                  opacity: opacity.clamp(0.3, 1.0),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: dotColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              );
-            },
-          );
-        }),
+      child: CustomPaint(
+        size: const Size(40, 20), // 3 dots (8px) + spacing
+        painter: _TypingIndicatorPainter(
+          animation: _controller,
+          color: dotColor,
+        ),
       ),
     );
+  }
+}
+
+class _TypingIndicatorPainter extends CustomPainter {
+  final Animation<double> animation;
+  final Color color;
+
+  _TypingIndicatorPainter({required this.animation, required this.color})
+    : super(repaint: animation);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    final double dotSize = 8.0;
+    final double spacing = 4.0;
+
+    // Center the dots horizontally
+    final double totalWidth = (dotSize * 3) + (spacing * 2);
+    final double startX = (size.width - totalWidth) / 2;
+    final double centerY = size.height / 2;
+
+    for (int i = 0; i < 3; i++) {
+      // Offset the phase for each dot
+      final double t = (animation.value - i * 0.2);
+      // Use sine wave for smooth bouncing
+      final double curveValue = math.sin(2 * math.pi * t);
+      // Map sine wave (-1 to 1) to vertical offset
+      final double yOffset = curveValue * 4;
+      // Also animate opacity slightly for better effect
+      final double opacity = (curveValue + 1.5) / 2.5;
+
+      paint.color = color.withValues(alpha: opacity.clamp(0.3, 1.0));
+
+      canvas.drawCircle(
+        Offset(
+          startX + (dotSize / 2) + (i * (dotSize + spacing)),
+          centerY + yOffset,
+        ),
+        dotSize / 2,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_TypingIndicatorPainter oldDelegate) {
+    return oldDelegate.animation != animation || oldDelegate.color != color;
   }
 }
