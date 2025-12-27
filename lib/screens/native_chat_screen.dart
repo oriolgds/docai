@@ -741,12 +741,12 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       _currentPageIndex = index;
     });
 
-    // Open preset selector only when switching to chat page (index 0) from history
-    if (index == 0 && _currentPageIndex == 1) {
-      // Don't open modal when returning from history
+    if (index == 0) {
       _safeLogScreenView(screenName: 'home_screen');
     } else if (index == 1) {
       _safeLogScreenView(screenName: 'history_screen');
+    } else if (index == 2) {
+      _safeLogScreenView(screenName: 'settings_screen');
     }
   }
 
@@ -773,7 +773,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                     )
                   : Column(
                       children: [
-                        _buildHeader(),
+                        if (_currentPageIndex != 2) _buildHeader(),
                         Expanded(child: _buildMainContent(localizations)),
                         AnimatedSize(
                           duration: const Duration(milliseconds: 250),
@@ -909,10 +909,15 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                 ],
               ),
             )
-          : KeyedSubtree(
-              key: const ValueKey('history'),
-              child: _buildHistoryPage(),
-            ),
+          : _currentPageIndex == 1
+              ? KeyedSubtree(
+                  key: const ValueKey('history'),
+                  child: _buildHistoryPage(),
+                )
+              : const KeyedSubtree(
+                  key: ValueKey('settings'),
+                  child: SettingsScreen(),
+                ),
     );
   }
 
@@ -1037,18 +1042,14 @@ class _NativeChatScreenState extends State<NativeChatScreen>
 
                     // Settings button
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.settings_outlined,
-                        color: Colors.grey,
+                        color: _currentPageIndex == 2
+                            ? Colors.green[700]
+                            : Colors.grey,
                       ),
                       tooltip: localizations.menuSettings,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const SettingsScreen(),
-                          ),
-                        );
-                      },
+                      onPressed: () => _switchToPage(2),
                     ),
 
                     // Delete All (only on history page)
@@ -1134,11 +1135,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                   );
                                   break;
                                 case 'settings':
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => const SettingsScreen(),
-                                    ),
-                                  );
+                                  _switchToPage(2);
                                   break;
                                 case 'reports':
                                   Navigator.of(context).push(
@@ -2171,12 +2168,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           _QuickActionButton(
             icon: Icons.settings_outlined,
             label: localizations.menuSettings,
-            isActive: false,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              );
-            },
+            isActive: _currentPageIndex == 2,
+            onTap: () => _switchToPage(2),
           ),
         ],
       ),
