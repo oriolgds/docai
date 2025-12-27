@@ -2833,39 +2833,29 @@ class _WelcomeScreen extends StatelessWidget {
   }
 
   Widget _buildLogo(BuildContext context) {
-    return TweenAnimationBuilder(
-      tween: Tween<double>(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 800),
-      builder: (context, double value, child) {
-        return Transform.scale(
-          scale: value,
-          child: Opacity(opacity: value, child: child),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.green[900]!.withValues(alpha: 0.3)
-              : Colors.green[50],
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.green.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: ClipOval(
-          child: Image.asset(
-            _isChristmasTime(context)
-                ? 'assets/logo/xmas.webp'
-                : 'assets/logo/logo compress.webp',
-            width: 100,
-            height: 100,
-            fit: BoxFit.cover,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.green[900]!.withValues(alpha: 0.3)
+            : Colors.green[50],
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
+        ],
+      ),
+      child: ClipOval(
+        child: Image.asset(
+          _isChristmasTime(context)
+              ? 'assets/logo/xmas.webp'
+              : 'assets/logo/logo compress.webp',
+          width: 100,
+          height: 100,
+          fit: BoxFit.cover,
         ),
       ),
     );
