@@ -157,5 +157,7 @@
   "settingsTheme": "Thème",
   "themeLight": "Clair",
   "themeDark": "Sombre",
-  "themeSystem": "Système"
+  "themeSystem": "Système",
+  "followUpTitle": "Suivi",
+  "messageCount": "{count, plural, =1{1 message} other{{count} messages}}"
 }

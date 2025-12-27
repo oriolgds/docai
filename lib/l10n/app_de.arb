@@ -157,5 +157,7 @@
   "settingsTheme": "Thema",
   "themeLight": "Hell",
   "themeDark": "Dunkel",
-  "themeSystem": "System"
+  "themeSystem": "System",
+  "followUpTitle": "Folgefragen",
+  "messageCount": "{count, plural, =1{1 Nachricht} other{{count} Nachrichten}}"
 }

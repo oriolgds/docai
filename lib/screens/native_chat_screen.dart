@@ -2087,7 +2087,9 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      '${session.messages.length} messages',
+                                      localizations.messageCount(
+                                        session.messages.length,
+                                      ),
                                       style: TextStyle(
                                         color: Colors.grey[600],
                                         fontSize: 13,
@@ -3015,6 +3017,7 @@ class _FollowUpSuggestions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
@@ -3023,7 +3026,7 @@ class _FollowUpSuggestions extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
-            '💡 Follow up',
+            '💡 ${localizations.followUpTitle}',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,

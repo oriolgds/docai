@@ -164,5 +164,14 @@
   "settingsTheme": "Theme",
   "themeLight": "Light",
   "themeDark": "Dark",
-  "themeSystem": "System"
+  "themeSystem": "System",
+  "followUpTitle": "Follow up",
+  "messageCount": "{count, plural, =1{1 message} other{{count} messages}}",
+  "@messageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
