@@ -483,4 +483,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get themeSystem => 'Sistema';
+
+  @override
+  String get followUpTitle => 'Seguimiento';
+
+  @override
+  String messageCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mensajes',
+      one: '1 mensaje',
+    );
+    return '$_temp0';
+  }
 }

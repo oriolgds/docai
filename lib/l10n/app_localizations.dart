@@ -1048,6 +1048,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'System'**
   String get themeSystem;
+
+  /// No description provided for @followUpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow up'**
+  String get followUpTitle;
+
+  /// No description provided for @messageCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 message} other{{count} messages}}'**
+  String messageCount(int count);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
