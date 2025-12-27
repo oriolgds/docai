@@ -46,15 +46,14 @@ class PresetSelectorSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          ...MedicalPreset.presets.map((preset) {
+          ...MedicalPreset.presets.asMap().entries.map((entry) {
+            final index = entry.key;
+            final preset = entry.value;
             final isSelected = preset.id == selectedPreset.id;
 
             return TweenAnimationBuilder(
               tween: Tween<double>(begin: 0, end: 1),
-              duration: Duration(
-                milliseconds:
-                    200 + (MedicalPreset.presets.indexOf(preset) * 50),
-              ),
+              duration: Duration(milliseconds: 200 + (index * 50)),
               builder: (context, double value, child) {
                 return Opacity(
                   opacity: value,
@@ -206,14 +205,14 @@ class ModelSelectorSheet extends StatelessWidget {
               child: CircularProgressIndicator(),
             )
           else
-            ...availableModels.map((model) {
+            ...availableModels.asMap().entries.map((entry) {
+              final index = entry.key;
+              final model = entry.value;
               final isSelected = model == selectedModel;
 
               return TweenAnimationBuilder(
                 tween: Tween<double>(begin: 0, end: 1),
-                duration: Duration(
-                  milliseconds: 200 + (availableModels.indexOf(model) * 50),
-                ),
+                duration: Duration(milliseconds: 200 + (index * 50)),
                 builder: (context, double value, child) {
                   return Opacity(
                     opacity: value,
