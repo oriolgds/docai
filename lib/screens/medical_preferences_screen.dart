@@ -16,6 +16,8 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
   Timer? _debounceTimer;
+  _SaveStatus _saveStatus = _SaveStatus.idle;
+  Timer? _resetStatusTimer;
 
   // Controllers
   final TextEditingController _ageController = TextEditingController();
@@ -47,6 +49,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
   @override
   void dispose() {
     _debounceTimer?.cancel();
+    _resetStatusTimer?.cancel();
     _ageController.dispose();
     _weightController.dispose();
     _heightController.dispose();
@@ -88,6 +91,9 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
   Future<void> _savePreferences() async {
     if (_isLoading) return; // Don't save if still loading
 
+    _resetStatusTimer?.cancel();
+    setState(() => _saveStatus = _SaveStatus.saving);
+
     // We don't validate on auto-save to allow partial input, but we could if strict validation is needed.
     // However, basic type checks are done by keyboard type.
 
@@ -117,9 +123,20 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
       }
       await prefs.setString('pref_dietary', _dietaryController.text.trim());
 
-      // Auto-save is silent, no snackbar
+      if (mounted) {
+        setState(() => _saveStatus = _SaveStatus.success);
+        _resetStatusTimer = Timer(const Duration(seconds: 2), () {
+          if (mounted) setState(() => _saveStatus = _SaveStatus.idle);
+        });
+      }
     } catch (e) {
       debugPrint('Error saving preferences: $e');
+      if (mounted) {
+        setState(() => _saveStatus = _SaveStatus.error);
+        _resetStatusTimer = Timer(const Duration(seconds: 2), () {
+          if (mounted) setState(() => _saveStatus = _SaveStatus.idle);
+        });
+      }
     }
   }
 
@@ -137,7 +154,10 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(localizations.medicalPreferencesTitle),
-        // No save button in AppBar
+        actions: [
+          _buildSaveIndicator(localizations),
+          const SizedBox(width: 16),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -367,4 +387,40 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
       ],
     );
   }
+
+  Widget _buildSaveIndicator(AppLocalizations localizations) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: _getSaveStatusWidget(localizations),
+    );
+  }
+
+  Widget _getSaveStatusWidget(AppLocalizations localizations) {
+    final theme = Theme.of(context);
+    switch (_saveStatus) {
+      case _SaveStatus.saving:
+        return Tooltip(
+          message: localizations.loadingLabel,
+          child: const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2.5),
+          ),
+        );
+      case _SaveStatus.success:
+        return Tooltip(
+          message: localizations.preferencesSaved,
+          child: Icon(Icons.check_circle_outline, color: Colors.green[600]),
+        );
+      case _SaveStatus.error:
+        return Tooltip(
+          message: localizations.updateError,
+          child: Icon(Icons.error_outline, color: theme.colorScheme.error),
+        );
+      case _SaveStatus.idle:
+        return const SizedBox.shrink();
+    }
+  }
 }
+
+enum _SaveStatus { idle, saving, success, error }
