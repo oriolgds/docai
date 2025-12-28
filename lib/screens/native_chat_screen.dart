@@ -81,10 +81,12 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   late AnimationController _newChatTextController;
   late Animation<double> _newChatTextWidthAnimation;
   bool _isNewChatHovering = false;
+  bool _isChristmasTime = false;
 
   @override
   void initState() {
     super.initState();
+    _checkIsChristmasTime();
     _checkForUpdate();
     _loadChatHistory();
 
@@ -153,6 +155,12 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     _scrollController.addListener(_onScroll);
 
     _safeLogScreenView(screenName: 'home_screen');
+  }
+
+  void _checkIsChristmasTime() {
+    final now = DateTime.now();
+    _isChristmasTime =
+        (now.month == 12 && now.day >= 8) || (now.month == 1 && now.day <= 8);
   }
 
   Future<void> _checkForUpdate() async {
@@ -790,12 +798,9 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             child: ValueListenableBuilder<TextEditingValue>(
               valueListenable: _inputController,
               builder: (context, value, child) {
-                final now = DateTime.now();
-                final isChristmasTime =
-                    (now.month == 12 && now.day >= 8) ||
-                    (now.month == 1 && now.day <= 8);
+                // Optimization: Use cached _isChristmasTime to avoid DateTime.now() in builder
                 final showSnowfall =
-                    isChristmasTime &&
+                    _isChristmasTime &&
                     _currentPageIndex == 0 &&
                     _messages.isEmpty &&
                     value.text.trim().isEmpty;
