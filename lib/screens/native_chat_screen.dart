@@ -1765,6 +1765,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                 enabled: !_isGenerating,
                 style: const TextStyle(fontSize: 15),
                 maxLines: null,
+                keyboardType: TextInputType.multiline,
+                textCapitalization: TextCapitalization.sentences,
                 textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
                   hintText: localizations.inputPlaceholder,
