@@ -81,12 +81,17 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   late AnimationController _newChatTextController;
   late Animation<double> _newChatTextWidthAnimation;
   bool _isNewChatHovering = false;
+  bool _isChristmasTime = false;
 
   @override
   void initState() {
     super.initState();
     _checkForUpdate();
     _loadChatHistory();
+
+    final now = DateTime.now();
+    _isChristmasTime = (now.month == 12 && now.day >= 8) ||
+        (now.month == 1 && now.day <= 8);
 
     _newChatTextController = AnimationController(
       vsync: this,
@@ -790,12 +795,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             child: ValueListenableBuilder<TextEditingValue>(
               valueListenable: _inputController,
               builder: (context, value, child) {
-                final now = DateTime.now();
-                final isChristmasTime =
-                    (now.month == 12 && now.day >= 8) ||
-                    (now.month == 1 && now.day <= 8);
-                final showSnowfall =
-                    isChristmasTime &&
+                // Optimization: Use cached seasonal check to avoid DateTime.now() on every keystroke
+                final showSnowfall = _isChristmasTime &&
                     _currentPageIndex == 0 &&
                     _messages.isEmpty &&
                     value.text.trim().isEmpty;
