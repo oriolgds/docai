@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -16,7 +15,7 @@ import 'package:docai/screens/reports_screen.dart';
 import 'package:docai/screens/medical_preferences_screen.dart';
 import 'package:docai/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+
 import 'package:uuid/uuid.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:docai/state/theme_scope.dart';
@@ -27,6 +26,7 @@ import 'package:docai/services/firestore_service.dart';
 import 'package:docai/widgets/snowfall_animation.dart';
 import 'package:docai/widgets/cached_markdown_body.dart';
 import 'package:docai/services/app_haptics.dart';
+import 'package:docai/widgets/responsive_side_nav.dart';
 
 // Top-level function for background isolation of JSON encoding
 // Receives a list of Maps (primitive objects) to be safe for isolate transfer
@@ -180,6 +180,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         return;
       }
 
+      if (!mounted) return;
       final localizations = AppLocalizations.of(context);
       _showError(localizations?.updateError ?? 'Update failed');
 
@@ -205,6 +206,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     );
 
     if (available) {
+      if (!mounted) return;
       final currentCode = Localizations.localeOf(context).languageCode;
       String localeId = currentCode;
 
@@ -548,20 +550,27 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       medicalProfile = '\n\nUser Medical Profile:\n';
       if (age?.isNotEmpty == true) medicalProfile += '- Age: $age\n';
       if (gender?.isNotEmpty == true) medicalProfile += '- Gender: $gender\n';
-      if (weight?.isNotEmpty == true)
+      if (weight?.isNotEmpty == true) {
         medicalProfile += '- Weight: $weight kg\n';
-      if (height?.isNotEmpty == true)
+      }
+      if (height?.isNotEmpty == true) {
         medicalProfile += '- Height: $height cm\n';
-      if (allergies?.isNotEmpty == true)
+      }
+      if (allergies?.isNotEmpty == true) {
         medicalProfile += '- Allergies: $allergies\n';
-      if (conditions?.isNotEmpty == true)
+      }
+      if (conditions?.isNotEmpty == true) {
         medicalProfile += '- Chronic Conditions: $conditions\n';
-      if (medications?.isNotEmpty == true)
+      }
+      if (medications?.isNotEmpty == true) {
         medicalProfile += '- Current Medications: $medications\n';
-      if (activityLevel?.isNotEmpty == true)
+      }
+      if (activityLevel?.isNotEmpty == true) {
         medicalProfile += '- Activity Level: $activityLevel\n';
-      if (dietary?.isNotEmpty == true)
+      }
+      if (dietary?.isNotEmpty == true) {
         medicalProfile += '- Dietary Restrictions: $dietary\n';
+      }
 
       medicalProfile +=
           '\nTake this profile into account when answering if relevant.';
@@ -767,7 +776,62 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               child: isLandscape
                   ? Row(
                       children: [
-                        _buildSideNav(localizations),
+                        ResponsiveSideNav(
+                          currentPageIndex: _currentPageIndex,
+                          isIncognito: _isIncognito,
+                          hasMessages: _messages.isNotEmpty,
+                          hasHistory: _chatHistory.isNotEmpty,
+                          selectedPreset: _selectedPreset,
+                          menuRotationAnimation: _menuRotationAnimation,
+                          onNewChat: () {
+                            AppHaptics.selectionClick(context);
+                            _safeLogEvent(name: 'new_chat');
+                            _clearChat();
+                            if (_currentPageIndex != 0) {
+                              _switchToPage(0);
+                            }
+                          },
+                          onHistory: () => _switchToPage(1),
+                          onSettings: () => _switchToPage(2),
+                          onDeleteAll: _deleteAllChats,
+                          onPresetTap: () {
+                            if (_currentPageIndex != 0) {
+                              _switchToPage(0);
+                            } else {
+                              _showPresetSelector();
+                            }
+                          },
+                          onIncognitoToggle: () {
+                            AppHaptics.selectionClick(context);
+                            setState(() => _isIncognito = !_isIncognito);
+                          },
+
+                          onInfo: () {
+                            _safeLogScreenView(screenName: 'info_screen');
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const InfoScreen(),
+                              ),
+                            );
+                          },
+                          onReports: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const ReportsScreen(),
+                              ),
+                            );
+                          },
+                          onMedicalProfile: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const MedicalPreferencesScreen(),
+                              ),
+                            );
+                          },
+                          onMenuOpened: () => _menuButtonController.forward(),
+                          onMenuCanceled: () => _menuButtonController.reverse(),
+                        ),
                         Expanded(child: _buildMainContent(localizations)),
                       ],
                     )
@@ -910,404 +974,14 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               ),
             )
           : _currentPageIndex == 1
-              ? KeyedSubtree(
-                  key: const ValueKey('history'),
-                  child: _buildHistoryPage(),
-                )
-              : const KeyedSubtree(
-                  key: ValueKey('settings'),
-                  child: SettingsScreen(),
-                ),
-    );
-  }
-
-  Widget _buildSideNav(AppLocalizations localizations) {
-    final currentTheme = ThemeScope.of(context).themeMode;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Optimization: Removed BackdropFilter to improve performance on solid background.
-    return Container(
-      width: 64,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isDark
-              ? [
-                  Colors.grey[900]!.withOpacity(0.85),
-                  Colors.grey[850]!.withOpacity(0.85),
-                ]
-              : [
-                  Colors.white.withOpacity(0.85),
-                  Colors.grey[50]!.withOpacity(0.85),
-                ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        border: Border(
-          right: BorderSide(
-            color: isDark
-                ? Colors.white.withOpacity(0.1)
-                : Colors.black.withOpacity(0.05),
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.3)
-                : Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(2, 0),
-          ),
-        ],
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 12),
-                    // Gradient logo
-                    ShaderMask(
-                      shaderCallback: (bounds) => LinearGradient(
-                        colors: [Colors.green[400]!, Colors.teal[400]!],
-                      ).createShader(bounds),
-                      child: const Text(
-                        'Doky',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // New Chat button
-                    IconButton(
-                      icon: const Icon(Icons.add_comment_outlined),
-                      tooltip: localizations.chatNewConversation,
-                      onPressed: () {
-                        AppHaptics.selectionClick(context);
-                        _safeLogEvent(name: 'new_chat');
-                        _clearChat();
-                      },
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Preset selector
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primaryContainer.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.2),
-                          width: 1,
-                        ),
-                      ),
-                      child: IconButton(
-                        icon: Text(
-                          _selectedPreset.emoji,
-                          style: const TextStyle(fontSize: 22),
-                        ),
-                        tooltip: _getPresetName(context, _selectedPreset),
-                        onPressed: () {
-                          if (_currentPageIndex != 0) {
-                            _switchToPage(0);
-                          } else {
-                            _showPresetSelector();
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // History button
-                    IconButton(
-                      icon: Icon(
-                        Icons.history_outlined,
-                        color: _currentPageIndex == 1
-                            ? Colors.green[700]
-                            : Colors.grey[700],
-                      ),
-                      tooltip: localizations.menuHistory,
-                      onPressed: () => _switchToPage(1),
-                    ),
-
-                    // Settings button
-                    IconButton(
-                      icon: Icon(
-                        Icons.settings_outlined,
-                        color: _currentPageIndex == 2
-                            ? Colors.green[700]
-                            : Colors.grey,
-                      ),
-                      tooltip: localizations.menuSettings,
-                      onPressed: () => _switchToPage(2),
-                    ),
-
-                    // Delete All (only on history page)
-                    if (_currentPageIndex == 1 && _chatHistory.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.red,
-                        ),
-                        tooltip: localizations.deleteDialogConfirm,
-                        onPressed: _deleteAllChats,
-                      ),
-                    ],
-
-                    const Spacer(),
-
-                    // Incognito button (outside menu)
-                    if (_currentPageIndex == 0)
-                      IconButton(
-                        icon: Icon(
-                          _isIncognito
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                          color: _isIncognito
-                              ? Colors.amber[700]
-                              : (_messages.isNotEmpty ? Colors.grey : null),
-                        ),
-                        tooltip: _messages.isNotEmpty
-                            ? localizations.incognitoLockedTooltip
-                            : (_isIncognito
-                                  ? localizations.incognitoOnTooltip
-                                  : localizations.incognitoOffTooltip),
-                        onPressed: _messages.isEmpty
-                            ? () {
-                                AppHaptics.selectionClick(context);
-                                setState(() => _isIncognito = !_isIncognito);
-                              }
-                            : null,
-                      ),
-                    if (_currentPageIndex == 0) const SizedBox(height: 8),
-
-                    // Animated Menu button
-                    AnimatedBuilder(
-                      animation: _menuRotationAnimation,
-                      builder: (context, child) {
-                        return Transform.rotate(
-                          angle: _menuRotationAnimation.value * 3.14159,
-                          child: PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_vert),
-                            tooltip: localizations.menuTooltip,
-                            offset: const Offset(64, 0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 8,
-                            onOpened: () => _menuButtonController.forward(),
-                            onCanceled: () => _menuButtonController.reverse(),
-                            onSelected: (value) async {
-                              _menuButtonController.reverse();
-                              switch (value) {
-                                case 'theme_light':
-                                  ThemeScope.of(
-                                    context,
-                                  ).updateThemeMode(ThemeMode.light);
-                                  break;
-                                case 'theme_dark':
-                                  ThemeScope.of(
-                                    context,
-                                  ).updateThemeMode(ThemeMode.dark);
-                                  break;
-                                case 'theme_system':
-                                  ThemeScope.of(
-                                    context,
-                                  ).updateThemeMode(ThemeMode.system);
-                                  break;
-                                case 'info':
-                                  _safeLogScreenView(screenName: 'info_screen');
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => const InfoScreen(),
-                                    ),
-                                  );
-                                  break;
-                                case 'settings':
-                                  _switchToPage(2);
-                                  break;
-                                case 'reports':
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => const ReportsScreen(),
-                                    ),
-                                  );
-                                  break;
-                                case 'medical_profile':
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          const MedicalPreferencesScreen(),
-                                    ),
-                                  );
-                                  break;
-                              }
-                            },
-                            itemBuilder: (context) {
-                              return [
-                                // Medical Profile
-                                PopupMenuItem<String>(
-                                  value: 'medical_profile',
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.assignment_ind_outlined,
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        localizations.medicalPreferencesTitle,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const PopupMenuDivider(),
-
-                                // Theme submenu header
-                                PopupMenuItem<String>(
-                                  enabled: false,
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.palette_outlined,
-                                        size: 20,
-                                        color: Theme.of(context).hintColor,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        'Theme',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: Theme.of(context).hintColor,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem<String>(
-                                  value: 'theme_light',
-                                  child: Row(
-                                    children: [
-                                      const SizedBox(width: 8),
-                                      const Icon(
-                                        Icons.light_mode_outlined,
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      const Expanded(child: Text('Light')),
-                                      if (currentTheme == ThemeMode.light)
-                                        Icon(
-                                          Icons.check,
-                                          color: Colors.green[600],
-                                          size: 18,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem<String>(
-                                  value: 'theme_dark',
-                                  child: Row(
-                                    children: [
-                                      const SizedBox(width: 8),
-                                      const Icon(
-                                        Icons.dark_mode_outlined,
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      const Expanded(child: Text('Dark')),
-                                      if (currentTheme == ThemeMode.dark)
-                                        Icon(
-                                          Icons.check,
-                                          color: Colors.green[600],
-                                          size: 18,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem<String>(
-                                  value: 'theme_system',
-                                  child: Row(
-                                    children: [
-                                      const SizedBox(width: 8),
-                                      const Icon(
-                                        Icons.brightness_auto,
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      const Expanded(child: Text('System')),
-                                      if (currentTheme == ThemeMode.system)
-                                        Icon(
-                                          Icons.check,
-                                          color: Colors.green[600],
-                                          size: 18,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-
-                                const PopupMenuDivider(),
-
-                                // Settings
-                                PopupMenuItem<String>(
-                                  value: 'settings',
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.settings_outlined, size: 20),
-                                      const SizedBox(width: 12),
-                                      Text(localizations.menuSettings),
-                                    ],
-                                  ),
-                                ),
-
-                                // Info
-                                PopupMenuItem<String>(
-                                  value: 'info',
-                                  child: Row(
-                                    children: const [
-                                      Icon(Icons.info_outline, size: 20),
-                                      SizedBox(width: 12),
-                                      Text('Info'),
-                                    ],
-                                  ),
-                                ),
-
-                                // Reports
-                                PopupMenuItem<String>(
-                                  value: 'reports',
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.flag_outlined, size: 20),
-                                      const SizedBox(width: 12),
-                                      Text(localizations.menuMyReports),
-                                    ],
-                                  ),
-                                ),
-                              ];
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-              ),
+          ? KeyedSubtree(
+              key: const ValueKey('history'),
+              child: _buildHistoryPage(),
+            )
+          : const KeyedSubtree(
+              key: ValueKey('settings'),
+              child: SettingsScreen(),
             ),
-          );
-        },
-      ),
     );
   }
 
@@ -2499,7 +2173,6 @@ class _MessageCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final userBubbleColor = isDark ? Colors.green[800] : Colors.green[500];
     final assistantBubbleColor = isDark ? Colors.grey[800] : Colors.white;
-    final codeBackgroundColor = isDark ? Colors.black26 : Colors.grey[100];
 
     return GestureDetector(
       onLongPress: () {
@@ -3481,12 +3154,11 @@ class _TypingIndicatorPainter extends CustomPainter {
   final Color color;
 
   _TypingIndicatorPainter({required this.animation, required this.color})
-      : super(repaint: animation);
+    : super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.fill;
+    final paint = Paint()..style = PaintingStyle.fill;
 
     // Center horizontally
     final double centerX = size.width / 2;
