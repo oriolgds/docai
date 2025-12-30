@@ -72,12 +72,13 @@ class ResponsiveSideNav extends StatelessWidget {
     final isExtended = screenWidth > 900;
     final navWidth = isExtended
         ? 260.0
-        : 80.0; // Slightly wider for better breathing room
+        : 90.0; // Slightly wider to prevent overflow
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeOutCubic,
       width: navWidth,
+      clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         border: Border(
@@ -98,7 +99,7 @@ class ResponsiveSideNav extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           // Logo Area
           ShaderMask(
             shaderCallback: (bounds) => LinearGradient(
@@ -142,11 +143,11 @@ class ResponsiveSideNav extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
 
           // Primary Action: New Chat
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: isExtended ? 16 : 12),
+            padding: EdgeInsets.symmetric(horizontal: isExtended ? 16 : 6),
             child: _NewChatButton(
               isExtended: isExtended,
               onTap: onNewChat,
@@ -154,11 +155,11 @@ class ResponsiveSideNav extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           // Presets Card
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: isExtended ? 16 : 12),
+            padding: EdgeInsets.symmetric(horizontal: isExtended ? 16 : 6),
             child: _PresetSelector(
               isExtended: isExtended,
               selectedPreset: selectedPreset,
@@ -167,12 +168,12 @@ class ResponsiveSideNav extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           // Navigation Items
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: isExtended ? 16 : 12),
+              padding: EdgeInsets.symmetric(horizontal: isExtended ? 16 : 6),
               child: Column(
                 children: [
                   _NavItem(
@@ -191,7 +192,7 @@ class ResponsiveSideNav extends StatelessWidget {
                     onTap: onSettings,
                   ),
                   if (currentPageIndex == 1 && hasHistory) ...[
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     Divider(
                       color: Theme.of(
                         context,
@@ -215,7 +216,7 @@ class ResponsiveSideNav extends StatelessWidget {
           // Bottom Actions
           Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: isExtended ? 16 : 12,
+              horizontal: isExtended ? 16 : 6,
               vertical: 16,
             ),
             child: Column(
@@ -247,7 +248,7 @@ class ResponsiveSideNav extends StatelessWidget {
                       ? Alignment.centerLeft
                       : Alignment.center,
                   child: PopupMenuButton<String>(
-                    offset: const Offset(230, -100),
+                    offset: Offset(isExtended ? 230 : 80, -100),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -331,7 +332,7 @@ class ResponsiveSideNav extends StatelessWidget {
                             ? MainAxisAlignment.start
                             : MainAxisAlignment.center,
                         children: [
-                          const SizedBox(width: 12),
+                          if (isExtended) const SizedBox(width: 16),
                           RotationTransition(
                             turns: menuRotationAnimation,
                             child: Icon(
@@ -464,7 +465,7 @@ class _PresetSelector extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         height: isExtended ? 64 : 56,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: EdgeInsets.symmetric(horizontal: isExtended ? 12 : 6),
         decoration: BoxDecoration(
           color: Theme.of(
             context,
@@ -480,7 +481,13 @@ class _PresetSelector extends StatelessWidget {
               ? MainAxisAlignment.start
               : MainAxisAlignment.center,
           children: [
-            Text(selectedPreset.emoji, style: const TextStyle(fontSize: 24)),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                selectedPreset.emoji,
+                style: const TextStyle(fontSize: 24),
+              ),
+            ),
             if (isExtended) ...[
               const SizedBox(width: 16),
               Expanded(
@@ -585,7 +592,10 @@ class _NavItemState extends State<_NavItem> {
           onTap: widget.onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(
+              horizontal: widget.isExtended ? 16 : 6,
+              vertical: 12,
+            ),
             decoration: BoxDecoration(
               color: bgColor,
               borderRadius: BorderRadius.circular(12),
