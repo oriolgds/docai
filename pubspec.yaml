@@ -63,7 +63,7 @@ flutter_launcher_icons:
 
 # MSIX Configuration for Microsoft Store
 msix_config:
-  display_name: "DocAI"
+  display_name: "Docai"
   publisher_display_name: "Oriol Giner"
   identity_name: "OriolGiner.Docai"
   publisher: "CN=2A1BF35C-B236-4EA2-9703-E3FBAD46CF55"

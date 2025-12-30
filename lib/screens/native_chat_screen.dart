@@ -710,38 +710,58 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   }
 
   void _showPresetSelector() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _PresetSelectorSheet(
-        selectedPreset: _selectedPreset,
-        onPresetSelected: (preset) {
-          // Always clear chat when selecting a preset (even if it's the same one)
-          if (_messages.isNotEmpty) {
-            showDialog(
-              context: context,
-              builder: (context) => _ConfirmPresetChangeDialog(
-                isSamePreset: preset.id == _selectedPreset.id,
-                onConfirm: () {
-                  AppHaptics.selectionClick(context);
-                  setState(() {
-                    _selectedPreset = preset;
-                    _clearChat();
-                  });
-                  Navigator.of(context).pop();
-                },
-              ),
-            );
-          } else {
-            setState(() {
-              _selectedPreset = preset;
-              _clearChat(); // Clear chat even if empty to reset session
-            });
-          }
-        },
-      ),
-    );
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900;
+
+    void onPresetSelected(MedicalPreset preset) {
+      if (_messages.isNotEmpty) {
+        showDialog(
+          context: context,
+          builder: (context) => _ConfirmPresetChangeDialog(
+            isSamePreset: preset.id == _selectedPreset.id,
+            onConfirm: () {
+              AppHaptics.selectionClick(context);
+              setState(() {
+                _selectedPreset = preset;
+                _clearChat();
+              });
+              Navigator.of(context).pop();
+            },
+          ),
+        );
+      } else {
+        setState(() {
+          _selectedPreset = preset;
+          _clearChat();
+        });
+        Navigator.of(context).pop();
+      }
+    }
+
+    if (isDesktop) {
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          child: _PresetSelectorSheet(
+            selectedPreset: _selectedPreset,
+            onPresetSelected: onPresetSelected,
+            isDialog: true,
+          ),
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => _PresetSelectorSheet(
+          selectedPreset: _selectedPreset,
+          onPresetSelected: onPresetSelected,
+        ),
+      );
+    }
   }
 
   void _switchToPage(int index) {
@@ -2848,10 +2868,12 @@ class _QuickActionButton extends StatelessWidget {
 class _PresetSelectorSheet extends StatelessWidget {
   final MedicalPreset selectedPreset;
   final ValueChanged<MedicalPreset> onPresetSelected;
+  final bool isDialog;
 
   const _PresetSelectorSheet({
     required this.selectedPreset,
     required this.onPresetSelected,
+    this.isDialog = false,
   });
 
   @override
@@ -2862,24 +2884,28 @@ class _PresetSelectorSheet extends StatelessWidget {
     return Container(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.85,
+        maxWidth: isDialog ? 600 : double.infinity,
       ),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: isDialog
+            ? BorderRadius.circular(24)
+            : const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
+          // Handle bar (only for bottom sheet)
+          if (!isDialog)
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
           const SizedBox(height: 20),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 24),
@@ -2973,14 +2999,6 @@ class _PresetSelectorSheet extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (isSelected) ...[
-                        const SizedBox(height: 4),
-                        Icon(
-                          Icons.check_circle,
-                          color: Colors.green[600],
-                          size: 16,
-                        ),
-                      ],
                     ],
                   )
                 : Row(
