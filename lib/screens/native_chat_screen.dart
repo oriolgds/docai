@@ -3156,11 +3156,14 @@ class _TypingIndicatorState extends State<_TypingIndicator>
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-      child: CustomPaint(
-        size: const Size(40, 20),
-        painter: _TypingIndicatorPainter(
-          animation: _controller,
-          color: dotColor,
+      child: Semantics(
+        label: AppLocalizations.of(context)!.loadingLabel,
+        child: CustomPaint(
+          size: const Size(40, 20),
+          painter: _TypingIndicatorPainter(
+            animation: _controller,
+            color: dotColor,
+          ),
         ),
       ),
     );
