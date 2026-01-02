@@ -3153,14 +3153,18 @@ class _TypingIndicatorState extends State<_TypingIndicator>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final dotColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+    final localizations = AppLocalizations.of(context)!;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-      child: CustomPaint(
-        size: const Size(40, 20),
-        painter: _TypingIndicatorPainter(
-          animation: _controller,
-          color: dotColor,
+      child: Semantics(
+        label: localizations.loadingLabel,
+        child: CustomPaint(
+          size: const Size(40, 20),
+          painter: _TypingIndicatorPainter(
+            animation: _controller,
+            color: dotColor,
+          ),
         ),
       ),
     );
