@@ -34,6 +34,13 @@ List<String> _encodeChatHistory(List<Map<String, dynamic>> historyMaps) {
   return historyMaps.map((map) => jsonEncode(map)).toList();
 }
 
+// Top-level function for background isolation of JSON decoding
+List<Map<String, dynamic>> _decodeChatHistory(List<String> historyJson) {
+  return historyJson
+      .map((json) => jsonDecode(json) as Map<String, dynamic>)
+      .toList();
+}
+
 class NativeChatScreen extends StatefulWidget {
   const NativeChatScreen({super.key});
 
@@ -313,10 +320,13 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       final prefs = await SharedPreferences.getInstance();
       final historyJson = prefs.getStringList('chat_history') ?? [];
 
+      // Offload JSON decoding to a background isolate
+      final historyMaps = await compute(_decodeChatHistory, historyJson);
+
       setState(() {
         _chatHistory =
-            historyJson
-                .map((json) => ChatSession.fromJson(jsonDecode(json)))
+            historyMaps
+                .map((map) => ChatSession.fromJson(map))
                 .toList()
               ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       });
