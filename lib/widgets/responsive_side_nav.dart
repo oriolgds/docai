@@ -12,6 +12,7 @@ class ResponsiveSideNav extends StatelessWidget {
   final VoidCallback onNewChat;
   final VoidCallback onHistory;
   final VoidCallback onSettings;
+  final VoidCallback onWellness;
   final VoidCallback onDeleteAll;
   final VoidCallback onPresetTap;
   final VoidCallback onIncognitoToggle;
@@ -32,6 +33,7 @@ class ResponsiveSideNav extends StatelessWidget {
     required this.onNewChat,
     required this.onHistory,
     required this.onSettings,
+    required this.onWellness,
     required this.onDeleteAll,
     required this.onPresetTap,
     required this.onIncognitoToggle,
@@ -182,6 +184,14 @@ class ResponsiveSideNav extends StatelessWidget {
                     isExtended: isExtended,
                     isSelected: currentPageIndex == 1,
                     onTap: onHistory,
+                  ),
+                  const SizedBox(height: 8),
+                   _NavItem(
+                    icon: Icons.favorite_outline_rounded,
+                    label: localizations.wellnessTitle,
+                    isExtended: isExtended,
+                    isSelected: currentPageIndex == 3,
+                    onTap: onWellness,
                   ),
                   const SizedBox(height: 8),
                   _NavItem(

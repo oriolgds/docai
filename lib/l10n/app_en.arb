@@ -173,5 +173,48 @@
         "type": "int"
       }
     }
-  }
+  },
+  "wellnessTitle": "Wellness",
+  "wellnessTracker": "Cycle Tracker",
+  "wellnessLog": "Log Symptoms",
+  "wellnessPeriodStart": "Period Start",
+  "wellnessPeriodEnd": "Period End",
+  "wellnessNextPeriod": "Next Period",
+  "wellnessFertileWindow": "Fertile Window",
+  "wellnessFlow": "Flow",
+  "wellnessSymptoms": "Symptoms",
+  "wellnessMood": "Mood",
+  "wellnessEducation": "Education",
+  "wellnessStats": "Statistics",
+  "wellnessPrediction": "Prediction",
+  "wellnessDays": "Days",
+  "wellnessLow": "Low",
+  "wellnessMedium": "Medium",
+  "wellnessHigh": "High",
+  "wellnessMoodHappy": "Happy",
+  "wellnessMoodSad": "Sad",
+  "wellnessMoodIrritable": "Irritable",
+  "wellnessMoodAnxious": "Anxious",
+  "wellnessMoodTired": "Tired",
+  "wellnessSymptomCramps": "Cramps",
+  "wellnessSymptomHeadache": "Headache",
+  "wellnessSymptomAcne": "Acne",
+  "wellnessSymptomBloating": "Bloating",
+  "wellnessSymptomFatigue": "Fatigue",
+  "wellnessLogSaved": "Log saved",
+  "wellnessEducationTitle": "Reproductive Health",
+  "wellnessAvgCycle": "Average Cycle",
+  "wellnessDayOfCycle": "Day {day} of cycle",
+  "@wellnessDayOfCycle": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "wellnessStartPeriodConfirm": "Start period today?",
+  "wellnessEndPeriodConfirm": "End period today?",
+  "wellnessWeight": "Weight",
+  "wellnessTemperature": "Temperature",
+  "wellnessNotes": "Notes"
 }

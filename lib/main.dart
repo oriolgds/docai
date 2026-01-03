@@ -15,6 +15,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:docai/firebase_options.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:docai/services/firestore_service.dart';
+import 'package:docai/services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,6 +56,9 @@ class _DocAIAppWrapperState extends State<DocAIAppWrapper> {
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
         );
+
+        // Initialize Notifications
+        await NotificationService().init();
 
         if (kDebugMode) {
           // Disable Crashlytics collection in debug mode

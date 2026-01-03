@@ -14,6 +14,8 @@ import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/screens/reports_screen.dart';
 import 'package:docai/screens/medical_preferences_screen.dart';
 import 'package:docai/screens/settings_screen.dart';
+import 'package:docai/screens/wellness/wellness_screen.dart';
+import 'package:docai/services/wellness_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:uuid/uuid.dart';
@@ -571,7 +573,22 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       if (dietary?.isNotEmpty == true) {
         medicalProfile += '- Dietary Restrictions: $dietary\n';
       }
+    }
 
+    // Retrieve wellness data
+    String wellnessContext = '';
+    try {
+      final wellnessData = await WellnessService().loadData();
+      wellnessContext = WellnessService().getWellnessContext(wellnessData);
+    } catch (e) {
+      debugPrint('Error loading wellness data for context: $e');
+    }
+
+    if (wellnessContext.isNotEmpty) {
+      medicalProfile += '\n\n$wellnessContext';
+    }
+
+    if (medicalProfile.isNotEmpty) {
       medicalProfile +=
           '\nTake this profile into account when answering if relevant.';
     }
@@ -776,6 +793,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       _safeLogScreenView(screenName: 'history_screen');
     } else if (index == 2) {
       _safeLogScreenView(screenName: 'settings_screen');
+    } else if (index == 3) {
+      _safeLogScreenView(screenName: 'wellness_screen');
     }
   }
 
@@ -813,6 +832,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                           },
                           onHistory: () => _switchToPage(1),
                           onSettings: () => _switchToPage(2),
+                          onWellness: () => _switchToPage(3),
                           onDeleteAll: _deleteAllChats,
                           onPresetTap: () {
                             if (_currentPageIndex != 0) {
@@ -857,7 +877,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                     )
                   : Column(
                       children: [
-                        if (_currentPageIndex != 2) _buildHeader(),
+                        if (_currentPageIndex != 2 && _currentPageIndex != 3) _buildHeader(),
                         Expanded(child: _buildMainContent(localizations)),
                         AnimatedSize(
                           duration: const Duration(milliseconds: 250),
@@ -998,9 +1018,14 @@ class _NativeChatScreenState extends State<NativeChatScreen>
               key: const ValueKey('history'),
               child: _buildHistoryPage(),
             )
-          : const KeyedSubtree(
+          : _currentPageIndex == 2
+            ? const KeyedSubtree(
               key: ValueKey('settings'),
               child: SettingsScreen(),
+            )
+            : const KeyedSubtree(
+              key: ValueKey('wellness'),
+              child: WellnessScreen(),
             ),
     );
   }
@@ -1853,6 +1878,12 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             label: localizations.menuHistory,
             isActive: _currentPageIndex == 1,
             onTap: () => _switchToPage(1),
+          ),
+          _QuickActionButton(
+            icon: Icons.favorite_outline,
+            label: localizations.wellnessTitle,
+            isActive: _currentPageIndex == 3,
+            onTap: () => _switchToPage(3),
           ),
           if (_updateAvailable)
             _QuickActionButton(
