@@ -390,11 +390,14 @@ class _NewChatButtonState extends State<_NewChatButton>
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          height: 56,
+      child: Semantics(
+        label: widget.label,
+        button: true,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 56,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.green[500]!, Colors.teal[500]!],
@@ -588,11 +591,15 @@ class _NavItemState extends State<_NavItem> {
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: widget.onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: EdgeInsets.symmetric(
+        child: Semantics(
+          label: widget.label,
+          button: true,
+          selected: widget.isSelected,
+          child: GestureDetector(
+            onTap: widget.onTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: EdgeInsets.symmetric(
               horizontal: widget.isExtended ? 16 : 6,
               vertical: 12,
             ),
@@ -625,6 +632,7 @@ class _NavItemState extends State<_NavItem> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );
