@@ -56,6 +56,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   final Set<String> _shownMessageIds = {};
+  bool _isChristmasTime = false;
 
   MedicalPreset _selectedPreset = MedicalPreset.presets.first;
   bool _isLongResponse =
@@ -158,6 +159,11 @@ class _NativeChatScreenState extends State<NativeChatScreen>
     );
 
     _scrollController.addListener(_onScroll);
+
+    // Cache christmas time check
+    final now = DateTime.now();
+    _isChristmasTime = (now.month == 12 && now.day >= 8) ||
+        (now.month == 1 && now.day <= 8);
 
     _safeLogScreenView(screenName: 'home_screen');
   }
@@ -884,12 +890,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             child: ValueListenableBuilder<TextEditingValue>(
               valueListenable: _inputController,
               builder: (context, value, child) {
-                final now = DateTime.now();
-                final isChristmasTime =
-                    (now.month == 12 && now.day >= 8) ||
-                    (now.month == 1 && now.day <= 8);
                 final showSnowfall =
-                    isChristmasTime &&
+                    _isChristmasTime &&
                     _currentPageIndex == 0 &&
                     _messages.isEmpty &&
                     value.text.trim().isEmpty;
@@ -939,6 +941,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
                                 onSuggestionTap: (suggestion) {
                                   _inputController.text = suggestion;
                                 },
+                                isChristmasTime: _isChristmasTime,
                               )
                             : _buildMessagesList(),
                         // Scroll to bottom button positioned above input
@@ -2383,14 +2386,13 @@ class _ActionButton extends StatelessWidget {
 class _WelcomeScreen extends StatelessWidget {
   final MedicalPreset preset;
   final ValueChanged<String> onSuggestionTap;
+  final bool isChristmasTime;
 
-  const _WelcomeScreen({required this.preset, required this.onSuggestionTap});
-
-  bool _isChristmasTime(BuildContext context) {
-    final now = DateTime.now();
-    return (now.month == 12 && now.day >= 8) ||
-        (now.month == 1 && now.day <= 8);
-  }
+  const _WelcomeScreen({
+    required this.preset,
+    required this.onSuggestionTap,
+    required this.isChristmasTime,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2562,7 +2564,7 @@ class _WelcomeScreen extends StatelessWidget {
         ),
         child: ClipOval(
           child: Image.asset(
-            _isChristmasTime(context)
+            isChristmasTime
                 ? 'assets/logo/xmas.webp'
                 : 'assets/logo/logo compress.webp',
             width: 100,
