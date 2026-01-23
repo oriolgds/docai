@@ -4,6 +4,8 @@ import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/services/app_haptics.dart';
 import 'dart:async';
 
+enum _SaveStatus { idle, saving, saved, error }
+
 class MedicalPreferencesScreen extends StatefulWidget {
   const MedicalPreferencesScreen({super.key});
 
@@ -16,6 +18,8 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
   Timer? _debounceTimer;
+  _SaveStatus _saveStatus = _SaveStatus.idle;
+  Timer? _resetTimer;
 
   // Controllers
   final TextEditingController _ageController = TextEditingController();
@@ -47,6 +51,7 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
   @override
   void dispose() {
     _debounceTimer?.cancel();
+    _resetTimer?.cancel();
     _ageController.dispose();
     _weightController.dispose();
     _heightController.dispose();
@@ -88,6 +93,10 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
   Future<void> _savePreferences() async {
     if (_isLoading) return; // Don't save if still loading
 
+    setState(() {
+      _saveStatus = _SaveStatus.saving;
+    });
+
     // We don't validate on auto-save to allow partial input, but we could if strict validation is needed.
     // However, basic type checks are done by keyboard type.
 
@@ -117,9 +126,27 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
       }
       await prefs.setString('pref_dietary', _dietaryController.text.trim());
 
-      // Auto-save is silent, no snackbar
+      if (!mounted) return;
+
+      setState(() {
+        _saveStatus = _SaveStatus.saved;
+      });
+
+      _resetTimer?.cancel();
+      _resetTimer = Timer(const Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() {
+            _saveStatus = _SaveStatus.idle;
+          });
+        }
+      });
     } catch (e) {
       debugPrint('Error saving preferences: $e');
+      if (mounted) {
+        setState(() {
+          _saveStatus = _SaveStatus.error;
+        });
+      }
     }
   }
 
@@ -137,7 +164,33 @@ class _MedicalPreferencesScreenState extends State<MedicalPreferencesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(localizations.medicalPreferencesTitle),
-        // No save button in AppBar
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: switch (_saveStatus) {
+                _SaveStatus.idle => const SizedBox.shrink(),
+                _SaveStatus.saving => Semantics(
+                  label: localizations.loadingLabel,
+                  child: const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+                _SaveStatus.saved => Semantics(
+                  label: localizations.preferencesSaved,
+                  child: const Icon(Icons.check, color: Colors.green),
+                ),
+                _SaveStatus.error => Tooltip(
+                  message: localizations.reportError,
+                  child: const Icon(Icons.error_outline, color: Colors.red),
+                ),
+              },
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
