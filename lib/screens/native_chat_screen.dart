@@ -607,8 +607,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
       final response = await _service.generateText(
         messages: apiMessages,
         // model: 'koboldcpp/Llama-3-8B-Instruct', // Optional: specify model or let service pick default
-        temperature: 1.0,
-        maxTokens: _isLongResponse ? 2048 : 256,
+        temperature: 0.8,
+        maxTokens: _isLongResponse ? 4096 : 512,
       );
 
       setState(() {

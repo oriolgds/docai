@@ -45,7 +45,7 @@ class HordeService {
     final buffer = StringBuffer();
 
     // Check if there is a system message
-    final systemMessage = messages.firstWhere(
+    final systemMessage = messages.cast<Map<String, dynamic>>().firstWhere(
       (m) => m['role'] == 'system',
       orElse: () => {},
     );
@@ -81,7 +81,8 @@ class HordeService {
     required List<Map<String, dynamic>> messages,
     String? model,
     double temperature = 0.7,
-    int maxTokens = 256,
+    int maxTokens = 1024,
+    int maxContextLength = 8192,
   }) async {
     try {
       final prompt = _messagesToPrompt(messages);
@@ -98,14 +99,14 @@ class HordeService {
           'prompt': prompt,
           'params': {
             'n': 1,
-            'max_context_length': 2048,
+            'max_context_length': maxContextLength,
             'max_length': maxTokens,
             'temperature': temperature,
             // Generic params that work well for most models
             'rep_pen': 1.1,
             'top_p': 0.9,
           },
-          'models': model != null ? [model] : ['koboldcpp/Llama-3-8B-Instruct'],
+          if (model != null) 'models': [model],
         }),
       );
 
@@ -146,7 +147,7 @@ class HordeService {
         if (statusData['done'] == true) {
           final generations = statusData['generations'] as List;
           if (generations.isNotEmpty) {
-            return generations[0]['text'] as String;
+            return _cleanResponse(generations[0]['text'] as String);
           } else {
             throw Exception('No generations returned');
           }
@@ -158,6 +159,19 @@ class HordeService {
       debugPrint('Error in generateText: $e');
       rethrow;
     }
+  }
+
+  /// Clean response by removing <think>...</think> blocks and unmatched </think> tags
+  String _cleanResponse(String text) {
+    // 1. Remove <think>...</think> blocks (including newlines)
+    text = text.replaceAll(RegExp(r'<think>.*?</think>', dotAll: true), '');
+
+    // 2. Remove anything before a stray </think> (if the start tag was missing/cut off)
+    if (text.contains('</think>')) {
+      text = text.substring(text.indexOf('</think>') + '</think>'.length);
+    }
+
+    return text.trim();
   }
 
   /// Generate 3 follow-up suggestions
