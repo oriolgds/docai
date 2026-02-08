@@ -41,17 +41,14 @@ android {
     }
 
     signingConfigs {
-        // Solo crear la configuración de release si todas las propiedades existen
-        if (keystoreProperties["keyAlias"] != null &&
-            keystoreProperties["keyPassword"] != null &&
-            keystoreProperties["storeFile"] != null &&
-            keystoreProperties["storePassword"] != null) {
-            create("release") {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
+        create("release") {
+            keyAlias = keystoreProperties.getProperty("keyAlias")
+            keyPassword = keystoreProperties.getProperty("keyPassword")
+            val storePath = keystoreProperties.getProperty("storeFile")
+            if (storePath != null) {
+                storeFile = file(storePath)
             }
+            storePassword = keystoreProperties.getProperty("storePassword")
         }
     }
 
@@ -60,10 +57,7 @@ android {
             // Usa automáticamente el debug keystore predeterminado
         }
         release {
-            // Solo usar signing config si existe
-            if (signingConfigs.findByName("release") != null) {
-                signingConfig = signingConfigs.getByName("release")
-            }
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
