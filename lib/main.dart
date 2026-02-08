@@ -15,9 +15,11 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:docai/firebase_options.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:docai/services/firestore_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
 
   // Initialize timeago locales for all supported languages
   timeago.setLocaleMessages('es', timeago.EsMessages());
@@ -173,7 +175,10 @@ class _DocAIAppWrapperState extends State<DocAIAppWrapper> {
       controller: _settingsController!,
       child: LocaleScope(
         controller: _localeController!,
-        child: ThemeScope(controller: _themeController!, child: const DocAIApp()),
+        child: ThemeScope(
+          controller: _themeController!,
+          child: const DocAIApp(),
+        ),
       ),
     );
   }

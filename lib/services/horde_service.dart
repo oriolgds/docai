@@ -3,9 +3,12 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class HordeService {
   static const String _baseUrl = 'https://aihorde.net/api/v2';
-  static const String _apiKey = '0000000000'; // Anonymous key
+  // Use API key from .env or fallback to anonymous
+  String get _apiKey => dotenv.env['HORDE_API_KEY'] ?? '0000000000';
   static const String _clientAgent = 'DocAI:1.0:github.com/oriolgds/docai';
 
   final http.Client _client;
