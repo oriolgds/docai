@@ -20,12 +20,12 @@ dependencies:
   url_launcher: ^6.3.1
   shared_preferences: ^2.3.2
   http: ^1.6.0
-  flutter_markdown: ^0.7.7+1
+  flutter_markdown_plus: ^0.7.3+2
   uuid: ^4.5.1
   timeago: ^3.7.0
   speech_to_text: ^7.3.0
   in_app_update: ^4.2.5
-  package_info_plus: ^8.2.0
+  package_info_plus: ^9.0.0
   cloud_firestore: ^6.1.0
 
 dev_dependencies:
@@ -46,7 +46,7 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/logo/xmas.png"
+  image_path: "assets/logo/logo.jpg"
   min_sdk_android: 16
   web:
     generate: true

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 class CachedMarkdownBody extends StatefulWidget {
   final String data;
@@ -34,7 +34,9 @@ class _CachedMarkdownBodyState extends State<CachedMarkdownBody> {
     _cachedData = widget.data;
     _cachedIsDark = widget.isDark;
 
-    final codeBackgroundColor = widget.isDark ? Colors.black26 : Colors.grey[100];
+    final codeBackgroundColor = widget.isDark
+        ? Colors.black26
+        : Colors.grey[100];
 
     // Create and cache the widget
     _cachedWidget = MarkdownBody(

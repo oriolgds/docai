@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:docai/services/holiday_service.dart';
 
 /// Custom animated splash screen that displays while the app initializes.
 /// Features logo fade-in, scale animation, and theme-aware design.
@@ -156,7 +157,7 @@ class _SplashScreenState extends State<SplashScreen>
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(40),
                               child: Image.asset(
-                                'assets/logo/xmas.webp',
+                                HolidayService.getLogoPath(),
                                 fit: BoxFit.cover,
                               ),
                             ),

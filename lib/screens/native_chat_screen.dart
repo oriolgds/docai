@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:docai/models/chat_message.dart';
 import 'package:docai/models/chat_session.dart';
 import 'package:docai/models/medical_preset.dart';
-import 'package:docai/services/pollinations_service.dart';
+import 'package:docai/services/horde_service.dart';
 import 'package:docai/screens/info_screen.dart';
 import 'package:docai/l10n/app_localizations.dart';
 import 'package:docai/screens/reports_screen.dart';
@@ -27,6 +27,7 @@ import 'package:docai/widgets/snowfall_animation.dart';
 import 'package:docai/widgets/cached_markdown_body.dart';
 import 'package:docai/services/app_haptics.dart';
 import 'package:docai/widgets/responsive_side_nav.dart';
+import 'package:docai/services/holiday_service.dart';
 
 // Top-level function for background isolation of JSON encoding
 // Receives a list of Maps (primitive objects) to be safe for isolate transfer
@@ -50,7 +51,7 @@ class NativeChatScreen extends StatefulWidget {
 
 class _NativeChatScreenState extends State<NativeChatScreen>
     with TickerProviderStateMixin {
-  final PollinationsService _service = PollinationsService();
+  final HordeService _service = HordeService();
   final FirestoreService _firestoreService = FirestoreService();
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -325,9 +326,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
 
       setState(() {
         _chatHistory =
-            historyMaps
-                .map((map) => ChatSession.fromJson(map))
-                .toList()
+            historyMaps.map((map) => ChatSession.fromJson(map)).toList()
               ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       });
     } catch (e) {
@@ -607,7 +606,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
 
       final response = await _service.generateText(
         messages: apiMessages,
-        model: 'openai',
+        // model: 'koboldcpp/Llama-3-8B-Instruct', // Optional: specify model or let service pick default
         temperature: 1.0,
         maxTokens: _isLongResponse ? 2048 : 256,
       );
@@ -884,12 +883,8 @@ class _NativeChatScreenState extends State<NativeChatScreen>
             child: ValueListenableBuilder<TextEditingValue>(
               valueListenable: _inputController,
               builder: (context, value, child) {
-                final now = DateTime.now();
-                final isChristmasTime =
-                    (now.month == 12 && now.day >= 8) ||
-                    (now.month == 1 && now.day <= 8);
                 final showSnowfall =
-                    isChristmasTime &&
+                    HolidayService.shouldEnableSnow() &&
                     _currentPageIndex == 0 &&
                     _messages.isEmpty &&
                     value.text.trim().isEmpty;
