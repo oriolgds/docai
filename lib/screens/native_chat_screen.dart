@@ -608,7 +608,7 @@ class _NativeChatScreenState extends State<NativeChatScreen>
         messages: apiMessages,
         // model: 'koboldcpp/Llama-3-8B-Instruct', // Optional: specify model or let service pick default
         temperature: 0.8,
-        maxTokens: _isLongResponse ? 4096 : 512,
+        maxTokens: _isLongResponse ? 2048 : 512,
       );
 
       setState(() {
@@ -743,7 +743,13 @@ class _NativeChatScreenState extends State<NativeChatScreen>
           _selectedPreset = preset;
           _clearChat();
         });
-        Navigator.of(context).pop();
+        // Navigator.pop is already handled by the sheet/dialog itself before this callback if needed,
+        // or we don't need to pop the main screen. The issue was double popping.
+        // If _PresetSelectorSheet is a dialog/sheet, it should handle its own closing or we should check if we need to close it.
+        // Looking at _PresetSelectorSheet implementation:
+        // uses Navigator.pop(context) inside onPresetSelected:
+        // onTap: () { ... Navigator.pop(context); onPresetSelected(preset); }
+        // So we DO NOT need to pop here again.
       }
     }
 
